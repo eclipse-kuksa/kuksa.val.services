@@ -1,0 +1,10 @@
+.devcontainer/
+.github/
+.git
+.vscode/
+tools/
+report/
+*.tar
+**/build/
+**/build_seat_controller/
+**/target/

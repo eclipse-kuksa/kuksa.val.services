@@ -1,0 +1,17 @@
+{
+  "name": "val-dev-container",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "http.proxyStrictSSL": false
+  },
+  "extensions": [
+    "yzhang.markdown-all-in-one",
+    "arturock.gitstash",
+    "eamodio.gitlens",
+    "streetsidesoftware.code-spell-checker",
+    "twxs.cmake"
+  ]
+}

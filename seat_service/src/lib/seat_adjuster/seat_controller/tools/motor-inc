@@ -1,0 +1,34 @@
+#!/bin/sh
+#********************************************************************************
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License 2.0 which is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************************/
+
+if [ "$1" = "--help" ]; then
+    echo "Usage: $0 <rpm>"
+    echo "  rpm - SECU1_CMD_1.motor1_rpm value [0..254]. Actual RPM are <rpm>*100. Default: 80"
+    exit 0
+fi
+
+rpm=$1
+[ -z "$rpm" ] && rpm=80
+
+# change manually if needed e.g. to "vcan0"
+CAN="can0"
+
+# stop motors (always required!)
+echo "cansend $CAN 705#00.00.00.00.00.00.00.00"
+cansend $CAN 705#00.00.00.00.00.00.00.00
+sleep 0.1
+
+BUF=`printf "705#02.%02X.00.00.00.00.00.00" $rpm`
+echo "cansend $CAN $BUF"
+cansend $CAN $BUF

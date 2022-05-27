@@ -1,0 +1,143 @@
+/********************************************************************************
+* Copyright (c) 2022 Contributors to the Eclipse Foundation
+*
+* See the NOTICE file(s) distributed with this work for additional
+* information regarding copyright ownership.
+*
+* This program and the accompanying materials are made available under the
+* terms of the Apache License 2.0 which is available at
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* SPDX-License-Identifier: Apache-2.0
+********************************************************************************/
+
+syntax = "proto3";
+
+package sdv.edge.comfort.seats.v1;
+
+/**
+ * @brief Seats service for getting and controlling the positions of the seats and their
+ *        components in the vehicle.
+ *        This definition corresponds to the COVESA Vehicle Service Catalog (VSC) comfort
+ *        seats service definition (https://github.com/COVESA/vehicle_service_catalog)
+ */
+service Seats {
+    /** Set the desired seat position 
+     *
+     *  Returns gRPC status codes:
+     *   * OK - Seat movement started
+     *   * OUT_OF_RANGE - The addressed seat is not present in this vehicle
+     *   * INVALID_ARGUMENT - At least one of the requested component positions is invalid
+     *   * INTERNAL - A seat service internal error happened - see error message for details
+    */
+    rpc Move(MoveRequest) returns (MoveReply);
+
+    /* Set a seat component position 
+     *
+     *  Returns gRPC status codes:
+     *   * OK - Seat movement started
+     *   * OUT_OF_RANGE - The addressed seat is not present in this vehicle
+     *   * NOT_FOUND - The addressed seat component is not supported by this seat/vehicle
+     *   * INVALID_ARGUMENT - At least one of the requested component positions is invalid
+     *   * INTERNAL - A seat service internal error happened - see error message for details
+    */
+    rpc MoveComponent(MoveComponentRequest) returns (MoveComponentReply);
+
+    /* Get the current position of the addressed seat
+     *
+     *  Returns gRPC status codes:
+     *   * OK - Seat positions returned
+     *   * OUT_OF_RANGE - The addressed seat is not present in this vehicle
+    */
+    rpc CurrentPosition(CurrentPositionRequest) returns (CurrentPositionReply);
+}
+
+/**
+ * @brief 
+ * 
+ */
+message MoveRequest {
+    Seat seat = 1; // The desired seat position
+}
+
+/**
+ * @brief 
+ * 
+ */
+message MoveReply {}
+
+/**
+ * @brief 
+ * 
+ */
+message MoveComponentRequest {
+    SeatLocation seat = 1; // The seat location to change
+    SeatComponent component = 2; // The component position to change
+    int32 position = 3; // The desired position to move the component to
+}
+
+/**
+ * @brief 
+ * 
+ */
+message MoveComponentReply {}
+
+/**
+ * @brief 
+ * 
+ */
+message CurrentPositionRequest {
+    uint32 row = 1; // The row of the desired seat (1 - front most)
+    uint32 index = 2; // The position in the addressed row (1 - left most)
+}
+
+/**
+ * @brief 
+ * 
+ */
+message CurrentPositionReply {
+    Seat seat = 1; // The seat state that was requested
+}
+
+/**
+ * @brief The structure used to describe the seat's position in the vehicle
+ * 
+ */ 
+message Seat {
+    SeatLocation location = 1; // The location of the seat in the vehicle
+    Position position = 2; // The various positions of the seat
+}
+
+/**
+ * @brief The location of the seat in the vehicle
+ * 
+ */ 
+message SeatLocation {
+    uint32 row = 1; // The row, front 1 and +1 toward rear
+    uint32 index = 2; // The index within the row, 1 left most, +1 toward right
+}
+
+/**
+ * @brief The position of the entire seat
+ * 
+ * NOTE: position -1 = Unknown/Unsupported
+ */
+message Position {
+    int32 base = 1;    // The position of the base 0 front, 1000 back
+    int32 cushion = 2; // The position of the cushion 0 short, 1000 long
+    int32 lumbar = 3;  // The position of the lumbar support
+    int32 side_bolster = 4;   // The position of the side bolster
+    int32 head_restraint = 5; // The position of the head restraint 0 down, 1000 up
+}
+
+/**
+ * @brief 
+ * 
+ */
+enum SeatComponent {
+    BASE = 0;
+    CUSHION = 1;
+    LUMBAR = 2;
+    SIDE_BOLSTER  = 3;
+    HEAD_RESTRAINT = 4;
+}

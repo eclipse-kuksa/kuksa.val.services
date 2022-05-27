@@ -1,0 +1,38 @@
+#!/bin/sh
+#********************************************************************************
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License 2.0 which is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************************/
+
+if [ "$1" = "--help" ]; then
+    echo "Usage: $0 {can_if} {timeout}"
+    echo "  can_if - use specified can interface. Default: can0"
+    echo "  timeout - time for running seat motor inc/dec direction. Default: 5 sec."
+    exit 0
+fi
+
+CAN=$1
+[ -z "$CAN" ] && CAN="can0"
+
+TIMEOUT=$2
+[ -z "$TIMEOUT" ] && TIMEOUT=5
+
+echo "# Running on can: $CAN, timeout: $TIMEOUT"
+
+while true; do 
+  echo ">>> Motor ++++"
+  cansend $CAN 705#00.00.00.00.00.00.00.00; sleep 0.1; cansend $CAN 705#02.50.00.00.00.00.00.00
+  sleep $TIMEOUT
+  echo ">>> Motor ----"
+  cansend $CAN 705#00.00.00.00.00.00.00.00; sleep 0.1; cansend $CAN 705#01.50.00.00.00.00.00.00 
+  sleep $TIMEOUT
+  echo "###############"
+done

@@ -1,0 +1,25 @@
+toolchain=/usr/bin/aarch64-linux-gnu-aarch64-linux-gnu
+target_host=aarch64-linux-gnu
+cc_compiler=gcc
+cxx_compiler=g++
+
+[settings]
+os=Linux
+compiler=gcc
+compiler.version=11
+compiler.libcxx=libstdc++11
+
+arch=armv8
+build_type=Debug
+
+[env]
+CONAN_CMAKE_FIND_ROOT_PATH=$toolchain  # Optional, for CMake to find things in that folder
+CONAN_CMAKE_SYSROOT=$toolchain  # Optional, if we want to define sysroot
+CHOST=$target_host
+AR=$target_host-ar
+AS=$target_host-as
+RANLIB=$target_host-ranlib
+CC=$target_host-$cc_compiler
+CXX=$target_host-$cxx_compiler
+STRIP=$target_host-strip
+RC=$target_host-windres
