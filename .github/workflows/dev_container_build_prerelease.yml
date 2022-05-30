@@ -22,6 +22,6 @@ on:
 
 jobs:
   call-dev-container-build:
-    uses: ./.github/workflows/dev_container_build.yml@main
+    uses: ./.github/workflows/dev_container_build.yml
     with:
       tag: "prerelease"
