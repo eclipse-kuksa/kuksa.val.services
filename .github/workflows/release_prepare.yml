@@ -10,7 +10,8 @@
 # *
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
-name: val-release-prepare
+
+name: release-prepare
 
 on:
   workflow_dispatch:

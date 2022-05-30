@@ -10,7 +10,8 @@
 # *
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
-name: val-dev-container-build
+
+name: dev-container-build
 
 on:
   push:
@@ -60,10 +61,10 @@ jobs:
         # github.event.inputs.tag - used when triggered by workflow_dispatch
         #              inputs.tag - used when triggered by workflow_call
         run: |
-          docker build --build-arg version=latest --build-arg USER_ID=0 --build-arg GROUP_ID=0 -t ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/swdc-os-vehapi-dev:${{ github.event.inputs.tag }}${{ inputs.tag }} -f tools/Dockerfile .
+          docker build --build-arg version=latest --build-arg USER_ID=0 --build-arg GROUP_ID=0 -t ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_dev-container:${{ github.event.inputs.tag }}${{ inputs.tag }} -f tools/Dockerfile .
       # push docker
       - name: Push docker
         # github.event.inputs.tag - used when triggered by workflow_dispatch
         #              inputs.tag - used when triggered by workflow_call
         run: |
-          docker push ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/swdc-os-vehapi-dev:${{ github.event.inputs.tag }}${{ inputs.tag }}
+          docker push ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_dev-container:${{ github.event.inputs.tag }}${{ inputs.tag }}

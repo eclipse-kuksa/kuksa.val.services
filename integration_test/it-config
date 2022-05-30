@@ -24,9 +24,9 @@ export FEEDER_TAG="v0.16.0"
 
 ### ghcr.io image config
 export DOCKER_REPO="ghcr.io"
-export VDB_IMAGE="${DOCKER_REPO}/softwaredefinedvehicle/swdc-os-vehicleapi/databroker:${VDB_TAG}"
-export SEAT_IMAGE="${DOCKER_REPO}/softwaredefinedvehicle/swdc-os-vehicleapi/seat_service:${SEAT_TAG}"
-export FEEDER_IMAGE="${DOCKER_REPO}/softwaredefinedvehicle/swdc-os-vehicleapi/feeder_can:${FEEDER_TAG}"
+export VDB_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val/oci-databroker:${VDB_TAG}"
+export SEAT_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/oci_service-seat:${SEAT_TAG}"
+export FEEDER_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.feeders/oci_feeder-can:${FEEDER_TAG}"
 
 export VDB_CONTAINER="it-databroker"
 export SEAT_CONTAINER="it-seat_service"

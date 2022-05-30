@@ -11,12 +11,12 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-name: val-hvac-service
+name: hvac-service
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/val_hvac_service.yml"
+      - ".github/workflows/hvac_service.yml"
       - "hvac_service/**"
   workflow_call:
   workflow_dispatch:

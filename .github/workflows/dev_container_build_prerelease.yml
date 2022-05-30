@@ -10,17 +10,18 @@
 # *
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
-name: val-dev-container-build-prerelease
+
+name: dev-container-build-prerelease
 
 on:
   push:
     paths:
       - "tools/Dockerfile"
-      - ".github/workflows/val_dev_container_build_prerelease.yml"
+      - ".github/workflows/dev_container_build_prerelease.yml"
   workflow_dispatch:
 
 jobs:
-  call-swdc-build-dev-container:
-    uses: SoftwareDefinedVehicle/swdc-os-vehicleapi/.github/workflows/val_dev_container_build.yml@main
+  call-dev-container-build:
+    uses: ./.github/workflows/dev_container_build.yml@main
     with:
       tag: "prerelease"

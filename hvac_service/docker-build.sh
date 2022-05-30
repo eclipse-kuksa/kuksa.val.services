@@ -85,7 +85,7 @@ if [ "$DOCKER_ARCH" = "multiarch" ]; then
 else
 	if [ $LOCAL -eq 1 ]; then
 		DOCKER_ARGS="--load -t $DOCKER_ARCH/$DOCKER_IMAGE"
-		docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/softwaredefinedvehicle/swdc-os-vehicleapi/$DOCKER_IMAGE:prerelease
+		docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/eclipse/kuksa.val.services/$DOCKER_IMAGE:prerelease
 		DOCKER_EXPORT="(local)"
 	else
 		DOCKER_ARGS="--platform linux/$DOCKER_ARCH -t $DOCKER_ARCH/$DOCKER_IMAGE --output type=oci,dest=$DOCKER_EXPORT"

@@ -1,5 +1,5 @@
 {
-  "name": "val-dev-container",
+  "name": "dev-container",
   "build": {
     "dockerfile": "Dockerfile"
   },

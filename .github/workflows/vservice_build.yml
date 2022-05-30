@@ -11,12 +11,12 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-name: val-vservice-build
+name: vservice-build
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/val_vservice_build.yml"
+      - ".github/workflows/vservice_build.yml"
       - "seat_service/**"
       - "vehicle_data_broker/proto/**"
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
     name: Build
     container:
       # TODO: find way to insert path to this repo without hard coding
-      image: ghcr.io/softwaredefinedvehicle/swdc-os-vehicleapi/swdc-os-vehapi-dev:v0.17.0
+      image: ghcr.io/eclipse/kuksa.val.services/oci_dev-container:v0.18.0
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}

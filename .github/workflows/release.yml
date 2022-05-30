@@ -11,7 +11,7 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-name: val-release
+name: release
 
 on:
   # workflow_dispatch:   #TODO: input versions manually
@@ -21,24 +21,24 @@ on:
 
 jobs:
   # reusable workflow issues: https://github.community/t/ref-head-in-reusable-workflows/203690/27
-  call_val_dev_container_build:
-    uses: SoftwareDefinedVehicle/swdc-os-vehicleapi/.github/workflows/val_dev_container_build.yml@main
+  call_dev_container_build:
+    uses: ./.github/workflows/dev_container_build.yml@main
     with:
       tag: ${{github.ref_name}}
-  call_val_vservice_release:
-    uses: SoftwareDefinedVehicle/swdc-os-vehicleapi/.github/workflows/val_vservice_release.yml@main
-    needs: [call_val_dev_container_build]
-  call_val_vservice_docu_build:
-    uses: SoftwareDefinedVehicle/swdc-os-vehicleapi/.github/workflows/val_vservice_docu_build.yml@main
-  call_val_hvac_service_build:
-    uses: SoftwareDefinedVehicle/swdc-os-vehicleapi/.github/workflows/val_hvac_service.yml@main
+  call_vservice_release:
+    uses: ./.github/workflows/vservice_release.yml@main
+    needs: [call_dev_container_build]
+  call_vservice_docu_build:
+    uses: ./.github/workflows/vservice_docu_build.yml@main
+  call_hvac_service_build:
+    uses: ./.github/workflows/hvac_service.yml@main
   create_release:
     runs-on: ubuntu-latest
     needs:
       [
-        call_val_vservice_release,
-        call_val_vservice_docu_build,
-        call_val_hvac_service_build,
+        call_vservice_release,
+        call_vservice_docu_build,
+        call_hvac_service_build,
       ]
     steps:
       - name: Checkout
@@ -65,7 +65,7 @@ jobs:
   release-seat-service-image:
     name: "Download and push to ghcr (seat_service)"
     runs-on: ubuntu-latest
-    needs: [call_val_vservice_release]
+    needs: [call_vservice_release]
     steps:
       - id: repository-name-adjusted
         name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
@@ -91,20 +91,20 @@ jobs:
 
       - name: "Push image to ghcr"
         env:
-          VAL_NAME: seat_service
-          VAL_VERSION: ${{ steps.get_version.outputs.version }}
+          COMPONENT_NAME: seat_service
+          COMPONENT_VERSION: ${{ steps.get_version.outputs.version }}
           GIT_HUB_REPOSITORY_NAME_LOWER_CASE: ${{ steps.repository-name-adjusted.outputs.lowercase }}
         shell: bash
         run: |
-          skopeo copy --all oci-archive:oci_vservice-seat.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$VAL_NAME:$VAL_VERSION"
-          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$VAL_NAME:$VAL_VERSION" | jq
-          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$VAL_NAME:$VAL_VERSION"
+          skopeo copy --all oci-archive:oci_vservice-seat.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION" | jq
+          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
 
   release-hvac-service-image:
     name: "Download and push to ghcr (hvac_service)"
     runs-on: ubuntu-latest
 
-    needs: [call_val_hvac_service_build]
+    needs: [call_hvac_service_build]
     steps:
       - id: repository-name-adjusted
         name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
@@ -130,11 +130,11 @@ jobs:
 
       - name: "Push image to ghcr"
         env:
-          VAL_NAME: hvac_service
-          VAL_VERSION: ${{ steps.get_version.outputs.version }}
+          COMPONENT_NAME: hvac_service
+          COMPONENT_VERSION: ${{ steps.get_version.outputs.version }}
           GIT_HUB_REPOSITORY_NAME_LOWER_CASE: ${{ steps.repository-name-adjusted.outputs.lowercase }}
         shell: bash
         run: |
-          skopeo copy --all oci-archive:oci_hvac-service.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$VAL_NAME:$VAL_VERSION"
-          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$VAL_NAME:$VAL_VERSION" | jq
-          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$VAL_NAME:$VAL_VERSION"
+          skopeo copy --all oci-archive:oci_hvac-service.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION" | jq
+          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"

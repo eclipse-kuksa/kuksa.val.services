@@ -12,7 +12,7 @@
 # ********************************************************************************/
 
 # Download base image of Ubuntu
-FROM ghcr.io/softwaredefinedvehicle/swdc-os-vehicleapi/swdc-os-vehapi-dev:v0.17.0
+FROM ghcr.io/eclipse/kuksa.val.services/oci_dev-container:v0.18.0
 
 # If you get proxy errors, make sure Docker is configured correctly.
 # Hint: https://dev.to/zyfa/setup-the-proxy-for-dockerfile-building--4jc8
