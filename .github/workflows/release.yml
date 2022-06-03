@@ -20,7 +20,6 @@ on:
       - "v*.*.*"
 
 jobs:
-  # reusable workflow issues: https://github.community/t/ref-head-in-reusable-workflows/203690/27
   call_dev_container_build:
     uses: ./.github/workflows/dev_container_build.yml
     with:

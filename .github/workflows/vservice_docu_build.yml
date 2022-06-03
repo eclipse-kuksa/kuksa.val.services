@@ -26,8 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build docu
     container:
-      # TODO: find way to insert path to this repo without hard coding
-      image: ghcr.io/eclipse/kuksa.val.services/oci_dev-container:v0.18.0
+      image: ghcr.io/${{ github.repository }}/oci_dev-container:prerelease
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}

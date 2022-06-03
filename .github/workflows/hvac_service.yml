@@ -61,7 +61,7 @@ jobs:
           pull: true
           push: false
           outputs: |
-            type=oci,dest=./hvac_service.tar
+            type=oci,dest=./oci_vservice-hvac.tar
           context: ./hvac_service
           file: ./hvac_service/Dockerfile
           platforms: linux/amd64, linux/arm64
@@ -73,5 +73,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: hvac_service.tar
-          path: ${{github.workspace}}/hvac_service.tar
+          path: ${{github.workspace}}/oci_vservice-hvac.tar
           retention-days: 1
