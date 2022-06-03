@@ -24,8 +24,6 @@ ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
 source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
 
-DATABROKER_GRPC_PORT='52001'
-
 HVACSERVICE_PORT='50052'
 HVACSERVICE_GRPC_PORT='52005'
 
@@ -38,7 +36,8 @@ fi
 cd "$HVACSERVICE_EXEC_PATH" || exit 1
 pip3 install -q -r requirements.txt
 
-export DAPR_GRPC_PORT=$DATABROKER_GRPC_PORT
+#export DAPR_GRPC_PORT=$DATABROKER_GRPC_PORT
+export DAPR_GRPC_PORT=$HVACSERVICE_GRPC_PORT
 export HVACSERVICE_DAPR_APP_ID='hvacservice'
 export VEHICLEDATABROKER_DAPR_APP_ID='vehicledatabroker'
 
@@ -48,5 +47,5 @@ dapr run \
 	--app-port $HVACSERVICE_PORT \
 	--dapr-grpc-port $HVACSERVICE_GRPC_PORT \
 	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml &
-sleep 1 && python3 ./hvacservice.py
+	--config $ROOT_DIRECTORY/.dapr/config.yaml \
+    -- python3 ./hvacservice.py
