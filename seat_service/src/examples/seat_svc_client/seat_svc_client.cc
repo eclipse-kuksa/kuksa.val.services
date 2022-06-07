@@ -46,7 +46,7 @@ using sdv::edge::comfort::seats::v1::Position;
  */
 const char* grpc_status_code_to_string(StatusCode status);
 
-static int verbose = ::getenv("CLI_DEBUG") && atoi(::getenv("CLI_DEBUG"));;
+static int debug = ::getenv("CLI_DEBUG") && atoi(::getenv("CLI_DEBUG"));;
 
 static void print_grpc_status(const Status &status) {
     if (status.ok()) {
@@ -123,7 +123,7 @@ class SeatSvcClient {
         } else {
             if (reply.has_seat() && reply.seat().has_position()) {
                 position = reply.seat().position(); // using operator=
-                if (verbose) print_postition(position);
+                if (debug) print_postition(position);
             }
         }
         return status;
@@ -349,7 +349,9 @@ int main(int argc, char** argv) {
     // std::cout << "- grpc_shutdown() ..." << std::endl;
     // grpc_shutdown_blocking();
 
-    std::cout << "- ShutdownProtobufLibrary() ..." << std::endl;
+    if (debug) {
+        std::cout << "- ShutdownProtobufLibrary() ..." << std::endl;
+    }
     google::protobuf::ShutdownProtobufLibrary();
 
     return 0;

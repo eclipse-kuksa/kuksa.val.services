@@ -22,6 +22,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <thread>
 
 #include <grpcpp/grpcpp.h>
 
@@ -66,6 +67,7 @@ private:
 
     std::atomic<bool> feeder_active_;
     bool connected_;
+    std::string broker_addr_;
     std::mutex stored_values_mutex_;
     std::condition_variable feeder_thread_sync_;
 
@@ -77,7 +79,8 @@ public:
         grpc_metadata_(getGrpcMetadata()),
         dp_config_(std::move(dp_config)),
         feeder_active_(true),
-        connected_(false)
+        connected_(false),
+        broker_addr_(broker_addr)
     {
         changeToDaprPortIfSet(broker_addr);
         channel_ = grpc::CreateChannel(broker_addr, grpc::InsecureChannelCredentials());
@@ -95,11 +98,20 @@ public:
          * re-establishing a lost connection to the broker.
          */
         while (feeder_active_) {
-            std::cout << "DataBrokerFeederImpl: Connecting to data broker ..." << std::endl;
+            if (dbf_debug > 0) {
+                std::cout << "DataBrokerFeederImpl: Connecting to data broker [" << broker_addr_ << "] ..." << std::endl;
+            }
             auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(5);
             connected_ = channel_->WaitForConnected(deadline);
+            if (connected_) {
+                std::cout << "DataBrokerFeederImpl: connected to data broker." << std::endl;
+            }
             if (feeder_active_ && connected_) {
-                registerDatapoints();
+                if (!registerDatapoints()) {
+                    // don't attempt to feed values (too often) if registration status was an error
+                    std::this_thread::sleep_for(std::chrono::seconds(5));
+                    continue;
+                }
             }
 
             bool also_feed_initial_values = true;
@@ -154,7 +166,9 @@ public:
     {
         if (feeder_active_) {
             if (dbf_debug > 1) {
-                std::cout <<"DataBrokerFeederImpl::FeedValue: Enqueue value"<< std::endl;
+                std::cout <<"DataBrokerFeederImpl::FeedValue: Enqueue value: { "
+                    << value.ShortDebugString()
+                    << " } " << std::endl;
             }
             std::unique_lock<std::mutex> lock(stored_values_mutex_);
             storeValue(name, value);
@@ -177,7 +191,10 @@ private:
 
     /** Register the data points (metadata) passed to the c-tor with the data broker.
      */
-    void registerDatapoints() {
+    bool registerDatapoints() {
+        if (dbf_debug > 0) {
+            std::cout << "DataBrokerFeederImpl::registerDatapoints()" << std::endl;
+        }
         sdv::databroker::v1::RegisterDatapointsRequest request;
         for (const auto& metadata : dp_config_) {
             ::sdv::databroker::v1::RegistrationMetadata reg_data;
@@ -197,8 +214,10 @@ private:
             for (const auto& name_to_id : id_map_) {
                 std::cout <<"    '"<< name_to_id.first <<"' -> " << name_to_id.second << std::endl;
             }
+            return true;
         } else {
             handleError(status, "DataBrokerFeederImpl::registerDatapoints");
+            return false;
         }
     }
 
@@ -234,7 +253,10 @@ private:
                 auto id = iter->second;
                 (*request.mutable_datapoints())[id] = value.second;
                 if (dbf_debug > 0) {
-                    std::cout <<"    '"<< value.first <<"' ("<< id <<") of type "<< value.second.value_case() << std::endl;
+                    std::cout <<"    '"<< value.first <<"' ("<< id <<") of type "
+                        << value.second.value_case()
+                        << ", value: { " << value.second.ShortDebugString() << " }"
+                        << std::endl;
                 }
             } else {
                 std::cerr <<"    Unknown name '"<< value.first <<"'!"<< std::endl;
@@ -265,13 +287,14 @@ private:
         std::cerr << caller <<" failed:"<< std::endl
             <<"    ErrorCode: "<< status.error_code() << std::endl
             <<"    ErrorMsg:  '"<< status.error_message() <<"'"<< std::endl
-            <<"    ErrorDetl: '"<< status.error_details() <<"'"<< std::endl;
+            <<"    ErrorDetl: '"<< status.error_details() <<"'"<< std::endl
+            <<"    grpcChannelState: "<< channel_->GetState(false) <<std::endl;
 
         switch (status.error_code()) {
         case GRPC_STATUS_INTERNAL:
         case GRPC_STATUS_UNAUTHENTICATED:
         case GRPC_STATUS_UNIMPLEMENTED:
-        case GRPC_STATUS_UNKNOWN:
+        // case GRPC_STATUS_UNKNOWN: // disabled due to dapr {GRPC_STATUS_UNKNOWN; ErrorMsg: 'timeout waiting for address for app id vehicledatabroker'}
             std::cerr <<">>> Unrecoverable error -> stopping broker feeder"<< std::endl;
             feeder_active_ = false;
             break;
@@ -300,6 +323,9 @@ private:
         if (!dapr_port.empty()) {
             std::string::size_type colon_pos = broker_addr.find_last_of(':');
             broker_addr = broker_addr.substr(0, colon_pos+1) + dapr_port;
+            if (dbf_debug > 0) {
+                std::cout << "DataBrokerFeederImpl::changeToDaprPortIfSet() -> " << broker_addr << std::endl;
+            }
         }
     }
 };

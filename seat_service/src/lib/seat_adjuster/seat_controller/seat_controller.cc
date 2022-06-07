@@ -467,6 +467,11 @@ void *seatctrl_threadFunc(void *arg)
             ::usleep(1000 * 1000u);
             continue;
         }
+        if (cnt < 0 && err == EINTR) { // BUGFIX: do not abort on EINTR
+            if (ctx->config.debug_verbose) printf(PREFIX_CAN "read() interrupted\n");
+            ::usleep(1 * 1000u);
+            continue;
+        }
         if (cnt < 0)
         {
             printf(PREFIX_CTL "read() -> %d, errno: %d\n", cnt, err);
