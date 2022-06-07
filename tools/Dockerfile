@@ -82,7 +82,7 @@ RUN apt-get -y install \
 # Install python tools and prerequists needed for all python using subfolders
 COPY hvac_service/requirements-dev.txt hvac_service/requirements-dev.txt 
 COPY integration_test/requirements-dev.txt integration_test/requirements-dev.txt 
-RUN pip install \
+RUN pip3 install \
   -r hvac_service/requirements-dev.txt \
   -r integration_test/requirements-dev.txt
 
