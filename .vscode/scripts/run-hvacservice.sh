@@ -36,16 +36,29 @@ fi
 cd "$HVACSERVICE_EXEC_PATH" || exit 1
 pip3 install -q -r requirements.txt
 
-#export DAPR_GRPC_PORT=$DATABROKER_GRPC_PORT
+# NOTE: use curent sidecar's grpc port, don't connect directly to sidecar of vdb (DATABROKER_GRPC_PORT)
 export DAPR_GRPC_PORT=$HVACSERVICE_GRPC_PORT
 export HVACSERVICE_DAPR_APP_ID='hvacservice'
 export VEHICLEDATABROKER_DAPR_APP_ID='vehicledatabroker'
 
+echo "*******************************************"
+echo "* Hvac Service APP port: $HVACSERVICE_PORT"
+echo "* Hvac Service Dapr sidecar port: $HVACSERVICE_GRPC_PORT"
+echo "* DAPR_GRPC_PORT=$DAPR_GRPC_PORT"
+echo "* metadata: [ HVACSERVICE_DAPR_APP_ID=$HVACSERVICE_DAPR_APP_ID, VEHICLEDATABROKER_DAPR_APP_ID=$VEHICLEDATABROKER_DAPR_APP_ID ]"
+echo "*******************************************"
+echo
+
+## uncomment for dapr debug logs
+DAPR_OPT="--enable-api-logging --log-level debug"
+
 dapr run \
-	--app-id $HVACSERVICE_DAPR_APP_ID \
-	--app-protocol grpc \
-	--app-port $HVACSERVICE_PORT \
-	--dapr-grpc-port $HVACSERVICE_GRPC_PORT \
-	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml \
-    -- python3 ./hvacservice.py
+    --app-id $HVACSERVICE_DAPR_APP_ID \
+    --app-protocol grpc \
+    --app-port $HVACSERVICE_PORT \
+    --dapr-grpc-port $HVACSERVICE_GRPC_PORT \
+    $DAPR_OPT \
+    --components-path $ROOT_DIRECTORY/.dapr/components \
+    --config $ROOT_DIRECTORY/.dapr/config.yaml \
+    -- \
+    python3 -u ./hvacservice.py
