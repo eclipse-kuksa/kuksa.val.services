@@ -17,7 +17,7 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTEXT_DIR="$SCRIPT_DIR"
 # name of docker image: ${DOCKER_ARCH)/${DOCKER_IMAGE}
-DOCKER_IMAGE="oci_hvac-service"
+DOCKER_IMAGE="oci_vservice-hvac"
 
 print_usage() {
 	echo "USAGE: $0 [OPTIONS] TARGETS"

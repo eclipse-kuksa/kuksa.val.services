@@ -1,5 +1,5 @@
 {
-  "name": "dev-container",
+  "name": "oci_kuksa-val-services-dev",
   "build": {
     "dockerfile": "Dockerfile"
   },

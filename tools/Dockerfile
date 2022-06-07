@@ -12,7 +12,7 @@
 # ********************************************************************************/
 
 # Download base image of Ubuntu LTS
-FROM ubuntu:latest
+FROM ubuntu:20.04
 
 # If you get proxy errors, make sure Docker is configured correctly.
 # Hint: https://dev.to/zyfa/setup-the-proxy-for-dockerfile-building--4jc8

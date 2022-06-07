@@ -1,9 +1,9 @@
 # Kuksa.VAL.services
 
-- [Kuksa Vehicle Abstraction Layer Services](#kuksa-val-services)
+- [Kuksa.VAL.services](#kuksavalservices)
   - [Overview](#overview)
   - [Contribution](#contribution)
-  - [Build Seat Service / Databroker containers](#build-seat-service--databroker-containers)
+  - [Build Seat Service containers](#build-seat-service-containers)
   - [Running Seat Service / Databroker containers](#running-seat-service--databroker-containers)
   - [Privacy Customer Information](#privacy-customer-information)
     - [Your Role](#your-role)
@@ -111,7 +111,7 @@ For accessing databroker from seat service container there are two ways of runni
     docker run --rm -it --network container:sandbox -e HOST=0.0.0.0 -e PORT=55555 -e PORT=50051  seat-service
     ```
 
-2. Another option is to use `<container-name>:<port>` and bind to `0.0.0.0` inside containers
+1. Another option is to use `<container-name>:<port>` and bind to `0.0.0.0` inside containers
 
 
 ## Privacy Customer Information

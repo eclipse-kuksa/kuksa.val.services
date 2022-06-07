@@ -11,30 +11,31 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-name: vservice-seat_controller-tests
+name: seat-service-build
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/vservice_seatctrl_test*"
-      - "seat_service/src/lib/seat_adjuster/**"
-      - "seat_service/CMakeLists.txt"
+      - ".github/workflows/seat_service_build.yml"
+      - "seat_service/**"
+      - "vehicle_data_broker/proto/**"
   workflow_dispatch:
-
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  # NOTE: CodeCoverage requires debug build...
-  BUILD_TYPE: Debug
 
 jobs:
   build:
     runs-on: ubuntu-latest
     name: Build
     container:
-      image: ghcr.io/${{ github.repository }}/oci_dev-container:prerelease
+      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:prerelease
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        target-arch: [x86_64, aarch64]
+      fail-fast: true
+    env:
+      BUILD_TYPE: Debug
 
     steps:
       - name: adding github workspace as safe directory
@@ -44,28 +45,26 @@ jobs:
 
       - name: Run build
         working-directory: ${{github.workspace}}/seat_service
-        run: ./build-seatctrl.sh
-        shell: bash
+        run: ./build-debug.sh ${{ matrix.target-arch }}
 
-      - name: cobertura-report
-        uses: 5monkeys/cobertura-action@v12
-        with:
-          path: ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_vservice-seat-ctrl.xml
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          minimum_coverage: 70
-
-      - name: Upload Code coverage (html)
+      - name: Upload binaries
         uses: actions/upload-artifact@v3
         with:
-          name: report_codecov_vservice-seat-ctrl
+          name: bin_vservice-seat_${{ matrix.target-arch }}_debug
           path: |
-            ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_*/**
+            ${{github.workspace}}/seat_service/target/${{ matrix.target-arch }}/debug/install
           if-no-files-found: error
 
-      - name: Upload Test Results
+      - name: Test (x86_64)
+        if: ${{ matrix.target-arch == 'x86_64' }}
+        working-directory: ${{github.workspace}}/seat_service/target/x86_64/debug/
+        run: ctest -j -T memcheck -C ${{env.BUILD_TYPE}} --output-on-failure -E '(example)'
+
+      - name: Upload Test results (x86_64)
+        if: ${{ matrix.target-arch == 'x86_64' }}
         uses: actions/upload-artifact@v3
         with:
-          name: report_test_vservice-seat-ctrl
+          name: report_test_vservice-seat
           path: |
-            ${{github.workspace}}/seat_service/build_seat_controller/x86_64/Testing/
+            ${{github.workspace}}/seat_service/target/x86_64/debug/Testing
           if-no-files-found: error

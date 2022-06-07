@@ -11,12 +11,12 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-name: vservice-release
+name: seat-service-release
 
 on:
   pull_request:
     paths:
-      - ".github/workflows/vservice_release.yml"
+      - ".github/workflows/seat_service_release.yml"
       - "seat_service/**"
       - "vehicle_data_broker/proto/**"
   workflow_dispatch:
@@ -27,8 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build
     container:
-      # TODO: find way to insert path to this repo without hard coding
-      image: ghcr.io/${{ github.repository }}/oci_dev-container:prerelease
+      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:prerelease
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}

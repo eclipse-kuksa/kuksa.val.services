@@ -1,6 +1,6 @@
-# sdv-edge-vehicle abstraction layer
+# Seat Service Example
 
-- [sdv-edge-vehicle abstraction layer](#sdv-edge-vehicle-abstraction-layer)
+- [Seat Service Example](#seat-service-example)
   - [Overview](#overview)
     - [Context](#context)
     - [Internals](#internals)
@@ -15,7 +15,7 @@
 
 ## Overview
 
-This represents the example seat control service. More elaborate or completely differing implementations are target of particular customer projects.
+This represents the example seat control service. More elaborate or completely differing implementations are target of particular projects providing a vehicle abstraction layer.
 ### Context
 ![SeatService_context](docs/assets/SeatService_context.svg)
 
@@ -33,7 +33,7 @@ This represents the example seat control service. More elaborate or completely d
 
    ``` bash
    cd tools/ && \
-   docker build -t swdc-os-vehapi-dev:latest .
+   docker build -t oci_kuksa-val-services-ci:latest .
    ```
 
 ### Usage on CLI
@@ -42,13 +42,13 @@ From the checked-out git folder, to enter a shell execute:
 
 ``` bash
 //Linux
-docker run --rm -it -v $(pwd):/workspace swdc-os-vehapi-dev:latest <build-command>
+docker run --rm -it -v $(pwd):/workspace oci_kuksa-val-services-ci:latest <build-command>
 
 //Windows (cmd)
-docker run --rm -it -v %cd%:/workspace swdc-os-vehapi-dev:latest <build-command>
+docker run --rm -it -v %cd%:/workspace oci_kuksa-val-services-ci:latest <build-command>
 
 //Windows (Powershell)
-docker run --rm -it -v ${PWD}:/workspace swdc-os-vehapi-dev:latest <build-command>
+docker run --rm -it -v ${PWD}:/workspace oci_kuksa-val-services-ci:latest <build-command>
 ```
 
 #### Build Seat Service
@@ -57,7 +57,7 @@ Building the seat service via dev container must be triggered from the project r
 
 ``` bash
 //Linux
-docker run --rm -it -v $(pwd):/workspace swdc-os-vehapi-dev:latest /bin/bash -c "cd seat_service; ./build-debug.sh"
+docker run --rm -it -v $(pwd):/workspace oci_kuksa-val-services-ci:latest /bin/bash -c "cd seat_service; ./build-debug.sh"
 ```
 
 ### Usage in Visual Studio Code
