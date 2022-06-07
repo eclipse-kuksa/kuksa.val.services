@@ -62,6 +62,3 @@ if [ -n "$STRIP" ]; then
 	file $BINARIES
 	echo
 fi
-
-# copy tools to archive
-cp -vr "$SCRIPT_DIR/../tools/containers" "$SCRIPT_DIR/../tools/vxcan" "$BUILD_DIR/install/bin"
