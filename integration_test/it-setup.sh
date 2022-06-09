@@ -225,7 +225,7 @@ it_status() {
 	local logs="$1"
 	echo
 	echo "### Docker Images"
-	docker images --format 'table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}' | grep "${DOCKER_REPO}/softwaredefinedvehicle/"
+	docker images --format 'table {{.Repository}}:{{.Tag}}\t{{.Size}}\t{{.CreatedSince}}' | grep "${DOCKER_REPO}/eclipse/kuksa\.val"
 	echo "-----------------------"
 	echo "### Docker Containers"
 	check_it_containers 1
