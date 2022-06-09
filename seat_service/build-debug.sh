@@ -37,5 +37,3 @@ sleep 1
 cmake --build . -j
 cmake --install .
 
-# copy tools to archive
-cp -vr "$SCRIPT_DIR/../tools/containers" "$SCRIPT_DIR/../tools/vxcan" "$BUILD_DIR/install/bin"

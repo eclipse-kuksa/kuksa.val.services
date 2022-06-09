@@ -10,9 +10,9 @@
   },
   "features": {
     "docker-in-docker": {
-        "version": "latest",
-        "moby": true
-    },
+      "version": "latest",
+      "moby": true
+    }
   },
   "extensions": [
     "yzhang.markdown-all-in-one",
