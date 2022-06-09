@@ -1,5 +1,4 @@
 # Licenses Notice
-*Note*: This file is auto-generated. Do not modify it manually.
 ## Python
 | Dependency | Version | License |
 |:-----------|:-------:|--------:|

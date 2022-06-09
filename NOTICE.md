@@ -28,4 +28,4 @@ SPDX-License-Identifier: Apache-2.0
 |     ./seat_service/toolchains/*      |           [MIT License](https://github.com/conan-io/docs/blob/develop/LICENSE)            |
 
 ### Further 3rd party licenses used in project
-[Auto-generated 3rd party licenses](./NOTICE-3RD-PARTY-CONTENT.md)
+[3rd party licenses](./NOTICE-3RD-PARTY-CONTENT.md)

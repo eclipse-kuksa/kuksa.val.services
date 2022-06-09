@@ -1,9 +1,0 @@
-whitelist-file-path: ./whitelisted-licenses.txt
-scan-dirs:
-  - path: ./hvac_service
-  - path: ./integration_test
-  - path: ./seat_service
-    cpp-conan-included-profile-files:
-      - "./toolchains/target_x86_64_Debug"
-      - "./toolchains/target_x86_64_Release"
-
