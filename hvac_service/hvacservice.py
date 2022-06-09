@@ -16,9 +16,10 @@ import logging
 import os
 import signal
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
-import time
+
 import grpc
 from sdv.databroker.v1.collector_pb2 import (
     RegisterDatapointsRequest,
@@ -27,7 +28,12 @@ from sdv.databroker.v1.collector_pb2 import (
 )
 from sdv.databroker.v1.collector_pb2_grpc import CollectorStub
 from sdv.databroker.v1.types_pb2 import ChangeType, DataType
-from sdv.edge.comfort.hvac.v1.hvac_pb2 import AcStatus, SetAcStatusReply, SetAcStatusRequest, SetTemperatureReply, SetTemperatureRequest
+from sdv.edge.comfort.hvac.v1.hvac_pb2 import (
+    SetAcStatusReply,
+    SetAcStatusRequest,
+    SetTemperatureReply,
+    SetTemperatureRequest,
+)
 from sdv.edge.comfort.hvac.v1.hvac_pb2_grpc import (
     HvacServicer,
     add_HvacServicer_to_server,
@@ -44,10 +50,10 @@ VDB_ADDRESS = os.getenv("VDB_ADDRESS", "127.0.0.1:55555")
 
 def is_grpc_fatal_error(e: grpc.RpcError) -> bool:
     if (
-        e.code() == grpc.StatusCode.UNAVAILABLE or
-        e.code() == grpc.StatusCode.UNKNOWN or
-        e.code() == grpc.StatusCode.UNAUTHENTICATED or
-        e.code() == grpc.StatusCode.INTERNAL
+        e.code() == grpc.StatusCode.UNAVAILABLE
+        or e.code() == grpc.StatusCode.UNKNOWN
+        or e.code() == grpc.StatusCode.UNAUTHENTICATED
+        or e.code() == grpc.StatusCode.INTERNAL
     ):
         log.error("Feeding aborted due to RpcError(%s, '%s')", e.code(), e.details())
         return True
@@ -70,7 +76,9 @@ class HvacService:
         self._connected = False
         self._registered = False
         self._shutdown = False
-        self._databroker_thread = Thread(target=self.connect_to_databroker, daemon=True, name="databroker-connector")
+        self._databroker_thread = Thread(
+            target=self.connect_to_databroker, daemon=True, name="databroker-connector"
+        )
         self._databroker_thread.start()
         # self.connect_to_databroker()
 
@@ -111,7 +119,7 @@ class HvacService:
                     log.error("Failed to register datapoints")
                     is_grpc_fatal_error(err)
                     # log.error("Failed to register datapoints", exc_info=True)
-                except Exception as ex:
+                except Exception:
                     log.error("Failed to register datapoints", exc_info=True)
                 self._connected = True
         else:
@@ -142,17 +150,8 @@ class HvacService:
                     time.sleep(1)
                     continue
             else:
-                # check if still connected
-                grpc_ok = self._check_grpc(5)
-                # log.debug("_run: grpc state: %s", grpc_ok)
+                # TODO: check if dapr grpc proxy has active connection(e.g. send last temp value)
                 time.sleep(1)
-
-    def _check_grpc(self, timeout=1) -> bool:
-        try:
-            grpc.channel_ready_future(self._channel).result(timeout=timeout)
-            return True
-        except grpc.FutureTimeoutError:
-            return False
 
     def serve(self):
         log.info("Starting HVAC Service on %s", self._address)
@@ -162,37 +161,6 @@ class HvacService:
         server.add_insecure_port(self._address)
         server.start()
         server.wait_for_termination()
-
-    def __on_broker_connectivity_change(self, connectivity):
-        log.info("[%s] Connectivity changed to: %s", self._vdb_address, connectivity)
-        if (
-            connectivity == grpc.ChannelConnectivity.READY
-            or connectivity == grpc.ChannelConnectivity.IDLE
-        ):
-            # Can change between READY and IDLE. Only act if coming from
-            # unconnected state
-            if not self._connected:
-                log.info("Connected to data broker: %s", self._vdb_address)
-                try:
-                    self.register_datapoints()
-                    log.info("Datapoints registered")
-                    self._registered = True
-                except Exception:
-                    log.error("Failed to register datapoints", exc_info=True)
-                self._connected = True
-            else:
-                # was connected READY->IDLE
-                if connectivity == grpc.ChannelConnectivity.IDLE:
-                    log.info("Maybe Disconnected from data broker")
-                    self._connected = False
-        else:
-            if self._connected:
-                log.info("Disconnected from data broker")
-            else:
-                if connectivity == grpc.ChannelConnectivity.CONNECTING:
-                    log.info("Trying to connect to data broker")
-            self._connected = False
-            self._registered = False
 
     async def close(self):
         """Closes runtime gRPC channel."""

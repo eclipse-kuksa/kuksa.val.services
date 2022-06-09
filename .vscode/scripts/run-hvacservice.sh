@@ -50,7 +50,7 @@ echo "*******************************************"
 echo
 
 ## uncomment for dapr debug logs
-DAPR_OPT="--enable-api-logging --log-level debug"
+# DAPR_OPT="--enable-api-logging --log-level debug"
 
 dapr run \
     --app-id $HVACSERVICE_DAPR_APP_ID \
