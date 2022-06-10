@@ -12,7 +12,7 @@
 
 ## Overview
 
-The Kuksa.VAL.services repository is part of the overall Eclipse Kuksa Vehicle Abstraction Layer (VAL) set of repositories. The VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*. Vehicle data is provided in form of a data model, which is accessible via the Vehicle Data Broker - see [Kuksa.VAL repository](https://github.com/eclipse/kuksa.val). Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*). This repository contains examples of vservices and their implementations to show, how a Vehicle API and the underlying abstraction layer could be realized. 
+The Kuksa.VAL.services repository is part of the overall Eclipse Kuksa Vehicle Abstraction Layer (VAL) set of repositories. The VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*. Vehicle data is provided in form of a data model, which is accessible via the Vehicle Data Broker - see [Kuksa.VAL repository](https://github.com/eclipse/kuksa.val). Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*). This repository contains examples of vservices and their implementations to show, how a Vehicle API and the underlying abstraction layer could be realized.
 
 It currently consists of
 * a simple example [HVAC service (Python)](./hvac_service) and
