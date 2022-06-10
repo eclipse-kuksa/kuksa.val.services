@@ -36,4 +36,3 @@ cmake "$SCRIPT_DIR" -DCMAKE_BUILD_TYPE=Debug -DSDV_COVERAGE=ON -DSDV_BUILD_TESTI
 sleep 1
 cmake --build . -j
 cmake --install .
-

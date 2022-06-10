@@ -47,5 +47,4 @@ updates:
     directory: "/tools"
     schedule:
       interval: "monthly"
-
 # conan package-ecosystem is for C++ is not supported yet

@@ -53,12 +53,12 @@ echo
 # DAPR_OPT="--enable-api-logging --log-level debug"
 
 dapr run \
-    --app-id $HVACSERVICE_DAPR_APP_ID \
-    --app-protocol grpc \
-    --app-port $HVACSERVICE_PORT \
-    --dapr-grpc-port $HVACSERVICE_GRPC_PORT \
-    $DAPR_OPT \
-    --components-path $ROOT_DIRECTORY/.dapr/components \
-    --config $ROOT_DIRECTORY/.dapr/config.yaml \
-    -- \
-    python3 -u ./hvacservice.py
+	--app-id $HVACSERVICE_DAPR_APP_ID \
+	--app-protocol grpc \
+	--app-port $HVACSERVICE_PORT \
+	--dapr-grpc-port $HVACSERVICE_GRPC_PORT \
+	$DAPR_OPT \
+	--components-path $ROOT_DIRECTORY/.dapr/components \
+	--config $ROOT_DIRECTORY/.dapr/config.yaml \
+	-- \
+	python3 -u ./hvacservice.py

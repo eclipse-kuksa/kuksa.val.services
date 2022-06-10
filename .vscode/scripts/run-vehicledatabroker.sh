@@ -40,11 +40,10 @@ DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATAB
 DATABROKER_EXECUTABLE="$DATABROKER_BINARY_PATH/target/release/vehicle-data-broker"
 DOWNLOAD_URL=https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME
 
-if [[ ! -f "$DATABROKER_EXECUTABLE" ]]
-then
-  echo "Downloading vehicle-data-broker:$DATABROKER_VERSION"
-  curl -o "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" --create-dirs -L -H "Accept: application/octet-stream" "$DOWNLOAD_URL"
-  tar -xf "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" -C $DATABROKER_BINARY_PATH
+if [[ ! -f "$DATABROKER_EXECUTABLE" ]]; then
+	echo "Downloading vehicle-data-broker:$DATABROKER_VERSION"
+	curl -o "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" --create-dirs -L -H "Accept: application/octet-stream" "$DOWNLOAD_URL"
+	tar -xf "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" -C $DATABROKER_BINARY_PATH
 fi
 
 export DAPR_GRPC_PORT=$DATABROKER_GRPC_PORT
@@ -55,5 +54,5 @@ dapr run \
 	--app-port $DATABROKER_PORT \
 	--dapr-grpc-port $DATABROKER_GRPC_PORT \
 	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml & \
+	--config $ROOT_DIRECTORY/.dapr/config.yaml &
 $DATABROKER_EXECUTABLE --address 0.0.0.0
