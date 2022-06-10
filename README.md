@@ -3,8 +3,8 @@
 - [Kuksa.VAL.services](#kuksavalservices)
   - [Overview](#overview)
   - [Contribution](#contribution)
-  - [Build Seat Service containers](#build-seat-service-containers)
-  - [Running Seat Service / Databroker containers](#running-seat-service--databroker-containers)
+  - [Build Seat Service Containers](#build-seat-service-containers)
+  - [Running Seat Service / Databroker Containers](#running-seat-service--databroker-containers)
   - [Privacy Customer Information](#privacy-customer-information)
     - [Your Role](#your-role)
     - [Where may the processing of personal related data be relevant?](#where-may-the-processing-of-personal-related-data-be-relevant)
@@ -12,12 +12,13 @@
 
 ## Overview
 
-The Kuksa.VAL (Vehicle Abstraction Layer) services contains example implementations to show how a Vehicle API and the underlying abstraction layer implementation could be realized.
+The Kuksa.VAL.services repository is part of the overall Eclipse Kuksa Vehicle Abstraction Layer (VAL) set of repositories. The VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*. Vehicle data is provided in form of a data model, which is accessible via the Vehicle Data Broker - see [Kuksa.VAL repository](https://github.com/eclipse/kuksa.val). Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*). This repository contains examples of vservices and their implementations to show, how a Vehicle API and the underlying abstraction layer could be realized. 
+
 It currently consists of
-* a simple example HVAC service (Python) and
-* a more complex example seat control service (C++).
+* a simple example [HVAC service (Python)](./hvac_service) and
+* a more complex example [seat control service (C++)](./seat_service).
   
-More elaborate or completely differing implementations are target of particular derived projects.
+More elaborate or completely differing implementations are target of "real world grown" projects.
 
 
 ## Contribution
@@ -25,7 +26,7 @@ More elaborate or completely differing implementations are target of particular 
 For contribution guidelines see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 
-## Build Seat Service containers
+## Build Seat Service Containers
 
 From the terminal, make the seat_service as your working directory:
 
@@ -58,7 +59,7 @@ DOCKER_BUILDKIT=1 docker build -f seat_service/Dockerfile -t seat_service:<tag> 
 ```
 The image creation may take around 2 minutes.
 
-## Running Seat Service / Databroker containers
+## Running Seat Service / Databroker Containers
 
 To directly run the containers following commands can be used:
 
