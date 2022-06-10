@@ -40,8 +40,8 @@ DOWNLOAD_URL=https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_
 if [[ ! -f "$DATABROKERCLI_EXECUTABLE" ]]
 then
   echo "Downloading vehicle-data-broker:$DATABROKER_VERSION"
-  curl -o $DATABROKER_BINARY_PATH/$DATABROKER_BINARY_NAME --create-dirs -L -H "Accept: application/octet-stream" "$DOWNLOAD_URL"
-  tar -xf $DATABROKER_BINARY_PATH/$DATABROKER_BINARY_NAME -C $DATABROKER_BINARY_PATH
+  curl -o "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" --create-dirs -L -H "Accept: application/octet-stream" "$DOWNLOAD_URL"
+  tar -xf "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" -C $DATABROKER_BINARY_PATH
 fi
 
 "$DATABROKERCLI_EXECUTABLE"

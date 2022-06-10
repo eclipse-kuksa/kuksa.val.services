@@ -18,6 +18,8 @@ env: # Comment env block if you do not want to apply fixes
   # Disable MyPy linter
   DISABLE_LINTERS: SPELL_CSPELL,COPYPASTE_JSCPD,DOCKERFILE_DOCKERFILELINT,DOCKERFILE_HADOLINT,ACTION_ACTIONLINT,C_CPPLINT,CPP_CPPLINT,RUST_CLIPPY,PROTOBUF_PROTOLINT,PYTHON_MYPY
   MARKDOWN_MARKDOWN_TABLE_FORMATTER_FILTER_REGEX_EXCLUDE: NOTICE-3RD-PARTY-CONTENT.md
+  CSS_FILTER_REGEX_EXCLUDE: '(doxygen-awesome.*\.css)'
+  GIT_FILTER_REGEX_EXCLUDE: '(doxygen-awesome.*\.css)'
 
 concurrency:
   group: ${{ github.ref }}-${{ github.workflow }}
