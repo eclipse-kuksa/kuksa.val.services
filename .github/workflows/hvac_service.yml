@@ -72,6 +72,6 @@ jobs:
       - name: Temporarily save Docker image
         uses: actions/upload-artifact@v3
         with:
-          name: hvac_service.tar
+          name: oci_vservice-hvac.tar
           path: ${{github.workspace}}/oci_vservice-hvac.tar
           retention-days: 1

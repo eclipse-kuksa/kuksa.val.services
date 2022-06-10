@@ -10,7 +10,6 @@ List of VAL core component tasks:
 - `run-databroker` - runs databroker via dapr (building amd64 binary if missing). Depends on "ensure-dapr".
 - `run-hvacservice` - runs the HVAC service via dapr. Depends on "run-databroker".
 - `run-seatservice` - runs seat service via dapr (building amd64 binary if missing). Depends on "run-databroker".
-- `run-feedercan` - runs feeder_can from sources. Depends on "run-databroker".
 
 List of VAL client tasks:
 
