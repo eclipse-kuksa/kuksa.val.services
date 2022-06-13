@@ -1,0 +1,71 @@
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+
+name: seat-service-seatcontroller-tests
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/seat_service_seatctrl_test*"
+      - "seat_service/src/lib/seat_adjuster/**"
+      - "seat_service/CMakeLists.txt"
+  workflow_dispatch:
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  # NOTE: CodeCoverage requires debug build...
+  BUILD_TYPE: Debug
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build
+    container:
+      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:prerelease
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: adding github workspace as safe directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - uses: actions/checkout@v3
+
+      - name: Run build
+        working-directory: ${{github.workspace}}/seat_service
+        run: ./build-seatctrl.sh
+        shell: bash
+
+      - name: cobertura-report
+        uses: 5monkeys/cobertura-action@v12
+        with:
+          path: ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_vservice-seat-ctrl.xml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          minimum_coverage: 70
+
+      - name: Upload Code coverage (html)
+        uses: actions/upload-artifact@v3
+        with:
+          name: report_codecov_vservice-seat-ctrl
+          path: |
+            ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_*/**
+          if-no-files-found: error
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: report_test_vservice-seat-ctrl
+          path: |
+            ${{github.workspace}}/seat_service/build_seat_controller/x86_64/Testing/
+          if-no-files-found: error

@@ -1,0 +1,52 @@
+#!/bin/bash
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+
+
+### Local docker image config (may force rebuild + tag local images)
+# export VDB_TAG="latest"
+# export SEAT_TAG="latest"
+# export FEEDER_TAG="latest"
+
+export VDB_TAG="v0.16.0"
+export SEAT_TAG="v0.16.0"
+export FEEDER_TAG="v0.16.0"
+
+### ghcr.io image config
+export DOCKER_REPO="ghcr.io"
+export VDB_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val/oci-databroker:${VDB_TAG}"
+export SEAT_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/oci_vservice-seat:${SEAT_TAG}"
+export FEEDER_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.feeders/oci_feeder-can:${FEEDER_TAG}"
+
+export VDB_CONTAINER="it-databroker"
+export SEAT_CONTAINER="it-seat_service"
+export FEEDER_CONTAINER="it-feeder_can"
+
+VDB_HOST_PORT="35555"
+SEAT_HOST_PORT="30051"
+DOCKER_VDB_ADDRESS="${VDB_CONTAINER}:55555"
+
+export VDB_DOCKER_OPT="-p   ${VDB_HOST_PORT}:55555/tcp --expose ${VDB_HOST_PORT}  -e RUST_LOG=info,databroker=debug,vehicle_data_broker=debug -e VEHICLEDATABROKER_DAPR_APP_ID=vdb --name ${VDB_CONTAINER}"
+export SEAT_DOCKER_OPT="-p ${SEAT_HOST_PORT}:50051/tcp --expose ${SEAT_HOST_PORT} -e BROKER_ADDR=${DOCKER_VDB_ADDRESS} -e SIM=cansim -e SC_RPM=100 -e VEHICLEDATABROKER_DAPR_APP_ID=vdb --name ${SEAT_CONTAINER}"
+export FEEDER_DOCKER_OPT="-e VDB_ADDRESS=${DOCKER_VDB_ADDRESS} -e LOG_LEVEL=info,databroker=debug,dbcfeeder=debug,dbcfeeder.broker_client=debug --name ${FEEDER_CONTAINER}"
+
+export DOCKER_NETWORK="val-int" # "host"
+
+export DOCKER_OPT=""
+
+# limit docker log output to 100 lines / 5 min
+#export DOCKER_LOG="-n 100"
+[ -z "${DOCKER_LOG}" ] && export DOCKER_LOG="--since 5m -n 1000"
+
+# output dir with results and logs
+export RESULTS="/tmp/val-it-results"

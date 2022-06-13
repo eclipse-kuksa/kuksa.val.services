@@ -1,0 +1,12 @@
+grpcio>=1.26.0
+grpcio-tools>=1.26.0
+protobuf==3.19.3
+pydocstyle >= 6.1.1
+mypy >= 0.910
+mypy-protobuf >= 3.0.0
+types-protobuf >= 0.1.14
+grpc-stubs >= 1.24.7
+pylint
+pytest
+pytest-ordering
+pytest-asyncio

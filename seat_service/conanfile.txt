@@ -1,0 +1,42 @@
+
+#********************************************************************************
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License 2.0 which is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************************/
+
+[requires]
+gtest/1.10.0
+grpc/1.37.1
+
+[build_requires]
+grpc/1.37.1 # Is needed in the build context to run generate code from proto files
+
+[generators]
+cmake_find_package
+cmake_paths
+virtualenv
+
+[options]
+grpc:fPIC=True
+grpc:cpp_plugin=True
+grpc:codegen=True
+
+# Follwing options do speed up cross build, but there is no prebuild package for  this combination
+#grpc:csharp_ext=False
+#grpc:csharp_plugin=False
+#grpc:node_plugin=False
+#grpc:objective_c_plugin=False
+#grpc:php_plugin=False
+#grpc:python_plugin=False
+#grpc:ruby_plugin=False
+
+[imports]
+., license* -> ./licenses @ folder=True, ignore_case=True

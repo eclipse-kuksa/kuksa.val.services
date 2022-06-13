@@ -1,0 +1,70 @@
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+
+name: dev-container-build
+
+on:
+  push:
+    paths:
+      - "tools/Dockerfile"
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "tag of the docker container, eg:latest, v0.2.1"
+        required: false
+        default: "latest"
+  workflow_call:
+    inputs:
+      tag:
+        description: "tag of the docker container, eg:latest, v0.2.1"
+        type: string
+        required: false
+        default: "latest"
+
+jobs:
+  build:
+    runs-on: [ubuntu-latest]
+
+    steps:
+      - name: adding github workspace as safe directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - uses: actions/checkout@v3
+
+      - id: repository-name-adjusted
+        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Runs docker Build
+      - name: Run docker Build
+        # github.event.inputs.tag - used when triggered by workflow_dispatch
+        #              inputs.tag - used when triggered by workflow_call
+        run: |
+          docker build --build-arg version=latest --build-arg USER_ID=0 --build-arg GROUP_ID=0 -t ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_kuksa-val-services-ci:${{ github.event.inputs.tag }}${{ inputs.tag }} -f tools/Dockerfile .
+      # push docker
+      - name: Push docker
+        # github.event.inputs.tag - used when triggered by workflow_dispatch
+        #              inputs.tag - used when triggered by workflow_call
+        run: |
+          docker push ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_kuksa-val-services-ci:${{ github.event.inputs.tag }}${{ inputs.tag }}

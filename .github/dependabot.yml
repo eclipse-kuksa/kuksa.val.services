@@ -1,0 +1,50 @@
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+
+# This configures Dependabot version updates, to keep dependencies up to date.
+# Dependabot security updates are configured differently,
+# see: https://docs.github.com/en/code-security/dependabot/dependabot-security-updates/about-dependabot-security-updates
+
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/hvac_service"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "pip"
+    directory: "/integration_test"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "docker"
+    directory: "/seat_service"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "docker"
+    directory: "/hvac_service"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "docker"
+    directory: "/tools"
+    schedule:
+      interval: "monthly"
+# conan package-ecosystem is for C++ is not supported yet

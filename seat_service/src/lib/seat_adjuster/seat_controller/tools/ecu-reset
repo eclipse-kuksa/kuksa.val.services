@@ -1,0 +1,235 @@
+#!/bin/bash
+#********************************************************************************
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License 2.0 which is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************************/
+
+# how many can read timeouts are accepted before bailing out (no can hw)
+MAX_RETRIES=3
+# motor pwm % for commands. WARNING: Setting 100% did not finish the learning.
+MOTOR_RPM=80
+
+# timeout for aborting calibration (seconds)
+TIMEOUT=60
+STAT=0
+VERBOSE=0
+FORCE=0
+
+while [ $# -gt 0 ]; do
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        echo "Usage: $0 {-h} {-s} {-v} {-f} {-t timeout_sec} {can_if}"
+        echo "   can_if: CAN interface to use. Default: can0";
+        echo "   -s: Prints RX Can frames (Useful for troubleshooting)"
+        echo "   -t: timeout in seconds to abort operation. Default: $TIMEOUT sec";
+        echo "   -f: Force calibration even if motor reports learned state";
+        echo "   -h: Prints this message";
+        exit 0
+    elif [ "$1" = "-v" ]; then
+        VERBOSE=1
+    elif [ "$1" = "-f" ]; then
+        FORCE=1
+    elif [ "$1" = "-s" ]; then
+        STAT=1
+    elif [ "$1" = "-t" ]; then
+        shift # get next arg
+        TIMEOUT=$1
+    else
+        CAN="$1"
+    fi
+    shift
+done
+
+#CAN="$1"
+[ -z "$CAN" ] && CAN="can0"
+
+echo "### Normalizing SeatAdjust ECU on $CAN"
+
+if ! ifconfig $CAN | grep -q "UP"; then
+    echo "CAN interface $CAN not up"
+    exit 1
+fi
+
+motor_off() {
+    frame=`printf "cansend $CAN 705#00.00.00.00.00.00.00.00"`
+    echo "TX: [motor-OFF] $frame"
+    `$frame`
+    sleep 0.5
+}
+
+motor_inc() {
+    local rpm=$1
+    frame=`printf "cansend $CAN 705#02.%02X.00.00.00.00.00.00" $rpm`
+    echo "TX: [motor-INC] $frame"
+    `$frame`
+    sleep 0.2
+}
+
+motor_dec() {
+    local rpm=$1
+    frame=`printf "cansend $CAN 705#01.%02X.00.00.00.00.00.00" $rpm`
+    echo "TX: [motor-DEC] $frame"
+    `$frame`
+    sleep 0.2
+}
+
+read_can_frame() {
+    local can=$1
+    candump -T 1000 -n 1 -L $can,712:7FF | cut -d ' ' -f 3
+}
+
+parse_motor_pos() {
+    local frame="$1"
+    # only handle 0x712 canid
+    if [ "${frame:0:4}" != "712#" ]; then
+        return 1;
+    fi
+    local data=${frame#*#}
+    # pos_hex is 3rd byte
+    pos_hex=${data:4:2}
+    echo $(( 0x${pos_hex} ))
+    return 0
+}
+
+parse_motor_mov() {
+    local frame="$1"
+    # only handle 0x712 canid
+    if [ "${frame:0:4}" != "712#" ]; then
+        return 1;
+    fi
+    local data=${frame#*#}
+    # mov_hex is 2nd & 0x0F
+    mov_hex=${data:1:1}
+    #echo -n " ($mov_hex)="
+    case $(( $mov_hex & 0x03 )) in
+        0) echo "OFF";;
+        1) echo "DEC";;
+        2) echo "INC";;
+        *) return 1;;
+    esac
+    return 0
+}
+
+parse_motor_lrn() {
+    local frame="$1"
+    # only handle 0x712 canid
+    if [ "${frame:0:4}" != "712#" ]; then
+        return 1;
+    fi
+    local data=${frame#*#}
+    # mov_hex is 2nd & 0x0F
+    mov_hex=${data:1:1}
+    #echo -n " ($mov_hex)="
+    case $(( ($mov_hex >> 2) & 0x03 )) in
+        0) echo "NOT";;
+        1) echo "LRN";;
+        2) echo "INV";;
+        *) return 1;;
+    esac
+    return 0
+}
+
+old_frame="---" # invalidate
+
+# FSM states
+state=0 # 0=motor_inc; 1=
+
+ts_start=$(date '+%s')
+failures=0
+while true; do
+    frame=`read_can_frame $CAN`
+    if [ $? -ne 0 ]; then
+        echo "Aborted. Can't read from $CAN ..."
+        exit 1
+    fi
+    ts_now=$(date '+%s')
+    ts_elapsed=$((ts_now - ts_start))
+    if [ $ts_elapsed -ge $TIMEOUT ]; then
+        echo "### Aborted after $ts_elapsed sec." 1>&2
+        exit 1
+    fi
+    if [ -z "$frame" ]; then
+        echo "RX: No can data, retry: $failures" 1>&2
+        failures=$((failures+1))
+         if [ $failures -ge $MAX_RETRIES ]; then
+            echo "### Aborted (no can frames) after $ts_elapsed sec." 1>&2
+            exit 2
+         fi
+    else
+        failures=0 # reset counter on incoming can frame...
+    fi
+    if [ "$frame" = "$old_frame" ]; then
+        #sleep 0
+        continue
+    fi
+
+    pos=`parse_motor_pos "$frame"`
+    mov=`parse_motor_mov "$frame"`
+    lrn=`parse_motor_lrn "$frame"`
+
+    [ -n "$frame" ] && [ "$STAT" = "1" ] && printf 'RX: SECU1_STAT {pos:%3d%% mov:%3s, lrn:%3s} \tframe: %s\n' "$pos" "$mov" "$lrn" "$frame"
+    old_frame="$frame"
+
+    # handle fsm
+    case $state in
+        0) ## 0. motor inc
+            # check if motor is in learned state and abort
+            if [ "$pos" != "255" ] && [ "$lrn" != "NOT" ]; then
+                if [ $FORCE -eq 1 ]; then
+                    echo "[Status Check] Running calibration on learned state (forced)"
+                else
+                    echo "[Status Check] Aborting. Motor is learned"
+                    exit 0
+                fi
+            fi
+            echo "0: [motor++]"
+            motor_off
+            motor_inc $MOTOR_RPM
+            state=1
+            #old_frame=""
+            ;;
+        1) ## 1. wait for mov OFF state, then motor_dec
+            if [ "$mov" = "OFF" ]; then
+                echo "1: [motor--]"
+                motor_off
+                motor_dec $MOTOR_RPM
+                state=2
+                #old_frame=""
+            else
+                [ "$VERBOSE" = "1" ] && echo "1: [++] waiting OFF..."
+            fi
+            ;;
+        2) ## 2. wait for mov OFF state, then motor_inc
+            if [ "$mov" = "OFF" ]; then
+                echo "2: [motor++]"
+                motor_off
+                motor_inc $MOTOR_RPM
+                state=3
+                #old_frame=""
+            else
+                [ "$VERBOSE" = "1" ] && echo "2: [--] waiting OFF..."
+            fi
+            ;;
+        3) ## 3. wait for mov OFF state, then finish
+            if [ "$mov" = "OFF" ]; then
+                echo "3: [*] Normalize finished"
+                state=4 # terminal state
+                #old_frame=""
+                break
+            else
+                [ "$VERBOSE" = "1" ] && echo "3: [++] waiting OFF..."
+            fi
+            ;;
+    esac
+done
+
+# stop the motor
+motor_off
+

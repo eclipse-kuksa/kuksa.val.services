@@ -1,0 +1,29 @@
+#!/bin/sh
+#********************************************************************************
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License 2.0 which is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************************/
+
+if [ "$1" = "--help" ]; then
+    echo "Usage: $0 <dbc_file>"
+    echo "  dbc_file - DBC for decoding can frames. Default: ../seat_ecu.dbc"
+    exit 0
+fi
+
+DBC="$1"
+[ -z "$DBC" ] && DBC="../seat_ecu.dbc"
+
+if [ ! -f "$DBC" ]; then
+	echo "Usage: $0 <dbc file>"
+	exit 1
+fi
+
+candump -c any | cantools decode "$DBC"
