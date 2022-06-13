@@ -1,0 +1,278 @@
+VERSION ""
+
+CM_ "
+* Copyright (c) 2022 Contributors to the Eclipse Foundation
+*
+* See the NOTICE file(s) distributed with this work for additional
+* information regarding copyright ownership.
+*
+* This program and the accompanying materials are made available under the
+* terms of the Apache License 2.0 which is available at
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* SPDX-License-Identifier: Apache-2.0
+";
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_:
+VAL_TABLE_ vtSeatMovStat 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_TABLE_ vtSeatLearnStat 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_TABLE_ vtSeatCmd1 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+
+
+BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
+ SG_ MOTOR4_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR4_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR3_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR2_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR1_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR4_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR3_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR2_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR1_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR4_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR3_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR2_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR1_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR4_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR3_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR2_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_POS : 0|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR1_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_LEARNING_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR4_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR3_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR2_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR1_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR4_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR3_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR2_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_SET_RPM : 0|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR1_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+
+BO_ 1798 SECU1_CMD_2: 5 Vector__XXX
+ SG_ MOTOR4_SET_RPM : 32|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR4_MANUAL_CMD : 6|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_SET_RPM : 24|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR3_MANUAL_CMD : 4|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_SET_RPM : 16|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR2_MANUAL_CMD : 2|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_SET_RPM : 8|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR1_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+
+BO_ 1810 SECU1_STAT: 8 Vector__XXX
+ SG_ MOTOR4_POS : 40|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR4_MOV_STATE : 12|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR4_LEARNING_STATE : 14|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_POS : 32|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR3_MOV_STATE : 8|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_LEARNING_STATE : 10|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_POS : 24|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR2_MOV_STATE : 4|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_LEARNING_STATE : 6|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_POS : 16|8@1+ (1,0) [0|255] "" Vector__XXX
+ SG_ MOTOR1_MOV_STATE : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_LEARNING_STATE : 2|2@1+ (1,0) [0|3] "" Vector__XXX
+
+BO_ 1797 SECU1_CMD_1: 5 Vector__XXX
+ SG_ MOTOR4_SET_RPM : 32|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR4_MANUAL_CMD : 6|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR3_SET_RPM : 24|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR3_MANUAL_CMD : 4|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR2_SET_RPM : 16|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR2_MANUAL_CMD : 2|2@1+ (1,0) [0|3] "" Vector__XXX
+ SG_ MOTOR1_SET_RPM : 8|8@1+ (1,0) [0|255] "RPM" Vector__XXX
+ SG_ MOTOR1_MANUAL_CMD : 0|2@1+ (1,0) [0|3] "" Vector__XXX
+
+
+
+CM_ BO_ 3221225472 "This is a message for not used signals.";
+CM_ SG_ 3221225472 MOTOR4_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR4_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR3_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR3_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR2_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR2_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid
+0 = off; 1 = dec; 2 = inc; 3 = invalid
+";
+CM_ SG_ 3221225472 MOTOR1_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR1_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR4_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR4_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR3_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR3_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR2_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR2_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid
+";
+CM_ SG_ 3221225472 MOTOR1_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR1_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR4_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR4_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR3_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR3_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 3221225472 MOTOR2_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR2_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid
+";
+CM_ SG_ 3221225472 MOTOR1_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 3221225472 MOTOR1_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 1798 MOTOR4_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1798 MOTOR4_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 1798 MOTOR3_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1798 MOTOR3_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 1798 MOTOR2_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1798 MOTOR2_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid
+";
+CM_ SG_ 1798 MOTOR1_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1798 MOTOR1_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 1797 MOTOR4_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1797 MOTOR4_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 1797 MOTOR3_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1797 MOTOR3_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+CM_ SG_ 1797 MOTOR2_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1797 MOTOR2_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid
+";
+CM_ SG_ 1797 MOTOR1_SET_RPM "0 ... 255 = 0 ... 25500 RPM
+";
+CM_ SG_ 1797 MOTOR1_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
+BA_DEF_  "BusType" STRING ;
+BA_DEF_ BU_  "NodeLayerModules" STRING ;
+BA_DEF_ BU_  "ECU" STRING ;
+BA_DEF_ BU_  "CANoeJitterMax" INT 0 0;
+BA_DEF_ BU_  "CANoeJitterMin" INT 0 0;
+BA_DEF_ BU_  "CANoeDrift" INT 0 0;
+BA_DEF_ BU_  "CANoeStartDelay" INT 0 0;
+BA_DEF_DEF_  "BusType" "";
+BA_DEF_DEF_  "NodeLayerModules" "";
+BA_DEF_DEF_  "ECU" "";
+BA_DEF_DEF_  "CANoeJitterMax" 0;
+BA_DEF_DEF_  "CANoeJitterMin" 0;
+BA_DEF_DEF_  "CANoeDrift" 0;
+BA_DEF_DEF_  "CANoeStartDelay" 0;
+BA_ "BusType" "CAN";
+VAL_ 3221225472 MOTOR4_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR3_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR2_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR1_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR4_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR4_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR3_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR3_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR2_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR2_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR1_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR1_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR4_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR4_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR3_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR3_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR2_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR2_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR1_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR1_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 3221225472 MOTOR4_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR3_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR2_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR1_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR4_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR3_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR2_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 3221225472 MOTOR1_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1798 MOTOR4_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1798 MOTOR3_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1798 MOTOR2_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1798 MOTOR1_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1810 MOTOR4_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1810 MOTOR4_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 1810 MOTOR3_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1810 MOTOR3_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 1810 MOTOR2_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1810 MOTOR2_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 1810 MOTOR1_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1810 MOTOR1_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
+VAL_ 1797 MOTOR4_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1797 MOTOR3_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1797 MOTOR2_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1797 MOTOR1_MANUAL_CMD 3 "INV" 2 "INC" 1 "DEC" 0 "OFF" ;
+

@@ -1,0 +1,55 @@
+#!/bin/bash
+#********************************************************************************
+# Copyright (c) 2022 Contributors to the Eclipse Foundation
+#
+# See the NOTICE file(s) distributed with this work for additional
+# information regarding copyright ownership.
+#
+# This program and the accompanying materials are made available under the
+# terms of the Apache License 2.0 which is available at
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# SPDX-License-Identifier: Apache-2.0
+#*******************************************************************************/
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+if [ $# -eq 0 ]; then
+    echo "Usage $0 <command> {arg0} {arg1} .."
+    echo "  <command> (with arguments) will be executed with libc hooks to simulate a single SocketCAN"
+    echo "  opening,reading,writing to that socket is handled by SeatAdjusterEngine to simulate real HW"
+    exit 1
+fi
+
+if [ ! -f "$SCRIPT_DIR/libcansim.so" ]; then
+    echo "Aborting! Couldn't find: $SCRIPT_DIR/libcansim.so" 1>&2
+    exit 1
+fi
+
+### Set default values (but allow overriding)
+
+# Enable real ECU auto stopping at thresholds (14% and 85%)
+[ -z "$SAE_STOP" ] && SAE_STOP=1
+# Sleep time in can read sim (10ms simulates real ECU cycle)
+[ -z "$SAE_DELAY" ] && SAE_DELAY=10
+# Initial motor position (255=not learned)
+[ -z "$SAE_POS" ] && SAE_POS=0
+# Debug dumps from SeatAdjuster Engine simulator
+[ -z "$SAE_DEBUG" ] && SAE_DEBUG=0
+# Verbose dumps from SeatAdjuster Engine simulator
+[ -z "$SAE_VERBOSE" ] && SAE_VERBOSE=0
+
+
+# Verbose dumps from libc mock
+[ -z "$CANSIM_VERBOSE" ] && CANSIM_VERBOSE=0
+# Debug dumps from libc mock
+[ -z "$CANSIM_DEBUG" ] && CANSIM_DEBUG=0
+
+if [ -n "$LD_PRELOAD" ]; then
+    ## e.g. If you want stack traces on crash, launch with:
+    # SEGFAULT_SIGNALS="abrt segv" LD_PRELOAD=/lib/x86_64-linux-gnu/libSegFault.so cansim cmd args...
+    PRELOAD_LIBS="$SCRIPT_DIR/libcansim.so:$LD_PRELOAD"
+else
+    PRELOAD_LIBS="$SCRIPT_DIR/libcansim.so"
+fi
+LD_PRELOAD="$PRELOAD_LIBS" exec "$@"

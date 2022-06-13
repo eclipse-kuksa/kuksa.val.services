@@ -1,0 +1,8 @@
+[flake8]
+max-line-length = 120
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+    # Ignore generated *_pb2.py files
+    gen_proto, *_pb2*

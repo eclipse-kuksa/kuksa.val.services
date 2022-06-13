@@ -1,0 +1,45 @@
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+
+name: release-prepare
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release version, eg:latest, 0.2.1"
+        required: true
+        default: "0.0.0"
+
+jobs:
+  bump-vdb-version:
+    runs-on: [ubuntu-latest]
+
+    steps:
+      - name: adding github workspace as safe directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - uses: actions/checkout@v3
+
+      - name: Change version of VDB
+        working-directory: ${{github.workspace}}
+        run: ./prepare_release.sh ${{ inputs.tag }}
+
+      - name: Create Pull Request with new vdb version
+        id: create-pr
+        uses: peter-evans/create-pull-request@v4.0.1
+        with:
+          token: ${{ secrets.PAT || secrets.GITHUB_TOKEN }}
+          commit-message: "[Bot] Prepare release for ${{ inputs.tag }}"
+          title: "[Bot] Prepare release for ${{ inputs.tag }}"
+          labels: bot

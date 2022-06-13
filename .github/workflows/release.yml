@@ -1,0 +1,140 @@
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+
+name: release
+
+on:
+  # workflow_dispatch:   #TODO: input versions manually
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  call_dev_container_build:
+    uses: ./.github/workflows/dev_container_build.yml
+    with:
+      tag: ${{github.ref_name}}
+  call_seat_service_release:
+    uses: ./.github/workflows/seat_service_release.yml
+    needs: [call_dev_container_build]
+  call_seat_service_docu_build:
+    uses: ./.github/workflows/seat_service_docu_build.yml
+    needs: [call_dev_container_build]
+  call_hvac_service_build:
+    uses: ./.github/workflows/hvac_service.yml
+  create_release:
+    runs-on: ubuntu-latest
+    needs:
+      [
+        call_seat_service_release,
+        call_seat_service_docu_build,
+        call_hvac_service_build,
+      ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: bin/
+      - name: Create release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
+            bin/**
+            LICENSE
+            NOTICE.md
+
+  release-seat-service-image:
+    name: "Download and push to ghcr (seat_service)"
+    runs-on: ubuntu-latest
+    needs: [call_seat_service_release]
+    steps:
+      - id: repository-name-adjusted
+        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
+
+      - id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Retrieve saved Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: oci_vservice-seat.tar
+          path: ${{github.workspace}}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Push image to ghcr"
+        env:
+          COMPONENT_NAME: seat_service
+          COMPONENT_VERSION: ${{ steps.get_version.outputs.version }}
+          GIT_HUB_REPOSITORY_NAME_LOWER_CASE: ${{ steps.repository-name-adjusted.outputs.lowercase }}
+        shell: bash
+        run: |
+          skopeo copy --all oci-archive:oci_vservice-seat.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION" | jq
+          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+
+  release-hvac-service-image:
+    name: "Download and push to ghcr (hvac_service)"
+    runs-on: ubuntu-latest
+
+    needs: [call_hvac_service_build]
+    steps:
+      - id: repository-name-adjusted
+        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
+
+      - id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Retrieve saved Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: oci_vservice-hvac.tar
+          path: ${{github.workspace}}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Push image to ghcr"
+        env:
+          COMPONENT_NAME: hvac_service
+          COMPONENT_VERSION: ${{ steps.get_version.outputs.version }}
+          GIT_HUB_REPOSITORY_NAME_LOWER_CASE: ${{ steps.repository-name-adjusted.outputs.lowercase }}
+        shell: bash
+        run: |
+          skopeo copy --all oci-archive:oci_vservice-hvac.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION" | jq
+          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"

@@ -1,0 +1,6 @@
+grpcio
+protobuf
+types-protobuf
+pytest
+pytest-ordering
+pytest-asyncio

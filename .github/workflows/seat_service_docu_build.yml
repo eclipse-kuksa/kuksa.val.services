@@ -1,0 +1,56 @@
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+
+name: seat-service-docu-build
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/seat_service_docu_build.yml"
+      - "seat_service/**"
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build docu
+    container:
+      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:prerelease
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: adding github workspace as safe directory
+        run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - uses: actions/checkout@v3
+
+      - name: Build docu
+        working-directory: ${{github.workspace}}/seat_service
+        run: ./build-docu.sh
+
+      - name: Tar files
+        shell: bash
+        working-directory: ${{github.workspace}}/seat_service/
+        run: |
+          tar -czvf docu_vservice-seat.tar.gz \
+          docs/doxygen/out/html/
+
+      - name: Upload docu
+        uses: actions/upload-artifact@v3
+        with:
+          name: docu_vservice-seat
+          path: ${{github.workspace}}/seat_service/docu_vservice-seat.tar.gz
+          if-no-files-found: error

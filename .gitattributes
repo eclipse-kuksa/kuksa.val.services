@@ -1,0 +1,2 @@
+*.sh text eol=lf
+seat_service/src/lib/seat_adjuster/seat_controller/tools/* text eol=lf

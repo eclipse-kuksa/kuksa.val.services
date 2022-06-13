@@ -1,0 +1,6 @@
+build*/
+docs/doxygen/out/*
+docs/conan/out/*
+src/**/*.proto
+target/
+*.tar.gz

@@ -1,0 +1,105 @@
+# /********************************************************************************
+# * Copyright (c) 2022 Contributors to the Eclipse Foundation
+# *
+# * See the NOTICE file(s) distributed with this work for additional
+# * information regarding copyright ownership.
+# *
+# * This program and the accompanying materials are made available under the
+# * terms of the Apache License 2.0 which is available at
+# * http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * SPDX-License-Identifier: Apache-2.0
+# ********************************************************************************/
+
+name: integration-test
+
+on:
+  workflow_dispatch:
+  push:
+    # Run only on branches/commits and not tags
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Adding github workspace as safe directory
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+          git config --global user.email "github-automation@users.noreply.github.com"
+          git config --global user.name "Github Automation"
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - id: repository-name-adjusted
+        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Setup VAL containers
+        shell: bash
+        run: |
+          ${{github.workspace}}/integration_test/it-setup.sh init
+          ${{github.workspace}}/integration_test/it-setup.sh start
+          ${{github.workspace}}/integration_test/it-setup.sh status
+          echo "$ docker image ls"
+          docker image ls
+          echo "$ docker ps -a"
+          docker ps -a
+          echo "$ docker inspect val-int"
+          docker inspect val-int
+
+      - name: Run Integration Tests
+        shell: bash
+        env:
+          # force using it-setup.sh (testing with ghcr.io tags), DAPR standalone mode does not work in CI
+          USE_DAPR: "0"
+        run: |
+          pip install -q -r integration_test/requirements.txt
+          pip install -q -r integration_test/requirements-dev.txt
+          pip install -e integration_test/
+          pytest -s ./integration_test --asyncio-mode=auto --override-ini \
+            junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
+            --log-file=./results/IntegrationTest/integration.log
+
+      - name: Publish Integration Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          files: ./results/IntegrationTest/junit.xml
+
+      - name: Upload Integration Test Logs
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: integration_test.log
+          path: |
+            ${{github.workspace}}/results/IntegrationTest/integration.log
+
+      - name: Cleanup Integration Tests
+        shell: bash
+        run: |
+
+          ${{github.workspace}}/integration_test/it-setup.sh cleanup --force
+          docker image ls
+          docker ps -a

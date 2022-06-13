@@ -1,0 +1,291 @@
+/********************************************************************************
+ * Copyright (c) 2022 Contributors to the Eclipse Foundation
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License 2.0 which is available at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ********************************************************************************/
+
+{
+  // See https://go.microsoft.com/fwlink/?LinkId=733558
+  // for the documentation about the tasks.json format
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ensure-dapr",
+      "type": "shell",
+      "command": "./.vscode/scripts/ensure-dapr.sh --task",
+      "presentation": {
+        "close": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "run-databroker",
+      "dependsOn": ["ensure-dapr"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-vehicledatabroker.sh --task",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^You're up and running! Dapr logs will appear here.",
+          "endsPattern": "."
+        }
+      }
+    },
+    {
+      "label": "run-databroker-cli",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-vehicledatabroker-cli.sh --task",
+      "group": "test",
+      "isBackground": false,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      }
+    },
+    {
+      "label": "run-seatservice",
+      "dependsOn": ["ensure-dapr", "run-databroker"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-seatservice.sh --task",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^You're up and running! Dapr logs will appear here.",
+          "endsPattern": "."
+        }
+      }
+    },
+    {
+      "label": "run-seat-cli",
+      "dependsOn": ["ensure-dapr"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-seatservice-cli.sh",
+      "args": ["--task", "${input:SEAT_POS}"],
+      "options": {
+        "env": {
+          "SEAT_WAIT": "${input:SEAT_WAIT}"
+        }
+      },
+      "group": "test",
+      "isBackground": false,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "clear": true,
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "run-hvacservice",
+      "dependsOn": ["ensure-dapr", "run-databroker"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-hvacservice.sh --task",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^You're up and running! Dapr logs will appear here.",
+          "endsPattern": "."
+        }
+      }
+    },
+    {
+      "label": "run-hvac-cli",
+      // "detail": "Runs HVAC Client",
+      "dependsOn": ["ensure-dapr", "run-hvacservice"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-hvac-cli.sh",
+      "args": ["${input:AC_TEMP}", "${input:AC_STATUS}"],
+      "group": "test",
+      "isBackground": false,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "clear": true,
+        "showReuseMessage": false
+      }
+    },
+    {
+      "label": "Start VAL",
+      "dependsOn": [
+        // "Clean VAL binaries",
+        "Terminate Tasks",
+        "ensure-dapr",
+        "run-databroker",
+        "run-hvacservice",
+        "run-seatservice"
+      ],
+      "dependsOrder": "sequence",
+      "runOptions": {
+        "runOn": "folderOpen",
+        "instanceLimit": 1
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "integration-test",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-integrationtest.sh --task",
+      "group": "test",
+      "dependsOn": [
+        "ensure-dapr",
+        "run-databroker",
+        "run-seatservice",
+        "run-feedercan"
+      ],
+      "dependsOrder": "sequence",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "isBackground": false,
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": "^FAILED|failed",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^========================================================================================= ",
+          "endsPattern": "."
+        }
+      }
+    },
+    {
+      "label": "Clean VAL binaries",
+      "type": "shell",
+      "dependsOn": ["Terminate Tasks"],
+      "dependsOrder": "sequence",
+      "command": "./.vscode/scripts/clean-binaries.sh --task",
+      "isBackground": false,
+      "presentation": {
+        "close": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Terminate Tasks",
+      "command": "echo ${input:terminate}",
+      "type": "shell",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "SEAT_POS",
+      "type": "promptString",
+      "description": "Seat Position [0..1000] (1000=100%)",
+      "default": "500"
+    },
+    {
+      "id": "SEAT_WAIT",
+      "type": "pickString",
+      "description": "Wait until seat position reached?",
+      "options": ["wait", "no-wait"],
+      "default": "wait"
+    },
+    {
+      "id": "AC_TEMP",
+      "type": "promptString",
+      "description": "AC Temperature",
+      "default": "23.0"
+    },
+    {
+      "id": "AC_STATUS",
+      "type": "pickString",
+      "description": "AC Status",
+      "options": ["ON", "OFF"],
+      "default": "ON"
+    },
+    {
+      "id": "terminate",
+      "type": "command",
+      "command": "workbench.action.tasks.terminate",
+      "args": "terminateAll"
+    }
+  ]
+}
