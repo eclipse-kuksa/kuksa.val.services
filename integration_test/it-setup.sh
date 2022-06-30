@@ -84,7 +84,7 @@ build_images() {
 	fi
 	if [ "$force" = "1" ] || ! __check_docker_image "${VDB_IMAGE}"; then
 		echo "# Building amd64/databroker:latest ..."
-		if cd ${SCRIPT_DIR}/../vehicle_data_broker && ./docker-build.sh -l x86_64; then
+		if cd ${SCRIPT_DIR}/../kuksa_data_broker && ./docker-build.sh -l x86_64; then
 			docker tag amd64/databroker:latest ${VDB_IMAGE}
 		fi
 	fi

@@ -23,7 +23,7 @@ Helper tasks:
 
 - `Terminate Tasks` - Stops all running vs code tasks
 - `Start VAL` - Terminates all tasks and restarts VAL components. Could be useful after rebuilding binaries.
-- `Clean VAL binaries` - removes VehicleDataBroker and SeatService binaries from target install to force rebuilding. Depends on "Terminate Tasks"
+- `Clean VAL binaries` - removes DataBroker and SeatService binaries from target install to force rebuilding. Depends on "Terminate Tasks"
 - `integration-test` - Runs local integration tests in `USE_DAPR=1` mode using pytest. Depends on core VAL service tasks
 
 **NOTE:** Tasks are defined in `.vscode/tasks.json` and mostly wrap scripts in `.vscode/scripts`, but also have extras like dependencies and terminal integration.

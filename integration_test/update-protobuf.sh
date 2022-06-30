@@ -20,7 +20,7 @@ GEN_DIR="./gen_proto"
 
 [ -d "$GEN_DIR" ] || mkdir -p "$GEN_DIR"
 
-DATABROKER_PROTO="../vehicle_data_broker/proto"
+DATABROKER_PROTO="../kuksa_data_broker/proto"
 
 if [ ! -d "$DATABROKER_PROTO" ]; then
 	echo "Warning! Can't find DataBroker proto dir in: $DATABROKER_PROTO"
