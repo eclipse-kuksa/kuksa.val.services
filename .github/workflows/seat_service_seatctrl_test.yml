@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Build
     container:
-      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:prerelease
+      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}

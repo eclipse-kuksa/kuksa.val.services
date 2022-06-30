@@ -14,7 +14,7 @@
 # shellcheck disable=SC2002
 
 echo "#######################################################"
-echo "### Running VehicleDataBroker CLI                   ###"
+echo "### Running DataBroker CLI                          ###"
 echo "#######################################################"
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
