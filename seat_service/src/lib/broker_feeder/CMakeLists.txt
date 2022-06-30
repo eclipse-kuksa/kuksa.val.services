@@ -12,7 +12,7 @@
 #*******************************************************************************/
 
 # Data Broker Proto file
-set(PROTO_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../vehicle_data_broker/proto/)
+set(PROTO_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../kuksa_data_broker/proto/)
 
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)

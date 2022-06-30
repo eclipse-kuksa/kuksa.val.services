@@ -43,7 +43,7 @@ __check_dapr_app() {
 }
 
 if ! __check_dapr_app "$DAPR_VDB" || ! __check_dapr_app "$DAPR_SEATSVC"; then
-	echo "Please run vs-code tasks: [run-vehicledatabroker, run-seatservice]"
+	echo "Please run vs-code tasks: [run-databroker, run-seatservice]"
 	exit 10
 fi
 

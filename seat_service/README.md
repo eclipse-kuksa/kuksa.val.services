@@ -53,7 +53,7 @@ docker run --rm -it -v ${PWD}:/workspace oci_kuksa-val-services-ci:latest <build
 
 #### Build Seat Service
 
-Building the seat service via dev container must be triggered from the project root folder (seat service is referencing vehicle_data_broker/proto), e.g.:
+Building the seat service via dev container must be triggered from the project root folder (seat service is referencing kuksa_data_broker/proto), e.g.:
 
 ``` bash
 //Linux

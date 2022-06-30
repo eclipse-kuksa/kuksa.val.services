@@ -4,14 +4,13 @@
   - [Overview](#overview)
   - [Contribution](#contribution)
   - [Build Seat Service Containers](#build-seat-service-containers)
-  - [Running Seat Service / Databroker Containers](#running-seat-service--databroker-containers)
-
+  - [Running Seat Service / Data Broker Containers](#running-seat-service--data-broker-containers)
 
 ## Overview
 
 The Kuksa.VAL.services repository is part of the overall Eclipse Kuksa Vehicle Abstraction Layer (VAL) set of repositories.
 The VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*.
-Vehicle data is provided in form of a data model, which is accessible via the Vehicle Data Broker - see [Kuksa.VAL repository](https://github.com/eclipse/kuksa.val).
+Vehicle data is provided in form of a data model, which is accessible via the Kuksa Data Broker (formerly known as Vehicle Data Broker) - see [Kuksa.VAL repository](https://github.com/eclipse/kuksa.val).
 Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*).
 This repository contains examples of vservices and their implementations to show, how a Vehicle API and the underlying abstraction layer could be realized.
 
@@ -60,7 +59,7 @@ DOCKER_BUILDKIT=1 docker build -f seat_service/Dockerfile -t seat_service:<tag> 
 ```
 The image creation may take around 2 minutes.
 
-## Running Seat Service / Databroker Containers
+## Running Seat Service / Data Broker Containers
 
 To directly run the containers following commands can be used:
 
@@ -81,7 +80,7 @@ To directly run the containers following commands can be used:
     ```
 
 
-For accessing databroker from seat service container there are two ways of running the containers.
+For accessing data broker from seat service container there are two ways of running the containers.
 
 1. The simplest way to run the containers is to sacrifice the isolation a bit and run all the containers in the host's network namespace with <i>docker run --network host</i>
 

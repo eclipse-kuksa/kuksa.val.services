@@ -30,7 +30,7 @@
       "dependsOn": ["ensure-dapr"],
       "dependsOrder": "sequence",
       "type": "shell",
-      "command": "./.vscode/scripts/run-vehicledatabroker.sh --task",
+      "command": "./.vscode/scripts/run-databroker.sh --task",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -61,7 +61,7 @@
     {
       "label": "run-databroker-cli",
       "type": "shell",
-      "command": "./.vscode/scripts/run-vehicledatabroker-cli.sh --task",
+      "command": "./.vscode/scripts/run-databroker-cli.sh --task",
       "group": "test",
       "isBackground": false,
       "presentation": {
