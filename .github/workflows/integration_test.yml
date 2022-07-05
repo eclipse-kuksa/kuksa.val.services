@@ -33,47 +33,142 @@ jobs:
   #   with:
   #     tag: ${{github.ref_name}}
 
-  build-seatservice:
+  # build-seatservice:
+  #   runs-on: ubuntu-latest
+  #   name: Build Seat Service
+  #   container:
+  #     image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
+  #     credentials:
+  #       username: ${{ github.repository_owner }}
+  #       password: ${{ secrets.GITHUB_TOKEN }}
+  #   steps:
+  #     - name: Adding github workspace as safe directory
+  #       run: |
+  #         git config --global --add safe.directory $GITHUB_WORKSPACE
+
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Get the version
+  #       id: get_version
+  #       run: echo ::set-output name=VERSION::$(git rev-parse --short HEAD)
+
+  #     - name: Build seatservice release
+  #       working-directory: ${{github.workspace}}/seat_service
+  #       run: ./build-release.sh x86_64
+
+  #     - name: Upload seatservice binaries
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: it_vservice-seat_x86_64_release-${{ steps.get_version.outputs.VERSION }}
+  #         path: |
+  #           ${{github.workspace}}/seat_service/target/x86_64/release/install
+  #         if-no-files-found: error
+
+  push-seat-service-image:
+    name: "Download and push to ghcr (seat_service)"
     runs-on: ubuntu-latest
-    name: Build Seat Service
-    container:
-      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
-      credentials:
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+    needs: [call_seat_service_release]
     steps:
-      - name: Adding github workspace as safe directory
-        run: |
-          git config --global --add safe.directory $GITHUB_WORKSPACE
-
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::$(git rev-parse --short HEAD)
-
-      - name: Build seatservice release
-        working-directory: ${{github.workspace}}/seat_service
-        run: ./build-release.sh x86_64
-
-      - name: Upload seatservice binaries
-        uses: actions/upload-artifact@v3
+      - id: repository-name-adjusted
+        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
+        uses: ASzc/change-string-case-action@v2
         with:
-          name: it_vservice-seat_x86_64_release-${{ steps.get_version.outputs.VERSION }}
-          path: |
-            ${{github.workspace}}/seat_service/target/x86_64/release/install
-          if-no-files-found: error
+          string: ${{ github.repository }}
 
+      - id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Retrieve saved Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: oci_vservice-seat.tar
+          path: ${{github.workspace}}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Push image to ghcr"
+        env:
+          COMPONENT_NAME: it-seat_service
+          COMPONENT_VERSION: ${{ steps.get_version.outputs.version }}
+          GIT_HUB_REPOSITORY_NAME_LOWER_CASE: ${{ steps.repository-name-adjusted.outputs.lowercase }}
+        shell: bash
+        run: |
+          skopeo copy --all oci-archive:oci_vservice-seat.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION" | jq
+          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+
+  release-hvac-service-image:
+    name: "Download and push to ghcr (hvac_service)"
+    runs-on: ubuntu-latest
+
+    needs: [call_hvac_service_build]
+    steps:
+      - id: repository-name-adjusted
+        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
+        uses: ASzc/change-string-case-action@v2
+        with:
+          string: ${{ github.repository }}
+
+      - id: get_version
+        uses: battila7/get-version-action@v2
+
+      - name: Retrieve saved Docker image
+        uses: actions/download-artifact@v3
+        with:
+          name: oci_vservice-hvac.tar
+          path: ${{github.workspace}}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: "Push image to ghcr"
+        env:
+          COMPONENT_NAME: it-hvac_service
+          COMPONENT_VERSION: ${{ steps.get_version.outputs.version }}
+          GIT_HUB_REPOSITORY_NAME_LOWER_CASE: ${{ steps.repository-name-adjusted.outputs.lowercase }}
+        shell: bash
+        run: |
+          skopeo copy --all oci-archive:oci_vservice-hvac.tar "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+          skopeo inspect --raw "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION" | jq
+          skopeo inspect "docker://ghcr.io/$GIT_HUB_REPOSITORY_NAME_LOWER_CASE/$COMPONENT_NAME:$COMPONENT_VERSION"
+
+  dump_contexts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        id: github_context_step
+        run: echo '${{ toJSON(github) }}'
+      - name: Dump job context
+        run: echo '${{ toJSON(job) }}'
+      - name: Dump steps context
+        run: echo '${{ toJSON(steps) }}'
+      - name: Dump runner context
+        run: echo '${{ toJSON(runner) }}'
+      - name: Dump strategy context
+        run: echo '${{ toJSON(strategy) }}'
+      - name: Dump matrix context
+        run: echo '${{ toJSON(matrix) }}'
 
   integration-test:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
-      credentials:
-        username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    needs: [build-seatservice]
+    # container:
+    #   image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
+    #   credentials:
+    #     username: ${{ github.repository_owner }}
+    #     password: ${{ secrets.GITHUB_TOKEN }}
+
+    #needs: [build-seatservice]
+    needs: [ push-seat-service-image ]
     steps:
       - name: Adding github workspace as safe directory
         run: |
@@ -84,35 +179,38 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - id: repository-name-adjusted
-        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
-        uses: ASzc/change-string-case-action@v2
-        with:
-          string: ${{ github.repository }}
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Retrieve seat_service binaries
+      - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: ${{github.workspace}}/seat_service
+          path: target
 
-      - name: Display downloaded files
-        run: find ${{github.workspace}}/seat_service/target -type f -exec file {} \;
+      - name: Check downloaded artifacts
+        run: |
+          find target -type f
+
+      # - name: Login to GitHub Container Registry
+      #   uses: docker/login-action@v2
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.repository_owner }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Retrieve seat_service binaries
+      #   uses: actions/download-artifact@v3
+      #   with:
+      #     path: ./seat_service
+
+      # - name: Display downloaded files
+      #   run: find ./seat_service/target -type f -exec file {} \;
 
       - name: Setup VAL containers
         shell: bash
         run: |
-          ${{github.workspace}}/integration_test/it-setup.sh cleanup --force
-          ${{github.workspace}}/integration_test/it-setup.sh init
-          ${{github.workspace}}/integration_test/it-setup.sh start --force
+          ./integration_test/it-setup.sh cleanup --force
+          ./integration_test/it-setup.sh init
+          ./integration_test/it-setup.sh start --force
           sleep 1
-          ${{github.workspace}}/integration_test/it-setup.sh status --logs
+          ./integration_test/it-setup.sh status --logs
           echo "$ docker image ls"
           docker image ls
           echo "$ docker ps -a"
@@ -131,9 +229,9 @@ jobs:
           pip install -q -r integration_test/requirements-dev.txt
           pip install -q -e hvac_service/
           pip install -q -e integration_test/
-          pytest -s ${{github.workspace}}/integration_test --asyncio-mode=auto \
-            --override-ini junit_family=xunit1 --junit-xml=${{github.workspace}}/results/IntegrationTest/junit.xml \
-            --log-file=${{github.workspace}}/results/IntegrationTest/integration.log --log-file-level=DEBUG
+          pytest -s ./integration_test --asyncio-mode=auto \
+            --override-ini junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
+            --log-file=./results/IntegrationTest/integration.log --log-file-level=DEBUG
 
       - name: Publish Integration Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
@@ -147,12 +245,12 @@ jobs:
         with:
           name: integration_test.log
           path: |
-            ${{github.workspace}}/results/IntegrationTest/integration.log
+            ./results/IntegrationTest/integration.log
 
       - name: Cleanup Integration Tests
         shell: bash
         run: |
 
-          ${{github.workspace}}/integration_test/it-setup.sh cleanup --force
+          ./integration_test/it-setup.sh cleanup --force
           docker image ls
           docker ps -a
