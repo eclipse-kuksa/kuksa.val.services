@@ -19,6 +19,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
+from typing import Any, Dict, Optional, Tuple
 
 import grpc
 from sdv.databroker.v1.collector_pb2 import (
@@ -67,12 +68,13 @@ class HvacService:
 
     def __init__(self, hvac_address: str):
         if os.getenv("DAPR_GRPC_PORT") is not None:
-            grpc_port = int(os.getenv("DAPR_GRPC_PORT"))
+            grpc_port = os.getenv("DAPR_GRPC_PORT")
             self._vdb_address = f"127.0.0.1:{grpc_port}"
         else:
             self._vdb_address = VDB_ADDRESS
+        self._metadata: Optional[Tuple[Tuple[str, Optional[str]]]] = None
         self._address = hvac_address
-        self._ids = {}
+        self._ids: Dict[str, Any] = {}
         self._connected = False
         self._registered = False
         self._shutdown = False
@@ -202,9 +204,9 @@ class HvacService:
         self._ids[name] = response.results[name]
 
     def set_float_datapoint(self, name: str, value: float):
-        id = self._ids[name]
+        _id = self._ids[name]
         request = UpdateDatapointsRequest()
-        request.datapoints[id].float_value = value
+        request.datapoints[_id].float_value = value
         try:
             log.info(" Feeding '%s' with value %s", name, value)
             self._stub.UpdateDatapoints(request, metadata=self._metadata)
@@ -214,9 +216,9 @@ class HvacService:
             raise err
 
     def set_bool_datapoint(self, name: str, value: bool):
-        id = self._ids[name]
+        _id = self._ids[name]
         request = UpdateDatapointsRequest()
-        request.datapoints[id].bool_value = value
+        request.datapoints[_id].bool_value = value
         log.info(" Feeding '%s' with value %s", name, value)
         try:
             self._stub.UpdateDatapoints(request, metadata=self._metadata)

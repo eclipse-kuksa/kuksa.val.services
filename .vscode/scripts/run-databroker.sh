@@ -12,6 +12,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
 # shellcheck disable=SC2086
+# shellcheck disable=SC2181
 
 echo "#######################################################"
 echo "### Running Databroker                              ###"
@@ -21,38 +22,41 @@ set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-DATABROKER_VERSION="test"
-DATABROKER_PORT='55555'
-DATABROKER_GRPC_PORT='52001'
-
-#Detect host environment (distinguish for Mac M1 processor)
-if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-	echo "Detected AArch64 architecture"
-	PROCESSOR="aarch64"
-else
-	echo "Detected x86_64 architecture"
-	PROCESSOR="x86_64"
+DATABROKER_VERSION=$(jq -r '.databroker.version // empty' "$CONFIG_JSON")
+if [ -z "$DATABROKER_VERSION" ]; then
+	echo "Coudln't find databroker version from $CONFIG_JSON"
+	exit 1
 fi
-DATABROKER_BINARY_NAME="bin_release_databroker_$PROCESSOR.tar.gz"
+
+# # Databroker App port
+# DATABROKER_PORT='55555'
+# # Databroker Dapr Sidecar gRPC port
+# DATABROKER_GRPC_PORT='52001'
+#VEHICLEDATABROKER_DAPR_APP_ID='vehicledatabroker'
+
+DATABROKER_BINARY_NAME="databroker_$PROCESSOR.tar.gz"
 DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATABROKER_VERSION/$PROCESSOR"
-DATABROKER_EXECUTABLE="$DATABROKER_BINARY_PATH/target/release/vehicle-data-broker"
-DOWNLOAD_URL=https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME
+DATABROKER_EXECUTABLE="$DATABROKER_BINARY_PATH/target/release/databroker"
+DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME"
 
-if [[ ! -f "$DATABROKER_EXECUTABLE" ]]; then
-	echo "Downloading vehicle-data-broker:$DATABROKER_VERSION"
-	curl -o "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" --create-dirs -L -H "Accept: application/octet-stream" "$DOWNLOAD_URL"
-	tar -xf "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" -C $DATABROKER_BINARY_PATH
-fi
+download_release "$DATABROKER_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_NAME" || exit 1
 
 export DAPR_GRPC_PORT=$DATABROKER_GRPC_PORT
 # export RUST_LOG="info,databroker=debug,vehicle_data_broker=debug"
+
+## uncomment for dapr debug logs
+# DAPR_OPT="--enable-api-logging --log-level debug"
+
 dapr run \
-	--app-id vehicledatabroker \
+	--app-id $VEHICLEDATABROKER_DAPR_APP_ID \
 	--app-protocol grpc \
 	--app-port $DATABROKER_PORT \
 	--dapr-grpc-port $DATABROKER_GRPC_PORT \
+	$DAPR_OPT \
 	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml &
-$DATABROKER_EXECUTABLE --address 0.0.0.0
+	--config $ROOT_DIRECTORY/.dapr/config.yaml \
+	& # -- \
+	$DATABROKER_EXECUTABLE --address 0.0.0.0
+	# --metadata $ROOT_DIRECTORY/.vscode/scripts/vss.json

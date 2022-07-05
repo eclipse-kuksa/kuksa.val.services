@@ -20,7 +20,7 @@ echo "#######################################################"
 
 ROOT_DIRECTORY="$(git rev-parse --show-toplevel)"
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
 version=$(dapr --version | grep "Runtime version: " | sed 's/^.*: //')
 

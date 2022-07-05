@@ -22,8 +22,9 @@ set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
+# DATABROKER_GRPC_PORT='52001'
 HVACSERVICE_PORT='50052'
 HVACSERVICE_GRPC_PORT='52005'
 
@@ -41,6 +42,7 @@ export DAPR_GRPC_PORT=$HVACSERVICE_GRPC_PORT
 export HVACSERVICE_DAPR_APP_ID='hvacservice'
 export VEHICLEDATABROKER_DAPR_APP_ID='vehicledatabroker'
 
+echo
 echo "*******************************************"
 echo "* Hvac Service APP port: $HVACSERVICE_PORT"
 echo "* Hvac Service Dapr sidecar port: $HVACSERVICE_GRPC_PORT"
