@@ -26,11 +26,8 @@ on:
 jobs:
   # call_dev_container_build:
   #   uses: ./.github/workflows/dev_container_build.yml
-  # call_seat_service_release:
-  #   uses: ./.github/workflows/seat_service_release.yml
-  #   # needs: [call_dev_container_build]
-  #   with:
-  #     tag: ${{github.ref_name}}
+  call_seat_service_release:
+     uses: ./.github/workflows/seat_service_release.yml
   # call_hvac_service_build:
   #   uses: ./.github/workflows/hvac_service.yml
   #   with:
@@ -51,18 +48,32 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@v3
-        
-      - name: Build seat service release
+
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::$(git rev-parse --short HEAD)
+
+      - name: Build seatservice release
         working-directory: ${{github.workspace}}/seat_service
         run: ./build-release.sh x86_64
 
-  setup:
+      - name: Upload seatservice binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: it_vservice-seat_x86_64_release-${{ steps.get_version.outputs.VERSION }}
+          path: |
+            ${{github.workspace}}/seat_service/target/x86_64/release/install
+          if-no-files-found: error
+
+
+  integration-test:
     runs-on: ubuntu-latest
-    needs:
-      [
-        build-seatservice,
-        # call_hvac_service_build,
-      ]
+    container:
+      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    needs: [build-seatservice]
     steps:
       - name: Adding github workspace as safe directory
         run: |
@@ -87,7 +98,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Retrieve seat_service binaries
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: ${{github.workspace}}/seat_service
 
