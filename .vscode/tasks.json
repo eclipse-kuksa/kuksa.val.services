@@ -19,7 +19,7 @@
     {
       "label": "ensure-dapr",
       "type": "shell",
-      "command": "./.vscode/scripts/ensure-dapr.sh --task",
+      "command": "./.vscode/scripts/ensure-dapr.sh",
       "presentation": {
         "close": true
       },
@@ -30,7 +30,7 @@
       "dependsOn": ["ensure-dapr"],
       "dependsOrder": "sequence",
       "type": "shell",
-      "command": "./.vscode/scripts/run-vehicledatabroker.sh --task",
+      "command": "./.vscode/scripts/run-databroker.sh",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -53,15 +53,15 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "^You're up and running! Dapr logs will appear here.",
-          "endsPattern": "."
+          "beginsPattern": "(?!)", // Negative Lookahead (match nothing)
+          "endsPattern": "You're up and running! .* logs will appear here.$"
         }
       }
     },
     {
       "label": "run-databroker-cli",
       "type": "shell",
-      "command": "./.vscode/scripts/run-vehicledatabroker-cli.sh --task",
+      "command": "./.vscode/scripts/run-databroker-cli.sh",
       "group": "test",
       "isBackground": false,
       "presentation": {
@@ -79,7 +79,7 @@
       "dependsOn": ["ensure-dapr", "run-databroker"],
       "dependsOrder": "sequence",
       "type": "shell",
-      "command": "./.vscode/scripts/run-seatservice.sh --task",
+      "command": "./.vscode/scripts/run-seatservice.sh",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -102,8 +102,8 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "^You're up and running! Dapr logs will appear here.",
-          "endsPattern": "."
+          "beginsPattern": "(?!)", // Negative Lookahead (match nothing)
+          "endsPattern": "You're up and running! .* logs will appear here.$"
         }
       }
     },
@@ -134,7 +134,7 @@
       "dependsOn": ["ensure-dapr", "run-databroker"],
       "dependsOrder": "sequence",
       "type": "shell",
-      "command": "./.vscode/scripts/run-hvacservice.sh --task",
+      "command": "./.vscode/scripts/run-hvacservice.sh",
       "group": "test",
       "presentation": {
         "reveal": "always",
@@ -157,8 +157,8 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "^You're up and running! Dapr logs will appear here.",
-          "endsPattern": "."
+          "beginsPattern": "(?!)", // Negative Lookahead (match nothing)
+          "endsPattern": "You're up and running! .* logs will appear here.$"
         }
       }
     },
@@ -176,8 +176,43 @@
         "instanceLimit": 1
       },
       "presentation": {
-        "clear": true,
+        "reveal": "always",
+        "panel": "shared",
         "showReuseMessage": false
+      }
+    },
+    {
+      "label": "run-feedercan",
+      // "detail": "Starts Generic CAN Feeder",
+      "dependsOn": ["run-databroker"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-feedercan.sh",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "(?!)", // Negative Lookahead (match nothing)
+          "endsPattern": "You're up and running! .* logs will appear here.$"
+        }
       }
     },
     {
@@ -188,31 +223,76 @@
         "ensure-dapr",
         "run-databroker",
         "run-hvacservice",
-        "run-seatservice"
+        "run-seatservice",
+        "run-feedercan"
       ],
       "dependsOrder": "sequence",
       "runOptions": {
         "runOn": "folderOpen",
-        "instanceLimit": 1
+        "instanceLimit": 1,
       },
       "problemMatcher": []
     },
     {
-      "label": "integration-test",
+      "label": "integration-test (local)",
       "type": "shell",
-      "command": "./.vscode/scripts/run-integrationtest.sh --task",
+      "command": "./.vscode/scripts/run-integrationtest.sh",
+      "options": {
+        "env": {
+          "USE_DAPR": "1"
+        }
+      },
       "group": "test",
       "dependsOn": [
         "ensure-dapr",
         "run-databroker",
         "run-seatservice",
+        "run-hvacservice",
         "run-feedercan"
       ],
       "dependsOrder": "sequence",
       "presentation": {
         "reveal": "always",
         "panel": "dedicated",
+        "clear": true,
         "showReuseMessage": false
+      },
+      "isBackground": false,
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": "^FAILED|failed",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "^========================================================================================= ",
+          "endsPattern": "."
+        }
+      }
+    },
+    {
+      "label": "integration-test (containers)",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-integrationtest.sh",
+      "group": "test",
+      "options": {
+        "env": {
+          "USE_DAPR": "0"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
       },
       "isBackground": false,
       "runOptions": {
@@ -240,7 +320,7 @@
       "type": "shell",
       "dependsOn": ["Terminate Tasks"],
       "dependsOrder": "sequence",
-      "command": "./.vscode/scripts/clean-binaries.sh --task",
+      "command": "./.vscode/scripts/clean-binaries.sh",
       "isBackground": false,
       "presentation": {
         "close": true

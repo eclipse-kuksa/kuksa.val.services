@@ -11,23 +11,27 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
-# shellcheck disable=SC2086
+# shellcheck disable=SC2002
 
 echo "#######################################################"
-echo "### Clean binaries                                  ###"
+echo "### Running VehicleDataBroker CLI                   ###"
 echo "#######################################################"
-
-set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
 source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-CLEAN_FILES="$ROOT_DIRECTORY/seat_service/target/x86_64/release/install"
-CLEAN_FILES="$ROOT_DIRECTORY/seat_service/target/aarch64/release/install $CLEAN_FILES"
+DATABROKER_VERSION=$(jq -r '.databroker.version // empty' "$CONFIG_JSON")
+if [ -z "$DATABROKER_VERSION" ]; then
+	echo "Coudln't find databroker version from $CONFIG_JSON"
+	exit 1
+fi
 
-#CLEAN_FILES="$ROOT_DIRECTORY/target/release/vehicle-data-* $CLEAN_FILES"
-#CLEAN_FILES="$ROOT_DIRECTORY/target/aarch64-unknown-linux-gnu/release/vehicle-data-* $CLEAN_FILES"
+DATABROKER_BINARY_NAME="databroker_$PROCESSOR.tar.gz"
+DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATABROKER_VERSION/$PROCESSOR"
+DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME"
+DATABROKERCLI_EXECUTABLE="$DATABROKER_BINARY_PATH/target/release/databroker-cli"
 
-set -x
-rm -rfv $CLEAN_FILES
+download_release "$DATABROKERCLI_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_NAME" || exit 1
+
+"$DATABROKERCLI_EXECUTABLE"

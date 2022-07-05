@@ -330,9 +330,9 @@ class BrokerSubscribe(object):
             request.query = query
             logger.info("broker.Subscribe('{}')".format(query))
             if self.timeout > 0:
-                response = self.broker_stub.Subscribe(request, timeout=self.timeout)
+                response: broker_pb2.SubscribeReply = self.broker_stub.Subscribe(request, timeout=self.timeout)
             else:
-                response = self.broker_stub.Subscribe(request)
+                response: broker_pb2.SubscribeReply = self.broker_stub.Subscribe(request)
 
             for subscribe_reply in response:
                 """

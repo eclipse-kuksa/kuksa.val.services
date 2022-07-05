@@ -21,7 +21,7 @@ set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
 SEATSERVICE_PORT='50051'
 SEATSERVICE_GRPC_PORT='52002'
@@ -38,14 +38,14 @@ build_seatservice() {
 	fi
 }
 
-#Detect host environment (distinguish for Mac M1 processor)
-if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-	echo "Detected ARM architecture"
-	PROCESSOR="aarch64"
-else
-	echo "Detected x86_64 architecture"
-	PROCESSOR="x86_64"
-fi
+# #Detect host environment (distinguish for Mac M1 processor)
+# if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
+# 	echo "Detected ARM architecture"
+# 	PROCESSOR="aarch64"
+# else
+# 	echo "Detected x86_64 architecture"
+# 	PROCESSOR="x86_64"
+# fi
 
 SEATSERVICE_EXEC_PATH="$ROOT_DIRECTORY/seat_service/target/$PROCESSOR/release/install/bin"
 
@@ -55,19 +55,35 @@ if [ ! -x "$SEATSERVICE_EXEC_PATH/seat_service" ]; then
 	file "$SEATSERVICE_EXEC_PATH/seat_service" || exit 1
 fi
 
+# NOTE: use dapr sidecar's grpc port, don't connect directly to sidecar of vdb (DATABROKER_GRPC_PORT)
 export DAPR_GRPC_PORT=$SEATSERVICE_GRPC_PORT
-export CAN="cansim"
 export VEHICLEDATABROKER_DAPR_APP_ID="vehicledatabroker"
 # needed to override vdb address
 export BROKER_ADDR="127.0.0.1:$DAPR_GRPC_PORT"
+
+export CAN="cansim"
 # export SA_DEBUG=1
-# export SC_STAT=1
+export SC_CTL=0
+export SAE_STOP=0
+# DataBrokerFeeder Debug level (0, 1, 2)
+export DBF_DEBUG=1
+
+echo
+echo "*** SeatService APP port: $SEATSERVICE_PORT"
+echo "*** SeatService Dapr sidecar port: $SEATSERVICE_GRPC_PORT"
+echo "*** DAPR_GRPC_PORT: $DAPR_GRPC_PORT"
+echo
+
+## uncomment for dapr debug logs
+# DAPR_OPT="--enable-api-logging --log-level debug"
 
 dapr run \
 	--app-id seatservice \
 	--app-protocol grpc \
 	--app-port $SEATSERVICE_PORT \
 	--dapr-grpc-port $SEATSERVICE_GRPC_PORT \
+	$DAPR_OPT \
 	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml &
-$SEATSERVICE_EXEC_PATH/val_start.sh
+	--config $ROOT_DIRECTORY/.dapr/config.yaml \
+	-- \
+	$SEATSERVICE_EXEC_PATH/val_start.sh

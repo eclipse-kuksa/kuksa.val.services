@@ -22,9 +22,9 @@ set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-[ "$1" = "--task" ] && shift
+# [ "$1" = "--task" ] && shift
 
 TEMP="$1"
 STATUS_MODE="$2"
@@ -45,6 +45,7 @@ else
 	STATUS="0"
 fi
 
+# gRPC port of hvac service (no dapr!)
 HVACSERVICE_PORT='50052'
 HVACSERVICE_EXEC_PATH="$ROOT_DIRECTORY/hvac_service"
 if [ ! -f "$HVACSERVICE_EXEC_PATH/testclient.py" ]; then
@@ -55,5 +56,8 @@ fi
 cd "$HVACSERVICE_EXEC_PATH" || exit 1
 pip3 install -q -r requirements.txt
 
-set -x
+## Uncomment to reduce logs from client
+# export CLI_LOG_LEVEL="WARNING"
+
+# set -x
 python3 -u testclient.py --addr=localhost:$HVACSERVICE_PORT --temp=$TEMP --status=$STATUS
