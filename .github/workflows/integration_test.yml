@@ -41,7 +41,6 @@ jobs:
     name: Build Seat Service
     container:
       image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
-      #image: ghcr.io/eclipse/kuksa.val.services/oci_kuksa-val-services-ci:v0.1.0
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -52,13 +51,6 @@ jobs:
 
       - name: Checkout Repository
         uses: actions/checkout@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
         
       - name: Build seat service release
         working-directory: ${{github.workspace}}/seat_service
