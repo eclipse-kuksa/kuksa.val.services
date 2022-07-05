@@ -26,13 +26,15 @@ on:
 jobs:
   call_dev_container_build:
     uses: ./.github/workflows/dev_container_build.yml
-    with:
-      tag: ${{github.ref_name}}
   call_seat_service_release:
     uses: ./.github/workflows/seat_service_release.yml
     needs: [call_dev_container_build]
+    with:
+      tag: ${{github.ref_name}}
   call_hvac_service_build:
     uses: ./.github/workflows/hvac_service.yml
+    with:
+      tag: ${{github.ref_name}}
 
   setup:
     runs-on: ubuntu-latest
