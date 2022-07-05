@@ -27,11 +27,9 @@ jobs:
   # call_dev_container_build:
   #   uses: ./.github/workflows/dev_container_build.yml
   call_seat_service_release:
-     uses: ./.github/workflows/seat_service_release.yml
-  # call_hvac_service_build:
-  #   uses: ./.github/workflows/hvac_service.yml
-  #   with:
-  #     tag: ${{github.ref_name}}
+    uses: ./.github/workflows/seat_service_release.yml
+  call_hvac_service_build:
+    uses: ./.github/workflows/hvac_service.yml
 
   # build-seatservice:
   #   runs-on: ubuntu-latest
