@@ -24,26 +24,62 @@ on:
       - main
 
 jobs:
-  call_dev_container_build:
-    uses: ./.github/workflows/dev_container_build.yml
-  call_seat_service_release:
-    uses: ./.github/workflows/seat_service_release.yml
-    needs: [call_dev_container_build]
-    with:
-      tag: ${{github.ref_name}}
-  call_hvac_service_build:
-    uses: ./.github/workflows/hvac_service.yml
-    with:
-      tag: ${{github.ref_name}}
+  # call_dev_container_build:
+  #   uses: ./.github/workflows/dev_container_build.yml
+  # call_seat_service_release:
+  #   uses: ./.github/workflows/seat_service_release.yml
+  #   # needs: [call_dev_container_build]
+  #   with:
+  #     tag: ${{github.ref_name}}
+  # call_hvac_service_build:
+  #   uses: ./.github/workflows/hvac_service.yml
+  #   with:
+  #     tag: ${{github.ref_name}}
+
+  build-seatservice:
+    runs-on: ubuntu-latest
+    name: Build Seat Service
+    container:
+      #image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:prerelease
+      image: ghcr.io/eclipse/kuksa.val.services/oci_kuksa-val-services-ci:v0.1.0
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    strategy:
+      matrix:
+        target-arch: [x86_64]
+      fail-fast: true
+    env:
+      BUILD_TYPE: Release
+    steps:
+      - name: Adding github workspace as safe directory
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+        
+      - name: Run build
+        working-directory: ${{github.workspace}}/seat_service
+        run: ./build-debug.sh ${{ matrix.target-arch }}
 
   setup:
     runs-on: ubuntu-latest
     needs:
       [
-        call_seat_service_release,
-        call_hvac_service_build,
+        build-seatservice,
+        # call_hvac_service_build,
       ]
-
     steps:
       - name: Adding github workspace as safe directory
         run: |
