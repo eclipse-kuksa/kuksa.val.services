@@ -40,17 +40,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Build Seat Service
     container:
-      #image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:prerelease
-      image: ghcr.io/eclipse/kuksa.val.services/oci_kuksa-val-services-ci:v0.1.0
+      image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
+      #image: ghcr.io/eclipse/kuksa.val.services/oci_kuksa-val-services-ci:v0.1.0
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.GITHUB_TOKEN }}
-    strategy:
-      matrix:
-        target-arch: [x86_64]
-      fail-fast: true
-    env:
-      BUILD_TYPE: Release
     steps:
       - name: Adding github workspace as safe directory
         run: |
@@ -60,18 +54,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
         
-      - name: Run build
+      - name: Build seat service release
         working-directory: ${{github.workspace}}/seat_service
-        run: ./build-debug.sh ${{ matrix.target-arch }}
+        run: ./build-release.sh x86_64
 
   setup:
     runs-on: ubuntu-latest
