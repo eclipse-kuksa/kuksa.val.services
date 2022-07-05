@@ -24,8 +24,23 @@ on:
       - main
 
 jobs:
+  call_dev_container_build:
+    uses: ./.github/workflows/dev_container_build.yml
+    with:
+      tag: ${{github.ref_name}}
+  call_seat_service_release:
+    uses: ./.github/workflows/seat_service_release.yml
+    needs: [call_dev_container_build]
+  call_hvac_service_build:
+    uses: ./.github/workflows/hvac_service.yml
+
   setup:
     runs-on: ubuntu-latest
+    needs:
+      [
+        call_seat_service_release,
+        call_hvac_service_build,
+      ]
 
     steps:
       - name: Adding github workspace as safe directory
@@ -50,18 +65,25 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
+
+      - name: Retrieve seat_service binaries
+        uses: actions/download-artifact@v3
+        with:
+          path: ${{github.workspace}}/seat_service
+
+      - name: Display downloaded files
+        run: find ${{github.workspace}}/seat_service/target -type f -exec file {} \;
 
       - name: Setup VAL containers
         shell: bash
         run: |
+          ${{github.workspace}}/integration_test/it-setup.sh cleanup --force
           ${{github.workspace}}/integration_test/it-setup.sh init
-          ${{github.workspace}}/integration_test/it-setup.sh start
-          ${{github.workspace}}/integration_test/it-setup.sh status
+          ${{github.workspace}}/integration_test/it-setup.sh start --force
+          sleep 1
+          ${{github.workspace}}/integration_test/it-setup.sh status --logs
           echo "$ docker image ls"
           docker image ls
           echo "$ docker ps -a"
@@ -74,13 +96,15 @@ jobs:
         env:
           # force using it-setup.sh (testing with ghcr.io tags), DAPR standalone mode does not work in CI
           USE_DAPR: "0"
+          GRPC_ENABLE_FORK_SUPPORT: "false"
         run: |
           pip install -q -r integration_test/requirements.txt
           pip install -q -r integration_test/requirements-dev.txt
-          pip install -e integration_test/
-          pytest -s ./integration_test --asyncio-mode=auto --override-ini \
-            junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
-            --log-file=./results/IntegrationTest/integration.log
+          pip install -q -e hvac_service/
+          pip install -q -e integration_test/
+          pytest -s ${{github.workspace}}/integration_test --asyncio-mode=auto \
+            --override-ini junit_family=xunit1 --junit-xml=${{github.workspace}}/results/IntegrationTest/junit.xml \
+            --log-file=${{github.workspace}}/results/IntegrationTest/integration.log --log-file-level=DEBUG
 
       - name: Publish Integration Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
