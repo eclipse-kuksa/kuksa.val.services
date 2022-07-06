@@ -28,12 +28,11 @@ export FEEDER_TAG="v0.1.0"
 export DOCKER_REPO="ghcr.io"
 export VDB_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val/databroker:${VDB_TAG}"
 export FEEDER_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.feeders/dbc2val:${FEEDER_TAG}"
-# allow custom image repo from CI
 export SEAT_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/seat_service:${SEAT_TAG}"
 export HVAC_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/hvac_service:${HVAC_TAG}"
 
 export VDB_CONTAINER="it-databroker"
-export SEAT_CONTAINER="it-seat_sservice"
+export SEAT_CONTAINER="it-seat_service"
 export HVAC_CONTAINER="it-hvac_service"
 export FEEDER_CONTAINER="it-feedercan"
 

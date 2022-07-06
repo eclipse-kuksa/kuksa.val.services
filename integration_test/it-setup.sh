@@ -43,10 +43,10 @@ cleanup() {
 	fi
 	if [ "$force" = "1" ]; then
 		echo "# Cleanup VAL ghcr images..."
-		docker image rm -f "${VDB_IMAGE}"
-		docker image rm -f "${SEAT_IMAGE}"
-		docker image rm -f "${HVAC_IMAGE}"
 		docker image rm -f "${FEEDER_IMAGE}"
+		docker image rm -f "${VDB_IMAGE}"
+		[ "$SEAT_TAG" != "prerelease" ] && docker image rm -f "${SEAT_IMAGE}"
+		[ "$HVAC_TAG" != "prerelease" ] && docker image rm -f "${HVAC_IMAGE}"
 	fi
 }
 
@@ -74,8 +74,8 @@ pull_images() {
 		docker login "${DOCKER_REPO}"
 
 		docker pull "${VDB_IMAGE}"
-		[ "$SEAT_TAG" = "prerelease" ] && docker pull "${SEAT_IMAGE}"
-		[ "$HVAC_TAG" = "prerelease" ] && docker pull "${HVAC_IMAGE}"
+		[ "$SEAT_TAG" != "prerelease" ] && docker pull "${SEAT_IMAGE}"
+		[ "$HVAC_TAG" != "prerelease" ] && docker pull "${HVAC_IMAGE}"
 		docker pull "${FEEDER_IMAGE}"
 	fi
 }
