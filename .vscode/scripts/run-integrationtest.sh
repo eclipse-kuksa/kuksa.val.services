@@ -42,6 +42,13 @@ pip3 install -q -e "${ROOT_DIRECTORY}/hvac_service/"
 set +e
 
 if [ "$USE_DAPR" = "0" ]; then
+	if true; then
+		echo "Rebuilding pre-release tags for seat and hvac services..."
+		export SEAT_TAG="prerelease"
+		export HVAC_TAG="prerelease"
+		"${ROOT_DIRECTORY}/seat_service/docker-build.sh" -l x86_64
+		"${ROOT_DIRECTORY}/hvac_service/docker-build.sh" -l x86_64
+	fi
 	"${ROOT_DIRECTORY}/integration_test/it-setup.sh" init
 
 	# ensure containers are re-created before test

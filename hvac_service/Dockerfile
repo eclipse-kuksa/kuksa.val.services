@@ -32,8 +32,10 @@ RUN /opt/venv/bin/python3 -m pip install --upgrade pip \
 
 RUN pip3 install wheel && pip3 install scons && pip3 install pyinstaller && pip3 install patchelf && pip3 install staticx
 
-RUN pyinstaller --clean -F -s hvacservice.py
-#   --debug=imports
+# install sdv package in edit mode
+RUN pip3 install --no-cache-dir -e .
+
+RUN pyinstaller --clean -F -s hvacservice.py --debug=imports
 
 WORKDIR /dist
 RUN staticx hvacservice hvacservice-exe

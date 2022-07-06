@@ -18,7 +18,7 @@
 
 # shellcheck disable=SC2086
 # shellcheck disable=SC2230
-set -x
+#set -x
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
