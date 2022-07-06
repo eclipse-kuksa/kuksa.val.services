@@ -90,9 +90,10 @@ jobs:
         shell: bash
         run: |
           pip3 install -r integration_test/requirements.txt
-          pip3 install -r integration_test/requirements-dev.txt
-          pip3 install -q -e hvac_service/
-          pip3 install -q -e integration_test/
+          # pip3 install -r integration_test/requirements-dev.txt
+          pip3 install -e hvac_service/
+          pip3 install -e integration_test/
+          bash -x ./integration_test/it-hvac-cli.sh 100 OFF
 
       - name: Run Integration Tests
         shell: bash
