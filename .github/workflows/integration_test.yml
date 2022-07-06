@@ -72,9 +72,8 @@ jobs:
           HVAC_TAG: "prerelease"
         run: |
           docker image ls
-          bash -x ./integration_test/it-setup.sh cleanup --force
           bash -x ./integration_test/it-setup.sh init
-          bash -x ./integration_test/it-setup.sh start --force
+          bash -x ./integration_test/it-setup.sh start
           sleep 1
           ./integration_test/it-setup.sh status --logs
           echo "$ docker image ls"
