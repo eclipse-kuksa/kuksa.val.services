@@ -93,7 +93,6 @@ jobs:
           # pip3 install -U -r integration_test/requirements-dev.txt
           pip3 install -U -e hvac_service/
           pip3 install -U -e integration_test/
-          bash -x ./integration_test/it-hvac-cli.sh 100 OFF
 
       - name: Run Integration Tests
         shell: bash
