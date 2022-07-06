@@ -123,4 +123,3 @@ UI_SOC:
   minupdatedelay: 100
   targets:
     Vehicle.Powertrain.Battery.StateOfCharge.Current: {}
-

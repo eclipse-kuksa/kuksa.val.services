@@ -106,4 +106,3 @@ if [ $? -eq 0 ]; then
 	echo "# Exported $DOCKER_ARCH/$DOCKER_IMAGE in $DOCKER_EXPORT"
 	docker image ls | grep "/$DOCKER_IMAGE"
 fi
-

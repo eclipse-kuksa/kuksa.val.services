@@ -23,7 +23,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # 	exit 1
 # fi
 
-
 ###
 ### Common dapr GRPC port setups
 ###
@@ -49,16 +48,13 @@ export FEEDERCAN_GRPC_PORT='52008'
 # path to json config with val component versions
 export CONFIG_JSON="$SCRIPT_DIR/../../prerequisite_settings.json"
 
-
 # databroker dapr app id
 export VEHICLEDATABROKER_DAPR_APP_ID="vehicledatabroker"
 
 # hvac service dapr app id
 export HVACSERVICE_DAPR_APP_ID="hvacservice"
 
-
-_check_prerequisities()
-{
+_check_prerequisite() {
 	local MISSING_PKG=""
 	if [ -z "$(which jq)" ]; then
 		MISSING_PKG="$MISSING_PKG jq"
@@ -85,8 +81,7 @@ _check_prerequisities()
 	fi
 }
 
-download_release()
-{
+download_release() {
 	local executable="$1"
 	local download_url="$2"
 	local binary_path="$3"
@@ -110,8 +105,7 @@ download_release()
 }
 
 # helper for checking out git branch
-git_checkout()
-{
+git_checkout() {
 	local repo="$1"
 	local dir="$2"
 	local branch="$3" # optional branch
@@ -126,9 +120,8 @@ git_checkout()
 	git clone --quiet $branch_opt "$repo" "$dir"
 }
 
-
 # init on sourcing
-_check_prerequisities
+_check_prerequisite
 
 if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
 	echo "- Detected AArch64 architecture"

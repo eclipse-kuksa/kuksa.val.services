@@ -18,13 +18,12 @@ import asyncio
 import logging
 import os
 import signal
-from threading import Thread
 import threading
-from typing import Any, Callable, Dict, List, Mapping, Optional, Type
+from threading import Thread
+from typing import Any, Callable, Dict, List, Mapping, Optional
 
 import grpc
 import pytest
-
 from gen_proto.sdv.databroker.v1.broker_pb2 import (
     GetDatapointsRequest,
     GetMetadataRequest,
@@ -72,9 +71,7 @@ class VDBHelper:
 
     def default_metadata(self):
         if os.environ.get("VEHICLEDATABROKER_DAPR_APP_ID") is not None:
-            return (
-                ("dapr-app-id", os.environ.get("VEHICLEDATABROKER_DAPR_APP_ID")),
-            )
+            return (("dapr-app-id", os.environ.get("VEHICLEDATABROKER_DAPR_APP_ID")),)
         return None
 
     def __enter__(self) -> "VDBHelper":
@@ -307,6 +304,7 @@ class SubscribeRunner:
     Helper for gathering subscription events in a dedicated thread,
     running for specified timeout
     """
+
     def __init__(self, vdb_address: str, query: str, timeout: int) -> None:
         self.vdb_address = vdb_address
         self.query = query
@@ -318,7 +316,10 @@ class SubscribeRunner:
     def start(self) -> None:
         if self.thread is not None:
             raise RuntimeWarning("Thread %s already started!", self.thread.name)
-        self.thread = Thread(target=self.__subscibe_thread_proc, name="SubscribeRunner({})".format(self.query))
+        self.thread = Thread(
+            target=self.__subscibe_thread_proc,
+            name="SubscribeRunner({})".format(self.query),
+        )
         self.thread.setDaemon(True)
         self.thread.start()
 
@@ -348,9 +349,8 @@ class SubscribeRunner:
             self.thread = None
 
     async def __async_handler(self) -> Dict[str, Any]:
-
         def inner_callback(name: str, dp: Datapoint):
-            """ inner function for collecting subscription events """
+            """inner function for collecting subscription events"""
             dd = self.helper.datapoint_to_dict(name, dp)
             if name not in self.events:
                 self.events[name] = []
@@ -376,7 +376,9 @@ class SubscribeRunner:
         self.helper = VDBHelper(self.vdb_address)
         loop.run_until_complete(self.__async_handler())
 
-        logger.debug("Closing helper %d sec for subscription [%s]", self.timeout, self.query)
+        logger.debug(
+            "Closing helper %d sec for subscription [%s]", self.timeout, self.query
+        )
         loop.run_until_complete(self.helper.close())
 
         loop.close()

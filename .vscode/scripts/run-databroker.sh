@@ -58,5 +58,5 @@ dapr run \
 	--components-path $ROOT_DIRECTORY/.dapr/components \
 	--config $ROOT_DIRECTORY/.dapr/config.yaml \
 	& # -- \
-	$DATABROKER_EXECUTABLE --address 0.0.0.0
-	# --metadata $ROOT_DIRECTORY/.vscode/scripts/vss.json
+$DATABROKER_EXECUTABLE --address 0.0.0.0
+# --metadata $ROOT_DIRECTORY/.vscode/scripts/vss.json

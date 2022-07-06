@@ -24,7 +24,6 @@ on:
       - main
 
 jobs:
-
   integration-test:
     runs-on: ubuntu-latest
     # container:
@@ -43,16 +42,22 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Install dependencies
+        shell: bash
+        run: |
+          .github/workflows/scripts/install-ci-tooling.sh
+
       - name: Build seat_service image
+        shell: bash
         working-directory: ./seat_service
         run: |
           ./docker-build.sh -l x86_64
 
       - name: Build hvac_service image
+        shell: bash
         working-directory: ./hvac_service
         run: |
           ./docker-build.sh -l x86_64
-
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
@@ -67,17 +72,23 @@ jobs:
           SEAT_TAG: "prerelease"
           HVAC_TAG: "prerelease"
         run: |
-          ./integration_test/it-setup.sh cleanup --force
           ./integration_test/it-setup.sh init
-          ./integration_test/it-setup.sh start --force
+          ./integration_test/it-setup.sh start
           sleep 1
           ./integration_test/it-setup.sh status --logs
-          echo "$ docker image ls"
-          docker image ls
-          echo "$ docker ps -a"
-          docker ps -a
-          echo "$ docker inspect val-int"
-          docker inspect val-int
+          # echo "$ docker image ls"
+          # docker image ls
+          # echo "$ docker ps -a"
+          # docker ps -a
+          # echo "$ docker inspect val-int"
+          # docker inspect val-int
+
+      - name: Install Requirements
+        shell: bash
+        run: |
+          pip3 install -U -r integration_test/requirements.txt
+          pip3 install -U -e hvac_service/
+          pip3 install -U -e integration_test/
 
       - name: Run Integration Tests
         shell: bash
@@ -86,10 +97,6 @@ jobs:
           USE_DAPR: "0"
           GRPC_ENABLE_FORK_SUPPORT: "false"
         run: |
-          pip install -q -r integration_test/requirements.txt
-          pip install -q -r integration_test/requirements-dev.txt
-          pip install -q -e hvac_service/
-          pip install -q -e integration_test/
           pytest -s ./integration_test --asyncio-mode=auto \
             --override-ini junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
             --log-file=./results/IntegrationTest/integration.log --log-file-level=DEBUG
@@ -108,10 +115,10 @@ jobs:
           path: |
             ./results/IntegrationTest/integration.log
 
-      - name: Cleanup Integration Tests
+      - name: Integration logs and cleanup
         shell: bash
         run: |
-
+          ./integration_test/it-setup.sh status --logs
           ./integration_test/it-setup.sh cleanup --force
           docker image ls
           docker ps -a

@@ -19,8 +19,6 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-set -e
-
 # shellcheck source=/dev/null
 source ${SCRIPT_DIR}/it-config
 
@@ -215,7 +213,6 @@ it_init() {
 
 it_start() {
 	local force="$1"
-	set -e
 
 	if [ "$force" = "1" ]; then
 		# initial cleanup for images/containers
@@ -233,7 +230,6 @@ it_start() {
 }
 
 it_stop() {
-	set -e
 
 	# cleanup for containres only
 	cleanup 0

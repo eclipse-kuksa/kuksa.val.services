@@ -1,6 +1,6 @@
 grpcio
 grpcio-tools
-protobuf
+protobuf>=3.19.3
 pydocstyle
 mypy
 mypy-protobuf
