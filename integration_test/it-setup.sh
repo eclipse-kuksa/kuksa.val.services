@@ -74,8 +74,8 @@ pull_images() {
 		docker login "${DOCKER_REPO}"
 
 		docker pull "${VDB_IMAGE}"
-		docker pull "${SEAT_IMAGE}"
-		docker pull "${HVAC_IMAGE}"
+		[ "$SEAT_TAG" = "prerelease" ] && docker pull "${SEAT_IMAGE}"
+		[ "$HVAC_TAG" = "prerelease" ] && docker pull "${HVAC_IMAGE}"
 		docker pull "${FEEDER_IMAGE}"
 	fi
 }

@@ -15,21 +15,22 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SCRIPT_DIR
 
 ### Local docker image config (may force rebuild + tag local images)
-# export VDB_TAG="latest"
-# export SEAT_TAG="latest"
-# export FEEDER_TAG="latest"
+# export HVAC_TAG="latest"
+# export SEAT_TAG="prerelease"
 
 export VDB_TAG="v0.17.0"
 export FEEDER_TAG="v0.1.0"
-export SEAT_TAG="v0.1.0"
-export HVAC_TAG="v0.1.0"
+# allow custom tags from CI
+[ -z "$SEAT_TAG" ] && export SEAT_TAG="v0.1.0"
+[ -z "$HVAC_TAG" ] && export HVAC_TAG="v0.1.0"
 
 ### ghcr.io image config
 export DOCKER_REPO="ghcr.io"
 export VDB_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val/databroker:${VDB_TAG}"
+export FEEDER_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.feeders/dbc2val:${FEEDER_TAG}"
+# allow custom image repo from CI
 export SEAT_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/seat_service:${SEAT_TAG}"
 export HVAC_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/hvac_service:${HVAC_TAG}"
-export FEEDER_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.feeders/dbc2val:${FEEDER_TAG}"
 
 export VDB_CONTAINER="it-databroker"
 export SEAT_CONTAINER="it-seat_sservice"
