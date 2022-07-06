@@ -64,7 +64,7 @@ def execute_script(args: list, quiet: bool = False) -> None:
     else:
         fork_stdout = subprocess.PIPE
     try:
-        process = subprocess.run(  # nosec B404
+        process = subprocess.run(  # nosec B603
             args, check=True, timeout=10,
             stdout=fork_stdout,
             # stderr=subprocess.DEVNULL,
@@ -257,7 +257,7 @@ async def _test_hvac_event_changes(setup_helper: VDBHelper) -> None:
         (10000000.0, True)
     ]
 
-    ## FIXME: can't find proper way to use it from ../hvac_service/
+    # ## FIXME: can't find proper way to use it from ../hvac_service/
     # hvac_cli = HVACTestClient()
     # hvac_cli.execute_methods(AcStatus.ON, 23.0)
 

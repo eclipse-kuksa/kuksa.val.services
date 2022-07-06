@@ -20,7 +20,7 @@ import os
 import signal
 from threading import Thread
 import threading
-from typing import Any, Callable, Dict, List, Mapping, Optional, Type
+from typing import Any, Callable, Dict, List, Mapping, Optional
 
 import grpc
 import pytest
