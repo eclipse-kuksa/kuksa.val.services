@@ -85,7 +85,7 @@ def main(argv):
     # environment values (overridden by cmdargs)
     hvac_addr = os.getenv("HVAC_ADDR", default_addr)
     ac_temp = float(os.environ.get("AC_TEMP", default_temp))
-    ac_status = AcStatus.ON if os.getenv("AC_STATUS") != "0" else 0  # AcStatus.OFF
+    ac_status = AcStatus.ON if os.getenv("AC_STATUS") != "0" else AcStatus.OFF
 
     # parse cmdline args
     try:
