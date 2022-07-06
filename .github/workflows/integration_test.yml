@@ -44,15 +44,18 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install dependencies
+        shell: bash
         run: |
           .github/workflows/scripts/install-ci-tooling.sh
 
       - name: Build seat_service image
+        shell: bash
         working-directory: ./seat_service
         run: |
-          bash -x ./docker-build.sh -l x86_64
+          ./docker-build.sh -l x86_64
 
       - name: Build hvac_service image
+        shell: bash
         working-directory: ./hvac_service
         run: |
           ./docker-build.sh -l x86_64
@@ -83,6 +86,14 @@ jobs:
           echo "$ docker inspect val-int"
           docker inspect val-int
 
+      - name: Install Requirements
+        shell: bash
+        run: |
+          pip3 install -r integration_test/requirements.txt
+          pip3 install -r integration_test/requirements-dev.txt
+          pip3 install -q -e hvac_service/
+          pip3 install -q -e integration_test/
+
       - name: Run Integration Tests
         shell: bash
         env:
@@ -90,11 +101,7 @@ jobs:
           USE_DAPR: "0"
           GRPC_ENABLE_FORK_SUPPORT: "false"
         run: |
-          pip install -q -r integration_test/requirements.txt
-          pip install -q -r integration_test/requirements-dev.txt
-          pip install -q -e hvac_service/
-          pip install -q -e integration_test/
-          pytest -s ./integration_test --asyncio-mode=auto \
+          pytest -sv ./integration_test --asyncio-mode=auto \
             --override-ini junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
             --log-file=./results/IntegrationTest/integration.log --log-file-level=DEBUG
 
