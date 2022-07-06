@@ -74,23 +74,21 @@ jobs:
           SEAT_TAG: "prerelease"
           HVAC_TAG: "prerelease"
         run: |
-          docker image ls
-          bash -x ./integration_test/it-setup.sh init
-          bash -x ./integration_test/it-setup.sh start
+          ./integration_test/it-setup.sh init
+          ./integration_test/it-setup.sh start
           sleep 1
           ./integration_test/it-setup.sh status --logs
-          echo "$ docker image ls"
-          docker image ls
-          echo "$ docker ps -a"
-          docker ps -a
-          echo "$ docker inspect val-int"
-          docker inspect val-int
+          # echo "$ docker image ls"
+          # docker image ls
+          # echo "$ docker ps -a"
+          # docker ps -a
+          # echo "$ docker inspect val-int"
+          # docker inspect val-int
 
       - name: Install Requirements
         shell: bash
         run: |
           pip3 install -U -r integration_test/requirements.txt
-          # pip3 install -U -r integration_test/requirements-dev.txt
           pip3 install -U -e hvac_service/
           pip3 install -U -e integration_test/
 
@@ -119,10 +117,10 @@ jobs:
           path: |
             ./results/IntegrationTest/integration.log
 
-      - name: Cleanup Integration Tests
+      - name: Integration logs and cleanup
         shell: bash
         run: |
-
+          ./integration_test/it-setup.sh status --logs
           ./integration_test/it-setup.sh cleanup --force
           docker image ls
           docker ps -a
