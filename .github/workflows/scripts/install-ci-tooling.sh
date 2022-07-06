@@ -4,24 +4,24 @@ export ENV DEBIAN_FRONTEND=noninteractive
 
 # Install apt & root utils needed inside devcontainer
 
-apt-get -qqy update && \
-apt-get -qqy install --no-install-recommends apt-utils software-properties-common sudo curl
+sudo apt-get -qqy update && \
+sudo apt-get -qqy install --no-install-recommends apt-utils software-properties-common sudo curl
 
 # Install dev utilities
-apt-get -qqy install git doxygen can-utils
+sudo apt-get -qqy install git doxygen can-utils
 
 # Install build tools
-apt-get -qqy install \
+sudo apt-get -qqy install \
 	cmake \
 	make
 
 # compilers
 #   compiler version must be sync with conan build profile
-apt-get -qqy install \
+sudo apt-get -qqy install \
   g++ \
   g++-aarch64-linux-gnu
 
-apt-get -qqy install \
+sudo apt-get -qqy install \
   lcov \
   gcovr \
   clang-format \
@@ -29,7 +29,7 @@ apt-get -qqy install \
   valgrind 
 
 # Install PIP
-apt-get -qqy install --fix-missing python3-pip
+sudo apt-get -qqy install --fix-missing python3-pip
 
 # conan: dependency management
 # conan needed > 1.43 for gtest

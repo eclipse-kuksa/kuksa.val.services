@@ -45,7 +45,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo .github/workflows/scripts/install-ci-tooling.sh
+          .github/workflows/scripts/install-ci-tooling.sh
 
       - name: Build seat_service image
         working-directory: ./seat_service
@@ -71,6 +71,7 @@ jobs:
           SEAT_TAG: "prerelease"
           HVAC_TAG: "prerelease"
         run: |
+          docker image ls
           bash -x ./integration_test/it-setup.sh cleanup --force
           bash -x ./integration_test/it-setup.sh init
           bash -x ./integration_test/it-setup.sh start --force
