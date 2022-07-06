@@ -43,10 +43,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: |
+          .github/workflows/scripts/install-ci-tooling.sh
+
       - name: Build seat_service image
         working-directory: ./seat_service
         run: |
-          ./docker-build.sh -l x86_64
+          bash -x ./docker-build.sh -l x86_64
 
       - name: Build hvac_service image
         working-directory: ./hvac_service
