@@ -15,7 +15,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SCRIPT_DIR
 
 ### Local docker image config (may force rebuild + tag local images)
-# export HVAC_TAG="latest"
+# export HVAC_TAG="prerelease"
 # export SEAT_TAG="prerelease"
 
 export VDB_TAG="v0.17.0"
