@@ -97,7 +97,7 @@ jobs:
           USE_DAPR: "0"
           GRPC_ENABLE_FORK_SUPPORT: "false"
         run: |
-          pytest -s ./integration_test --asyncio-mode=auto \
+          pytest -v ./integration_test --asyncio-mode=auto \
             --override-ini junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
             --log-file=./results/IntegrationTest/integration.log --log-file-level=DEBUG
 
