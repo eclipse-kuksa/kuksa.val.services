@@ -24,7 +24,6 @@ on:
       - main
 
 jobs:
-
   integration-test:
     runs-on: ubuntu-latest
     # container:
@@ -59,7 +58,6 @@ jobs:
         working-directory: ./hvac_service
         run: |
           ./docker-build.sh -l x86_64
-
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2

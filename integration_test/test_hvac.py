@@ -15,9 +15,9 @@
 import json
 import logging
 import os
-import subprocess   # nosec B404
-from threading import Thread
+import subprocess  # nosec B404
 import time
+from threading import Thread
 
 import pytest
 from gen_proto.sdv.databroker.v1.types_pb2 import Datapoint
@@ -37,20 +37,25 @@ if USE_DAPR:
     DEFAULT_VDB_ADDRESS = "localhost:55555"
     DEFAULT_SCRIPT_HVAC_CLI = "./task-hvac-cli.sh"
 else:
-    DEFAULT_VDB_ADDRESS = "localhost:35555"  # talk to exposed port (host) from databroker container
+    # talk to exposed port (host) from databroker container
+    DEFAULT_VDB_ADDRESS = "localhost:35555"
     DEFAULT_SCRIPT_HVAC_CLI = "./it-hvac-cli.sh"
 
 VDB_ADDRESS = os.environ.get("VDB_ADDRESS", DEFAULT_VDB_ADDRESS)
 
 
 SCRIPT_HVAC_CLI = os.getenv(
-    "SCRIPT_HVAC_CLI",
-    os.path.join(os.path.dirname(__file__), DEFAULT_SCRIPT_HVAC_CLI)
+    "SCRIPT_HVAC_CLI", os.path.join(os.path.dirname(__file__), DEFAULT_SCRIPT_HVAC_CLI)
 )
 
 
 def execute_script_thread(script_args: list, quiet: bool = False) -> Thread:
-    client_thread = Thread(target=execute_script, args=(script_args, True), daemon=True, name="execute_script({})".format(script_args))
+    client_thread = Thread(
+        target=execute_script,
+        args=(script_args, True),
+        daemon=True,
+        name="execute_script({})".format(script_args),
+    )
     return client_thread
 
 
@@ -65,7 +70,9 @@ def execute_script(args: list, quiet: bool = False) -> None:
         fork_stdout = subprocess.PIPE
     try:
         process = subprocess.run(  # nosec B603
-            args, check=True, timeout=10,
+            args,
+            check=True,
+            timeout=10,
             stdout=fork_stdout,
             # stderr=subprocess.DEVNULL,
             env=fork_env,
@@ -173,7 +180,9 @@ async def test_hvac_events(setup_helper: VDBHelper) -> None:
         events.append(dd)
 
     # start client requests in different thread as subscribe_datapoints will block...
-    client_thread = Thread(target=client_thread_runner, daemon=False, name="test_hvac_events")
+    client_thread = Thread(
+        target=client_thread_runner, daemon=False, name="test_hvac_events"
+    )
     client_thread.start()
 
     logger.info("# subscribing('{}', timeout={})".format(query, timeout))
@@ -183,9 +192,9 @@ async def test_hvac_events(setup_helper: VDBHelper) -> None:
     logger.info("Received events:{}".format(events))
     client_thread.join()
 
-    assert (  # nosec B101
-        len(events) > 0
-    ), "No events from feeder for {} sec.".format(timeout)
+    assert len(events) > 0, "No events from feeder for {} sec.".format(  # nosec B101
+        timeout
+    )
 
     # list of received names
     event_names = set([e["name"] for e in events])
@@ -242,6 +251,7 @@ async def test_hvac_events(setup_helper: VDBHelper) -> None:
 #             return dp
 #     return None
 
+
 async def _test_hvac_event_changes(setup_helper: VDBHelper) -> None:
     helper: VDBHelper = setup_helper
 
@@ -251,11 +261,7 @@ async def _test_hvac_event_changes(setup_helper: VDBHelper) -> None:
     timeout = 5
 
     # iterate over this list and expect to have received each of the tuples for temp, status
-    expected_values = [
-        (42.0, True),
-        (-273.15, False),
-        (10000000.0, True)
-    ]
+    expected_values = [(42.0, True), (-273.15, False), (10000000.0, True)]
 
     # ## FIXME: can't find proper way to use it from ../hvac_service/
     # hvac_cli = HVACTestClient()
@@ -284,22 +290,23 @@ async def _test_hvac_event_changes(setup_helper: VDBHelper) -> None:
             name_temp in events and name_status in events
         ), "Expected events not found in: {}".format(events)
 
-        event_values1 = sub.get_dp_values(name_temp)  # [e["value"] for e in events[name_temp]]
-        event_values2 = sub.get_dp_values(name_status)  # [e["value"] for e in events[name_status]]
+        event_values1 = sub.get_dp_values(name_temp)
+        event_values2 = sub.get_dp_values(name_status)
 
         logger.info("  '%s' values = %s", name_temp, event_values1)
         logger.info("  '%s' values = %s", name_status, event_values2)
 
         dp_temp = sub.find_dp_value(name_temp, temp)
         dp_status = sub.find_dp_value(name_status, status)
-        assert (  # nosec B101
-            dp_temp
-        ), "Expected temp {} not found in: {}".format(temp, event_values1)
-        assert (  # nosec B101
-            dp_status
-        ), "Expected status {} not found in: {}".format(temp, event_values2)
+        assert dp_temp, "Expected temp {} not found in: {}".format(  # nosec B101
+            temp, event_values1
+        )
+        assert dp_status, "Expected status {} not found in: {}".format(  # nosec B101
+            temp, event_values2
+        )
 
     await helper.close()
+
 
 if __name__ == "__main__":
     # execute_script([SCRIPT_HVAC_CLI, "1000", "ON"])

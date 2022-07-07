@@ -18,7 +18,6 @@ import os
 import sys
 
 import grpc
-
 import sdv.edge.comfort.hvac.v1.hvac_pb2 as pb2
 import sdv.edge.comfort.hvac.v1.hvac_pb2_grpc as pb2_grpc
 from sdv.edge.comfort.hvac.v1.hvac_pb2 import AcStatus

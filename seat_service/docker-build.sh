@@ -89,8 +89,8 @@ build_release() {
 
 	echo "-- Checking [$arch] binaries: $(pwd)/target/${arch}/release/install/bin ..."
 	file target/"${arch}"/release/install/bin/seat_service \
-		 target/"${arch}"/release/install/bin/seat_svc_client \
-		 target/"${arch}"/release/install/bin/tools/libcansim.so
+		target/"${arch}"/release/install/bin/seat_svc_client \
+		target/"${arch}"/release/install/bin/tools/libcansim.so
 }
 
 if [ -z "$TARGET" ] && [ $LOCAL -eq 1 ]; then

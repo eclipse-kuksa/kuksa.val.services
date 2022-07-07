@@ -25,8 +25,7 @@ ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
 source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-
-FEEDERCAN_VERSION=$(jq -r '.feedercan.version // empty'  "$CONFIG_JSON")
+FEEDERCAN_VERSION=$(jq -r '.feedercan.version // empty' "$CONFIG_JSON")
 
 ### Default feedercan settings (repo, tag are optional in json)
 FEEDERCAN_REPO="https://github.com/eclipse/kuksa.val.feeders.git"
@@ -85,6 +84,6 @@ dapr run \
 	--dapr-grpc-port $FEEDERCAN_GRPC_PORT \
 	$DAPR_OPT \
 	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml & \
-	#--
-	python3 -u ./dbcfeeder.py
+	--config $ROOT_DIRECTORY/.dapr/config.yaml &
+#--
+python3 -u ./dbcfeeder.py

@@ -229,7 +229,7 @@
       "dependsOrder": "sequence",
       "runOptions": {
         "runOn": "folderOpen",
-        "instanceLimit": 1,
+        "instanceLimit": 1
       },
       "problemMatcher": []
     },

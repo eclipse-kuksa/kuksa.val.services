@@ -1,8 +1,8 @@
 {
-    "databroker": {
-        "version": "databroker-v0.17.0"
-    },
-    "feedercan": {
-        "version": "main"
-    }
+  "databroker": {
+    "version": "databroker-v0.17.0"
+  },
+  "feedercan": {
+    "version": "main"
+  }
 }
