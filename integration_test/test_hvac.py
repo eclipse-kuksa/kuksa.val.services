@@ -72,7 +72,7 @@ def execute_script(args: list, quiet: bool = False) -> None:
         process = subprocess.run(  # nosec B603
             args,
             check=True,
-            timeout=10,
+            timeout=30,
             stdout=fork_stdout,
             # stderr=subprocess.DEVNULL,
             env=fork_env,
