@@ -222,7 +222,7 @@ it_start() {
 	# ensure images are pulled, containers are started
 	it_init "$force"
 
-    if [ "$force" = "1" ] || ! check_it_containers; then
+	if [ "$force" = "1" ] || ! check_it_containers; then
 		start_containers
 	fi
 
