@@ -86,5 +86,5 @@ Source code and build instructions are available in the respective KUKSA.VAL rep
 
 ## Guidelines
 
-- Please see the [vehicle service guidelines](vehicle_service.md) for information on how to implement a Vehicle Service.
+- Please see the [vehicle service guidelines](vehicle_service_howto.md) for information on how to implement a Vehicle Service.
 - Please see the [interface guideline](interface_guideline.md) for best practices on how to specify a gRPC interface.
