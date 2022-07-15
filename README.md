@@ -12,8 +12,9 @@ The Kuksa.VAL.services repository is part of the overall Eclipse Kuksa Vehicle A
 The VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*.
 Vehicle data is provided in form of a data model, which is accessible via the Kuksa Data Broker (formerly known as Vehicle Data Broker) - see [Kuksa.VAL repository](https://github.com/eclipse/kuksa.val).
 Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*).
-This repository contains examples of vservices and their implementations to show, how a Vehicle API and the underlying abstraction layer could be realized.
+For a more detailed overview look [here](docs/README.md).
 
+This repository contains examples of vservices and their implementations to show, how a Vehicle API and the underlying abstraction layer could be realized.
 It currently consists of
 * a simple example [HVAC service (Python)](./hvac_service) and
 * a more complex example [seat control service (C++)](./seat_service).
@@ -25,8 +26,13 @@ More elaborate or completely differing implementations are target of "real world
 
 For contribution guidelines see [CONTRIBUTING.md](CONTRIBUTING.md)
 
+If you want to define and implement your own vehicle services, there are two guidelines/how-tos available:
+* [How to implement a vservice](docs/vehicle_service_howto.md)
+* [Guideline for defining a vehicle service interface](docs/interface_guideline.md)
 
 ## Build Seat Service Containers
+
+:construction_worker_woman: :construction: **This section may be a bit outdated. So, please take care!** :construction: :construction_worker_man:
 
 From the terminal, make the seat_service as your working directory:
 
