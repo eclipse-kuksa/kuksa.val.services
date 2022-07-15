@@ -1,4 +1,5 @@
 # Interface Design Guideline
+
 ## GRPC Interface Style Guide
 
 This document provides a style guide for .proto files. By following these conventions, you'll make your protocol buffer message definitions and their corresponding classes consistent and easy to read.
@@ -92,7 +93,7 @@ enum FooBar {
 
 Each enum value should end with a semicolon, not a comma. The zero value enum should have the suffix UNSPECIFIED.
 
-###Services
+### Services
 
 If your .proto defines an RPC service, you should use PascalCase (with an initial capital) for both the service name and any RPC method names:
 
