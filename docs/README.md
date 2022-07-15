@@ -6,9 +6,9 @@ It offers **Vehicle Applications**, downloadable from or even runnable in the cl
 
 This independency is gained by supporting standarized data models and service catalogs like the [COVESA Vehicle Signal Specification (VSS)](https://covesa.github.io/vehicle_signal_specification/) and
 the [Vehicle Service Catalog (VSC)](https://github.com/COVESA/vehicle_service_catalog).
-Although encouraged, the usage of those COVESA (or other) standards is neither a premise nor is it a limitation, it is an offer:
-You are completely free to chose whatever vehicle model and service catalog you want to use and also to create your own ones.
-Furthermore, both standards (VSS and VSC) allow for proprietary extensions to enable bringing in your latest innovations.
+Although encouraged, the usage of those COVESA (or other) specifications is neither a premise nor is it a limitation.
+It is an offer: You are completely free to chose whatever vehicle model and service catalog you want to use and also to create your own ones.
+The usage of the COVESA specification is no limitation, as both allow for proprietary extensions to enable bringing in your latest innovations.
 
 The vehicle data (signals, sensors, and other states) provided to the applications is accessible via the central component **KUKSA Data Broker**.
 Access to vehicle functions and controls (e.g. actuators) is provided via a set of vehicle services.
@@ -28,7 +28,7 @@ The image below shows the main components of the Vehicle Abstraction Layer (VAL)
 
 ### KUKSA Data Broker
 
-The [KUKSA Data Broker](https://github.com/eclipse/kuksa.val/tree/master/kuksa_databroker) is a gRPC service acting as a broker of vehicle data / data points / signals.
+The [KUKSA Data Broker](https://github.com/eclipse/kuksa.val/tree/master/kuksa_databroker) is a gRPC-based service acting as a broker of vehicle data / data points / signals.
 It provides central access to vehicle data points arranged in a - preferably standardized - vehicle data model like the [COVESA Vehicle Signal Specification (VSS)](https://covesa.github.io/vehicle_signal_specification/) or others.
 It is implemented in Rust, can run in a container and provides services to get datapoints, update datapoints and for subscribing to datapoints.
 Filter- and rule-based subscriptions of datapoints can be used to reduce the number of updates sent to the subscriber.
