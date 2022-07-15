@@ -1,10 +1,4 @@
----
-title: "Interface Design Guideline"
-date: 2022-05-09T14:24:56+05:30
-aliases:
-  - /docs/interface_guideline.md
----
-
+# Interface Design Guideline
 ## GRPC Interface Style Guide
 
 This document provides a style guide for .proto files. By following these conventions, you'll make your protocol buffer message definitions and their corresponding classes consistent and easy to read.
@@ -238,7 +232,7 @@ This means that VSC error messages intentionally cover a smaller subset than gRP
 there is currently no detailed documentation in VCS on when individual error codes shall be used, which could cause
 problems as some error codes are similar.
 
-### SDV error handling for gRPC interfaces (e.g., vehicles services)
+### SDV error handling for gRPC interfaces (e.g., VAL vehicles services)
 
 - Use gRPC error codes as base
 - Document in proto files (as comments) which error codes that the service implementation can emit and the meaning of them. (Errors that only are emitted by the gRPC framework do not need to be listed.)

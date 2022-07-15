@@ -1,13 +1,4 @@
----
-title: "Vehicle Abstraction Layer (VAL)"
-date: 2022-05-09T14:24:56+05:30
-weight: 3
-resources:
-- src: "**dataflow_broker*.png"
-- src: "**dataflow_service*.png"
-- - src: "**val_architecture_overview*.png"
----
-
+# Vehicle Abstraction Layer - KUKSA.VAL
 ## Introduction
 
 The **KUKSA.VAL** is a reference implementation of a **Vehicle Abstraction Layer (VAL)** provided by the [Eclipse KUKSA project](https://www.eclipse.org/kuksa/). It offers **Vehicle Applications** downloadable from or even runnable in the cloud to interact with the underlying vehicle hardware and software in a unifom way independent of model, make or even manufacturer. 
@@ -29,9 +20,7 @@ More elaborate or completely differing implementations are the target of particu
 
 The image below shows the main components of the Vehicle Abstraction Layer (VAL) and its relation to the [Velocitas Development Model](/docs/development-model.md).
 
-{{< imgproc val_architecture_overview Resize "800x" >}}
-  Overview of the vehicle abstraction layer architecture
-{{< /imgproc >}}
+![VAL architecture overview](val_architecture_overview.png "Overview of the vehicle abstraction layer architecture")
 
 ### KUKSA Data Broker
 
@@ -75,15 +64,11 @@ Service implementations may also interact as feeders with the data broker.
 
 ### Data flow when a Vehicle Application uses the KUKSA Data Broker.
 
-{{< imgproc dataflow_broker Resize "800x" >}}
-  Architectural representation of the KUKSA data broker data flow
-{{< /imgproc >}}
+![KUKSA data broker data flow](dataflow_broker.png "Architectural representation of the KUKSA data broker data flow")
 
 ### Data flow when a Vehicle Application uses a Vehicle Service.
 
-{{< imgproc dataflow_service Resize "800x" >}}
-  Architectural representation of the vehicle service data flow
-{{< /imgproc >}}
+![Vehicle service data flow](dataflow_service.png "Architectural representation of the vehicle service data flow")
 
 ## Source Code
 
