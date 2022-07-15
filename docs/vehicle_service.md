@@ -1,9 +1,4 @@
----
-title: "Vehicle Service"
-date: 2022-05-09T14:24:56+05:30
-aliases:
-  - /docs/vehicle_service.md
----
+# How to create a vehicle service
 
 - [How to create a vehicle service](#how-to-create-a-vehicle-service)
   - [Motivation](#motivation)
@@ -21,11 +16,6 @@ aliases:
     - [Metadata](#metadata)
     - [Connection status with Dapr](#connection-status-with-dapr)
   - [Interaction with the KUKSA Data Broker (optional)](#interaction-with-the-kuksa-data-broker-optional)
-  - [Next steps](#next-steps)
-    - [Vehicle Apps SDK documentation](#vehicle-apps-sdk-documentation)
-    - [Vehicle App development](#vehicle-app-development)
-
-# How to create a vehicle service
 
 ## Motivation
 
@@ -175,12 +165,3 @@ Use the [interface description of the KUKSA data broker (\*.proto files)](https:
 2.  feed data via single calls `UpdateDatapoints` or in a stream manner `StreamDatapoints`.
 
 See the \*.proto files for a detailed description.
-
-## Next steps
-
-### Vehicle Apps SDK documentation
-- Concept: [Python SDK Overview](/docs/concepts/python_vehicle_app_sdk_overview.md)
-
-### Vehicle App development
-- Concept: [Development Model](/docs/concepts/development-model.md)
-- Tutorial: [Creating a Python Vehicle Model](/docs/tutorials/tutorial_how_to_create_a_vehicle_model.md)
