@@ -1,6 +1,6 @@
-# Kuksa.VAL.services
+# KUKSA.VAL.services
 
-- [Kuksa.VAL.services](#kuksavalservices)
+- [KUKSA.VAL.services](#kuksavalservices)
   - [Overview](#overview)
   - [Contribution](#contribution)
   - [Build Seat Service Containers](#build-seat-service-containers)
@@ -10,7 +10,7 @@
 
 This repository provides you a set of exemplary **vehicle services** showing how to define and implement these important pieces of the **Eclipse KUKSA Vehicle Abstraction Layer (VAL)**. 
 The KUKSA.VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*.
-Vehicle data is provided in form of a data model, which is accessible via the KUKSA Data Broker (formerly known as Vehicle Data Broker) - see [KUKSA.VAL repository](https://github.com/eclipse/kuksa.val).
+Vehicle data is provided in form of a data model, which is accessible via the KUKSA Data Broker (formerly known as Vehicle Data Broker) - see [kuksa.val repository](https://github.com/eclipse/kuksa.val).
 Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*).
 
 You'll find a more [detailed overview here](docs/README.md).
