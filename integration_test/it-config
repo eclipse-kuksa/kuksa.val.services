@@ -14,32 +14,40 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export SCRIPT_DIR
 
-### Local docker image config (may force rebuild + tag local images)
-# export HVAC_TAG="prerelease"
-# export SEAT_TAG="prerelease"
+CONFIG_JSON="$SCRIPT_DIR/../prerequisite_settings.json"
 
-export VDB_TAG="v0.17.0"
-export FEEDER_TAG="v0.1.0"
+# get databroker, feeder tags from prerequisite_settings.json
+FEEDER_TAG=$(jq -r '.feedercan.version // empty' "$CONFIG_JSON")
+KDB_TAG=$(jq -r '.databroker.imageVersion // empty' "$CONFIG_JSON")
+# default values
+[ -z "$KDB_TAG" ] && export KDB_TAG="v0.17.0"
+[ -z "$FEEDER_TAG" ] && export FEEDER_TAG="v0.1.0"
+
 # allow custom tags from CI
 [ -z "$SEAT_TAG" ] && export SEAT_TAG="v0.1.0"
 [ -z "$HVAC_TAG" ] && export HVAC_TAG="v0.1.0"
 
+### Local docker image config (may force rebuild + tag local images)
+# export HVAC_TAG="prerelease"
+# export SEAT_TAG="prerelease"
+
+
 ### ghcr.io image config
 export DOCKER_REPO="ghcr.io"
-export VDB_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val/databroker:${VDB_TAG}"
+export KDB_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val/databroker:${KDB_TAG}"
 export FEEDER_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.feeders/dbc2val:${FEEDER_TAG}"
 export SEAT_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/seat_service:${SEAT_TAG}"
 export HVAC_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val.services/hvac_service:${HVAC_TAG}"
 
-export VDB_CONTAINER="it-databroker"
+export KDB_CONTAINER="it-databroker"
 export SEAT_CONTAINER="it-seat_service"
 export HVAC_CONTAINER="it-hvac_service"
 export FEEDER_CONTAINER="it-feedercan"
 
-VDB_HOST_PORT="35555"
+KDB_HOST_PORT="35555"
 SEAT_HOST_PORT="35051"
 HVAC_HOST_PORT="35052"
-DOCKER_VDB_ADDRESS="${VDB_CONTAINER}:55555"
+DOCKER_KDB_ADDRESS="${KDB_CONTAINER}:55555"
 
 ### dbc2val container setup. Have to map $FEEDER_HOST_DIR into $FEEDER_MOUNT_DIR in container and setup dbcfeeder to use custom config in databroker usecase
 FEEDER_HOST_DIR="$SCRIPT_DIR/volumes/dbc2val"
@@ -49,10 +57,10 @@ FEEDER_MOUNT_OPT="-v $FEEDER_HOST_DIR:${FEEDER_MOUNT_DIR}"
 FEEDER_ENV="-e DBC_FILE=$FEEDER_MOUNT_DIR/it-can.dbc -e MAPPING_FILE=$FEEDER_MOUNT_DIR/it-mapping.yml -e CANDUMP_FILE=$FEEDER_MOUNT_DIR/it-candump0.log -e USECASE=databroker"
 FEEDER_LOG="info,databroker=debug" # ,dbcfeeder=debug,dbcfeeder.broker_client=debug"
 
-export VDB_DOCKER_OPT="-p   ${VDB_HOST_PORT}:55555/tcp --expose ${VDB_HOST_PORT}  -e RUST_LOG=info,databroker=debug,vehicle_data_broker=debug -e VEHICLEDATABROKER_DAPR_APP_ID=vdb --name ${VDB_CONTAINER}"
-export SEAT_DOCKER_OPT="-p ${SEAT_HOST_PORT}:50051/tcp --expose ${SEAT_HOST_PORT} -e BROKER_ADDR=${DOCKER_VDB_ADDRESS} -e SIM=cansim -e SC_RPM=100 -e VEHICLEDATABROKER_DAPR_APP_ID=vdb --name ${SEAT_CONTAINER}"
-export HVAC_DOCKER_OPT="-p ${HVAC_HOST_PORT}:50052/tcp --expose ${HVAC_HOST_PORT} -e VDB_ADDRESS=${DOCKER_VDB_ADDRESS} -e VEHICLEDATABROKER_DAPR_APP_ID=vdb -e LOG_LEVEL=debug --name ${HVAC_CONTAINER}"
-export FEEDER_DOCKER_OPT="-e VDB_ADDRESS=${DOCKER_VDB_ADDRESS} ${FEEDER_ENV} ${FEEDER_MOUNT_OPT} -e LOG_LEVEL=${FEEDER_LOG} --name ${FEEDER_CONTAINER}"
+export KDB_DOCKER_OPT="-p   ${KDB_HOST_PORT}:55555/tcp --expose ${KDB_HOST_PORT}  -e RUST_LOG=info,databroker=debug,vehicle_data_broker=debug -e VEHICLEDATABROKER_DAPR_APP_ID=kdb --name ${KDB_CONTAINER}"
+export SEAT_DOCKER_OPT="-p ${SEAT_HOST_PORT}:50051/tcp --expose ${SEAT_HOST_PORT} -e BROKER_ADDR=${DOCKER_KDB_ADDRESS} -e SIM=cansim -e SC_RPM=100 -e VEHICLEDATABROKER_DAPR_APP_ID=kdb --name ${SEAT_CONTAINER}"
+export HVAC_DOCKER_OPT="-p ${HVAC_HOST_PORT}:50052/tcp --expose ${HVAC_HOST_PORT} -e VDB_ADDRESS=${DOCKER_KDB_ADDRESS} -e VEHICLEDATABROKER_DAPR_APP_ID=kdb -e LOG_LEVEL=debug --name ${HVAC_CONTAINER}"
+export FEEDER_DOCKER_OPT="-e VDB_ADDRESS=${DOCKER_KDB_ADDRESS} ${FEEDER_ENV} ${FEEDER_MOUNT_OPT} -e LOG_LEVEL=${FEEDER_LOG} --name ${FEEDER_CONTAINER}"
 
 export DOCKER_NETWORK="val-int" # "host"
 

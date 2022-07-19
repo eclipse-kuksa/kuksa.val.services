@@ -24,8 +24,6 @@ ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
 source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-# [ "$1" = "--task" ] && shift
-
 TEMP="$1"
 STATUS_MODE="$2"
 
@@ -33,7 +31,7 @@ STATUS_MODE="$2"
 if [ -z "$TEMP" ] || [ "$STATUS_MODE" != "ON" ] && [ "$STATUS_MODE" != "OFF" ]; then
 	echo "Invalid arguments!"
 	echo
-	echo "Usage: $0 --task AC_TEMP [ON | OFF]"
+	echo "Usage: $0 AC_TEMP [ON | OFF]"
 	echo
 	exit 1
 fi

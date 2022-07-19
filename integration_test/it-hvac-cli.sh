@@ -51,7 +51,7 @@ __check_container_state() {
 # start was reworked to do it "lazy", otherwise start was initially stopping containers and hvac may not be available just after startup
 "${SCRIPT_DIR}/it-setup.sh" start
 
-if ! __check_container_state "${VDB_CONTAINER}" || ! __check_container_state "${HVAC_CONTAINER}"; then
+if ! __check_container_state "${KDB__CONTAINER}" || ! __check_container_state "${HVAC_CONTAINER}"; then
 	echo "Containers for IntegrationTest test are not running!"
 	exit 10
 fi

@@ -24,9 +24,14 @@ ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
 source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-# DATABROKER_GRPC_PORT='52001'
-HVACSERVICE_PORT='50052'
-HVACSERVICE_GRPC_PORT='52005'
+### NOTE: HVACSERVICE_* variables are defined in task-common.sh
+# HVACSERVICE_PORT='50052'
+# HVACSERVICE_GRPC_PORT='52005'
+# HVACSERVICE_DAPR_APP_ID='hvacservice'
+# VEHICLEDATABROKER_DAPR_APP_ID='vehicledatabroker'
+
+# NOTE: use curent sidecar's grpc port, don't connect directly to sidecar of kdb (DATABROKER_GRPC_PORT)
+export DAPR_GRPC_PORT=$HVACSERVICE_GRPC_PORT
 
 HVACSERVICE_EXEC_PATH="$ROOT_DIRECTORY/hvac_service"
 if [ ! -f "$HVACSERVICE_EXEC_PATH/hvacservice.py" ]; then
@@ -37,22 +42,18 @@ fi
 cd "$HVACSERVICE_EXEC_PATH" || exit 1
 pip3 install -q -r requirements.txt
 
-# NOTE: use curent sidecar's grpc port, don't connect directly to sidecar of vdb (DATABROKER_GRPC_PORT)
-export DAPR_GRPC_PORT=$HVACSERVICE_GRPC_PORT
-export HVACSERVICE_DAPR_APP_ID='hvacservice'
-export VEHICLEDATABROKER_DAPR_APP_ID='vehicledatabroker'
-
 echo
 echo "*******************************************"
+echo "* Hvac Service app-id: $HVACSERVICE_DAPR_APP_ID"
 echo "* Hvac Service APP port: $HVACSERVICE_PORT"
 echo "* Hvac Service Dapr sidecar port: $HVACSERVICE_GRPC_PORT"
 echo "* DAPR_GRPC_PORT=$DAPR_GRPC_PORT"
-echo "* metadata: [ HVACSERVICE_DAPR_APP_ID=$HVACSERVICE_DAPR_APP_ID, VEHICLEDATABROKER_DAPR_APP_ID=$VEHICLEDATABROKER_DAPR_APP_ID ]"
+echo "* metadata: [ VEHICLEDATABROKER_DAPR_APP_ID=$VEHICLEDATABROKER_DAPR_APP_ID ]"
 echo "*******************************************"
 echo
 
 ## uncomment for dapr debug logs
-# DAPR_OPT="--enable-api-logging --log-level debug"
+# DAPR_OPT="--enable-api-logging --log-level debug"1
 
 dapr run \
 	--app-id $HVACSERVICE_DAPR_APP_ID \

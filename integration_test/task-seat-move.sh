@@ -18,7 +18,7 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-DAPR_VDB="vehicledatabroker"
+DAPR_KDB="vehicledatabroker"
 DAPR_SEATSVC="seatservice"
 
 set -e
@@ -42,7 +42,7 @@ __check_dapr_app() {
 	fi
 }
 
-if ! __check_dapr_app "$DAPR_VDB" || ! __check_dapr_app "$DAPR_SEATSVC"; then
+if ! __check_dapr_app "$DAPR_KDB" || ! __check_dapr_app "$DAPR_SEATSVC"; then
 	echo "Please run vs-code tasks: [run-databroker, run-seatservice]"
 	exit 10
 fi

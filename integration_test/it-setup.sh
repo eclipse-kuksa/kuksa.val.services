@@ -27,8 +27,8 @@ cleanup() {
 	local force="$1"
 	# ensure containers are not running
 	echo "# Cleanup iteration test containers..."
-	if docker ps -a | grep "${VDB_CONTAINER}"; then
-		docker container rm -f "${VDB_CONTAINER}"
+	if docker ps -a | grep "${KDB_CONTAINER}"; then
+		docker container rm -f "${KDB_CONTAINER}"
 	fi
 	if docker ps -a | grep "${SEAT_CONTAINER}"; then
 		docker container rm -f "${SEAT_CONTAINER}"
@@ -42,7 +42,7 @@ cleanup() {
 	if [ "$force" = "1" ]; then
 		echo "# Cleanup VAL ghcr images..."
 		docker image rm -f "${FEEDER_IMAGE}"
-		docker image rm -f "${VDB_IMAGE}"
+		docker image rm -f "${KDB_IMAGE}"
 		[ "$SEAT_TAG" != "prerelease" ] && docker image rm -f "${SEAT_IMAGE}"
 		[ "$HVAC_TAG" != "prerelease" ] && docker image rm -f "${HVAC_IMAGE}"
 	fi
@@ -64,17 +64,25 @@ pull_images() {
 		return 0
 	fi
 	if [ "${force}" = "1" ] ||
-		! __check_docker_image "${VDB_IMAGE}" ||
+		! __check_docker_image "${KDB_IMAGE}" ||
 		! __check_docker_image "${SEAT_IMAGE}" ||
 		! __check_docker_image "${HVAC_IMAGE}" ||
 		! __check_docker_image "${FEEDER_IMAGE}"; then
 		echo "- Pulling images form ${DOCKER_REPO} (May need manual login)..."
 		docker login "${DOCKER_REPO}"
 
-		docker pull "${VDB_IMAGE}"
-		[ "$SEAT_TAG" != "prerelease" ] && docker pull "${SEAT_IMAGE}"
-		[ "$HVAC_TAG" != "prerelease" ] && docker pull "${HVAC_IMAGE}"
+		echo "- docker pull ${KDB_IMAGE}"
+		docker pull "${KDB_IMAGE}"
+		echo "- docker pull ${FEEDER_IMAGE}"
 		docker pull "${FEEDER_IMAGE}"
+		if [ "$SEAT_TAG" != "prerelease" ]; then
+			echo "- docker pull ${SEAT_IMAGE}"
+			docker pull "${SEAT_IMAGE}"
+		fi
+		if [ "$HVAC_TAG" != "prerelease" ]; then
+			echo "- docker pull ${HVAC_IMAGE}"
+			docker pull "${HVAC_IMAGE}"
+		fi
 	fi
 }
 
@@ -86,10 +94,10 @@ pull_images() {
 # 			docker tag amd64/seat-service:latest ${SEAT_IMAGE}
 # 		fi
 # 	fi
-# 	if [ "$force" = "1" ] || ! __check_docker_image "${VDB_IMAGE}"; then
+# 	if [ "$force" = "1" ] || ! __check_docker_image "${KDB_IMAGE}"; then
 # 		echo "# Building amd64/databroker:latest ..."
 # 		if cd ${SCRIPT_DIR}/../vehicle_data_broker && ./docker-build.sh -l x86_64; then
-# 			docker tag amd64/databroker:latest ${VDB_IMAGE}
+# 			docker tag amd64/databroker:latest ${KDB_IMAGE}
 # 		fi
 # 	fi
 # 	if [ "$force" = "1" ] || ! __check_docker_image "${FEEDER_IMAGE}"; then
@@ -124,32 +132,32 @@ __check_docker_image() {
 	fi
 }
 
-### Checks if $VDB_CONTAINER and $SEAT_CONTAINER are both running
+### Checks if $KDB_CONTAINER and $SEAT_CONTAINER are both running
 check_it_containers() {
 	local verbose="$1"
 
 	local seat_err=0
-	local vdb_err=0
+	local kdb_err=0
 	local feed_err=0
 	local hvac_err=0
 
-	__check_container_state "${VDB_CONTAINER}" "${verbose}" || vdb_err=1
+	__check_container_state "${KDB_CONTAINER}" "${verbose}" || kdb_err=1
 	__check_container_state "${SEAT_CONTAINER}" "${verbose}" || seat_err=1
 	__check_container_state "${HVAC_CONTAINER}" "${verbose}" || hvac_err=1
 	__check_container_state "${FEEDER_CONTAINER}" "${verbose}" || feed_err=1
 
-	if [ ${vdb_err} -ne 0 ] || [ ${seat_err} -ne 0 ] || [ ${feed_err} -ne 0 ] || [ ${hvac_err} -ne 0 ]; then
+	if [ ${kdb_err} -ne 0 ] || [ ${seat_err} -ne 0 ] || [ ${feed_err} -ne 0 ] || [ ${hvac_err} -ne 0 ]; then
 		return 1
 	fi
 	return 0
 }
 
-### Starts $VDB_CONTAINER and $SEAT_CONTAINER
+### Starts $KDB_CONTAINER and $SEAT_CONTAINER
 start_containers() {
-	echo "- Running ${VDB_CONTAINER} ..."
+	echo "- Running ${KDB_CONTAINER} ..."
 	# DataBroker container options
 	rc=0
-	docker run -d ${DOCKER_OPT} ${VDB_DOCKER_OPT} "${VDB_IMAGE}" || rc=1
+	docker run -d ${DOCKER_OPT} ${KDB_DOCKER_OPT} "${KDB_IMAGE}" || rc=1
 
 	echo "- Running ${SEAT_CONTAINER} ..."
 	# SeatService container options. BROKER_ADDR is needed to reach it-databroker ports within val-test network
@@ -164,7 +172,7 @@ start_containers() {
 	docker run -d ${DOCKER_OPT} ${FEEDER_DOCKER_OPT} "${FEEDER_IMAGE}" || rc=4
 
 	echo
-	__check_container_state "${VDB_CONTAINER}" 1 || rc=1
+	__check_container_state "${KDB_CONTAINER}" 1 || rc=1
 	__check_container_state "${SEAT_CONTAINER}" 1 || rc=2
 	__check_container_state "${HVAC_CONTAINER}" 1 || rc=3
 	__check_container_state "${FEEDER_CONTAINER}" 1 || rc=4
@@ -201,7 +209,7 @@ it_init() {
 	fi
 
 	# auto pull/build images (only if missing)
-	if echo "${VDB_TAG}${SEAT_TAG}${HVAC_TAG}${FEEDER_TAG}" | grep -q "latest"; then
+	if echo "${KDB_TAG}${SEAT_TAG}${HVAC_TAG}${FEEDER_TAG}" | grep -q "latest"; then
 		build_images "${force}"
 	else
 		pull_images "${force}"
@@ -247,8 +255,8 @@ it_status() {
 	echo "-----------------------"
 	echo
 	if [ "${logs}" = "1" ]; then
-		echo "### [${VDB_CONTAINER}] Logs:"
-		docker logs $DOCKER_LOG "${VDB_CONTAINER}"
+		echo "### [${KDB_CONTAINER}] Logs:"
+		docker logs $DOCKER_LOG "${KDB_CONTAINER}"
 		echo "-----------------------"
 		echo
 		echo "### [${SEAT_CONTAINER}] Logs:"
@@ -291,7 +299,7 @@ it_usage() {
 	echo "  cleanup  Removes VAL Containers. Use --force to also remove configured VAL images"
 }
 
-# FIXME: BROKER_ADDR=${VDB_CONTAINER}:55555 should be changed in case of host network...
+# FIXME: BROKER_ADDR=${KDB_CONTAINER}:55555 should be changed in case of host network...
 export DOCKER_OPT="--network ${DOCKER_NETWORK} ${DOCKER_OPT}"
 
 # parse options in $FORCE and $CMD

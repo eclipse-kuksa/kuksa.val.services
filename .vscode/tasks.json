@@ -113,7 +113,7 @@
       "dependsOrder": "sequence",
       "type": "shell",
       "command": "./.vscode/scripts/run-seatservice-cli.sh",
-      "args": ["--task", "${input:SEAT_POS}"],
+      "args": ["${input:SEAT_POS}"],
       "options": {
         "env": {
           "SEAT_WAIT": "${input:SEAT_WAIT}"
@@ -124,8 +124,10 @@
       "runOptions": {
         "instanceLimit": 1
       },
+      "problemMatcher": [],
       "presentation": {
         "clear": true,
+        // "close": true,
         "showReuseMessage": false
       }
     },

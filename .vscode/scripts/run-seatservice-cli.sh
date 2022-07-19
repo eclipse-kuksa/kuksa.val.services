@@ -24,7 +24,6 @@ ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
 source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-# [ "$1" = "--task" ] && shift
 POS="$1"
 shift
 ARGS="$*"

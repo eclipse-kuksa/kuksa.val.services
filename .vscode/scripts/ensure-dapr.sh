@@ -27,9 +27,11 @@ version=$(dapr --version | grep "Runtime version: " | sed 's/^.*: //')
 if ! [[ $version =~ ^([0-9]{1,2})\.([0-9]{1,2})\.([0-9]{1,2}) ]]; then
 	daprReleaseUrl="https://api.github.com/repos/dapr/cli/releases"
 	latest_release=$(curl -s $daprReleaseUrl | grep \"tag_name\" | grep -v rc | awk 'NR==1{print $2}' | sed -n 's/\"\(.*\)\",/\1/p')
+	# NOTE: 1.6.0 requires too old protobuf, better upgrade it
+	daprVersion="1.6.0"
 	if [ -z "$latest_release" ]; then
-		echo "Installing dapr pre-defined version: 1.6.0"
-		wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash -s 1.6.0
+		echo "Installing dapr pre-defined version: ${daprVersion}"
+		wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash -s "$daprVersion"
 	else
 		echo "Installing dapr latest version: $latest_release"
 		wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O - | /bin/bash

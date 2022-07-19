@@ -15,44 +15,38 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# echo "###[check] $* [$#]"
-# if [ $# -eq 0 ]; then
-# 	tput setaf 1
-# 	echo "ERROR: To execute script, use VSCODE Tasks: [CTRL+SHIFT+P -> Tasks: Run Tasks -> $1]."
-# 	read -r -p "Press <Enter> to close this window"
-# 	exit 1
-# fi
+# path to json config with val component versions
+export CONFIG_JSON="$SCRIPT_DIR/../../prerequisite_settings.json"
 
 ###
-### Common dapr GRPC port setups
+### Common dapr GRPC setups
 ###
 
 # Databroker App port
 export DATABROKER_PORT='55555'
 # Databroker Dapr Sidecar gRPC port
 export DATABROKER_GRPC_PORT='52001'
+# databroker dapr app id
+export VEHICLEDATABROKER_DAPR_APP_ID="vehicledatabroker"
 
 # SeatService App port
 export SEATSERVICE_PORT='50051'
 # SeatService Dapr Sidecar gRPC port
 export SEATSERVICE_GRPC_PORT='52002'
+# SeatService dapr app id
+export SEATSERVICE_DAPR_APP_ID="seatservice"
 
 # HvacService App port
 export HVACSERVICE_PORT='50052'
 # HvacService Dapr Sidecar gRPC port
 export HVACSERVICE_GRPC_PORT='52005'
+# HvacService dapr app id
+export HVACSERVICE_DAPR_APP_ID="hvacservice"
 
 # feedercan Dapr Sidecar gRPC port
 export FEEDERCAN_GRPC_PORT='52008'
-
-# path to json config with val component versions
-export CONFIG_JSON="$SCRIPT_DIR/../../prerequisite_settings.json"
-
-# databroker dapr app id
-export VEHICLEDATABROKER_DAPR_APP_ID="vehicledatabroker"
-
-# hvac service dapr app id
-export HVACSERVICE_DAPR_APP_ID="hvacservice"
+# feedercan dapr app id
+export FEEDERCAN_DAPR_APP_ID="feedercan"
 
 _check_prerequisite() {
 	local MISSING_PKG=""
@@ -65,7 +59,7 @@ _check_prerequisite() {
 	if [ -z "$(which curl)" ]; then
 		MISSING_PKG="$MISSING_PKG curl"
 	fi
-	if [ -z "$(which curl)" ]; then
+	if [ -z "$(which tar)" ]; then
 		MISSING_PKG="$MISSING_PKG tar"
 	fi
 	if [ -z "$(which python3)" ]; then

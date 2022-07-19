@@ -55,7 +55,7 @@ __check_container_state() {
 
 ${SCRIPT_DIR}/it-setup.sh start
 
-if ! __check_container_state ${VDB_CONTAINER} ||
+if ! __check_container_state ${KDB__CONTAINER} ||
 	! __check_container_state "${SEAT_CONTAINER}"; then
 	echo "Containers for IntegrationTest test are not running!"
 	exit 10
