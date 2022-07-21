@@ -31,7 +31,6 @@ KDB_TAG=$(jq -r '.databroker.imageVersion // empty' "$CONFIG_JSON")
 # export HVAC_TAG="prerelease"
 # export SEAT_TAG="prerelease"
 
-
 ### ghcr.io image config
 export DOCKER_REPO="ghcr.io"
 export KDB_IMAGE="${DOCKER_REPO}/eclipse/kuksa.val/databroker:${KDB_TAG}"
