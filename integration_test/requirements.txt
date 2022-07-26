@@ -1,5 +1,7 @@
-grpcio
-protobuf
+# grpcio,protobuf deps come from dapr, also make sure dapr is up to date
+dapr>=1.7.0
+grpcio>=1.26.0
+protobuf==3.20.1
 types-protobuf
 pytest
 pytest-ordering

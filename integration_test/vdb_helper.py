@@ -18,9 +18,12 @@ import asyncio
 import logging
 import os
 import signal
-from typing import Callable, Dict, Mapping, Optional
+import threading
+from threading import Thread
+from typing import Any, Callable, Dict, List, Mapping, Optional
 
 import grpc
+import pytest
 from gen_proto.sdv.databroker.v1.broker_pb2 import (
     GetDatapointsRequest,
     GetMetadataRequest,
@@ -67,8 +70,8 @@ class VDBHelper:
             await self._channel.close()
 
     def default_metadata(self):
-        if os.environ.get("VEHICLEDATABROKER_DAPR_APP_ID"):
-            return ("dapr-app-id", os.environ.get("VEHICLEDATABROKER_DAPR_APP_ID"))
+        if os.environ.get("VEHICLEDATABROKER_DAPR_APP_ID") is not None:
+            return (("dapr-app-id", os.environ.get("VEHICLEDATABROKER_DAPR_APP_ID")),)
         return None
 
     def __enter__(self) -> "VDBHelper":
@@ -237,9 +240,10 @@ class VDBHelper:
             response = self._broker_stub.Subscribe(
                 request, metadata=self._grpc_metadata, timeout=timeout
             )
-            # NOTE: async before iteration is crucial here with aio.channel!
+            # NOTE:
+            # 'async for' before iteration is crucial here with aio.channel!
             async for subscribe_reply in response:
-                logger.debug("Streaming SubscribeReply ...")
+                logger.debug("Streaming SubscribeReply %s", subscribe_reply)
                 """ from broker.proto:
                 message SubscribeReply {
                     // Contains the fields specified by the query.
@@ -294,6 +298,93 @@ def __on_subscribe_event(name: str, dp: Datapoint) -> None:
     )
 
 
+class SubscribeRunner:
+
+    """
+    Helper for gathering subscription events in a dedicated thread,
+    running for specified timeout
+    """
+
+    def __init__(self, vdb_address: str, query: str, timeout: int) -> None:
+        self.vdb_address = vdb_address
+        self.query = query
+        self.timeout = timeout
+        self.thread: Optional[Thread] = None
+        self.helper: VDBHelper
+        self.events: Dict[str, Any] = {}
+
+    def start(self) -> None:
+        if self.thread is not None:
+            raise RuntimeWarning("Thread %s already started!", self.thread.name)
+        self.thread = Thread(
+            target=self.__subscibe_thread_proc,
+            name="SubscribeRunner({})".format(self.query),
+        )
+        self.thread.setDaemon(True)
+        self.thread.start()
+
+    def get_events(self):
+        self.close()
+        return self.events
+
+    def get_dp_values(self, dp_name: str) -> List[Datapoint]:
+        return [dp["value"] for dp in self.events[dp_name]]
+
+    def find_dp_value(self, dp_name: str, dp_value: Any) -> Datapoint:
+        if dp_name not in self.events:
+            return None
+        for dp in self.events[dp_name]:
+            val = dp["value"]
+            if val == dp_value:
+                return dp
+            elif isinstance(val, float) and dp_value == pytest.approx(val, 0.1):
+                # allow 'fuzzy' float matching
+                return dp
+        return None
+
+    def close(self) -> None:
+        if self.thread is not None:
+            logger.debug("Waiting for thread: %s", threading.current_thread().name)
+            self.thread.join()
+            self.thread = None
+
+    async def __async_handler(self) -> Dict[str, Any]:
+        def inner_callback(name: str, dp: Datapoint):
+            """inner function for collecting subscription events"""
+            dd = self.helper.datapoint_to_dict(name, dp)
+            if name not in self.events:
+                self.events[name] = []
+            self.events[name].append(dd)
+
+        # start client requests in different thread as subscribe_datapoints will block...
+        logger.info("# subscribing('{}', timeout={})".format(self.query, self.timeout))
+        try:
+            await self.helper.subscribe_datapoints(
+                self.query, timeout=self.timeout, sub_callback=inner_callback
+            )
+            return self.events
+        except Exception as ex:
+            logger.warning("Subscribe(%s) failed", self.query, exc_info=True)
+            raise ex
+
+    def __subscibe_thread_proc(self) -> None:
+        # create dedicated event loop and instantiate vdbhelper in it
+        logger.info("Thread %s started.", threading.current_thread().name)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        logger.debug("Waiting %d sec for subscription [%s]", self.timeout, self.query)
+        self.helper = VDBHelper(self.vdb_address)
+        loop.run_until_complete(self.__async_handler())
+
+        logger.debug(
+            "Closing helper %d sec for subscription [%s]", self.timeout, self.query
+        )
+        loop.run_until_complete(self.helper.close())
+
+        loop.close()
+        logger.info("Thread %s finished.", threading.current_thread().name)
+
+
 async def main() -> None:
     LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
     logging.basicConfig(format="<%(levelname)s>\t%(message)s", level=LOG_LEVEL)
@@ -306,6 +397,17 @@ async def main() -> None:
         query, sub_callback=__on_subscribe_event, timeout=1
     )
     await helper.close()
+
+    # logger.setLevel(logging.DEBUG)
+    sr = SubscribeRunner(vdb_addr, query, 5)
+    sr.start()
+    try:
+        sr.start()
+    except RuntimeWarning as exc:
+        logger.debug("%s", exc)
+        pass
+    sr.close()
+    print(sr.events)
 
 
 if __name__ == "__main__":

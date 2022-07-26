@@ -1,0 +1,9 @@
+{
+  "databroker": {
+    "version": "databroker-v0.17.0",
+    "imageVersion": "v0.17.0"
+  },
+  "feedercan": {
+    "version": "v0.1.0"
+  }
+}

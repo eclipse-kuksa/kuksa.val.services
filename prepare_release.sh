@@ -41,6 +41,12 @@ DOCKERDEV_ROOT="$REPO_ROOT/.devcontainer"
 sed -i -E "s/(^.*):v${VERSION_REGEX}(.*)$/\1:v${VERSION}/" \
 	"$DOCKERDEV_ROOT/Dockerfile"
 
+# replace python package versions
+PYTHON_ROOT="$REPO_ROOT"
+sed -i -E "s/^[[:space:]]*PKG_VERSION[[:space:]]*=[[:space:]]*\"(.*)\"\$/PKG_VERSION=\"v${VERSION}\"/" \
+	"$PYTHON_ROOT/integration_test/setup.py" \
+	"$PYTHON_ROOT/hvac_service/setup.py"
+
 # Create release commit and tag it
 #git commit -a -m "Release ${VERSION}"
 #git tag -a "v${VERSION}" -m "Release ${VERSION}"

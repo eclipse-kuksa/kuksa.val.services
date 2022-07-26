@@ -21,13 +21,13 @@ set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
 CLEAN_FILES="$ROOT_DIRECTORY/seat_service/target/x86_64/release/install"
 CLEAN_FILES="$ROOT_DIRECTORY/seat_service/target/aarch64/release/install $CLEAN_FILES"
 
-CLEAN_FILES="$ROOT_DIRECTORY/target/release/vehicle-data-* $CLEAN_FILES"
-CLEAN_FILES="$ROOT_DIRECTORY/target/aarch64-unknown-linux-gnu/release/vehicle-data-* $CLEAN_FILES"
+#CLEAN_FILES="$ROOT_DIRECTORY/target/release/vehicle-data-* $CLEAN_FILES"
+#CLEAN_FILES="$ROOT_DIRECTORY/target/aarch64-unknown-linux-gnu/release/vehicle-data-* $CLEAN_FILES"
 
 set -x
 rm -rfv $CLEAN_FILES

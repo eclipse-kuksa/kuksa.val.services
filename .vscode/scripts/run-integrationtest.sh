@@ -11,8 +11,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
-# shell check disable=SC2002
-# shell check disable=SC2086
+# shellcheck disable=SC2002
+# shellcheck disable=SC2086
 
 echo "#######################################################"
 echo "### Running Integration Tests                       ###"
@@ -22,14 +22,72 @@ set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-pip install -q -r "${ROOT_DIRECTORY}/integration_test/requirements-dev.txt"
-pip install -q -e "${ROOT_DIRECTORY}/integration_test/"
+if [ "$USE_DAPR" = "0" ]; then
+	echo
+	echo "##### Integration test in Container mode (it-setup.sh)"
+	echo
+else
+	echo
+	echo "##### Integration test in Dapr mode (standalone)"
+	echo
+fi
 
-pytest -v "${ROOT_DIRECTORY}/integration_test" \
-	--log-file=./results/IntegrationTest/integration.log \
-	--asyncio-mode=auto --override-ini \
-	junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml
+pip3 install -q -r "${ROOT_DIRECTORY}/integration_test/requirements-dev.txt"
+pip3 install -q -r "${ROOT_DIRECTORY}/integration_test/requirements.txt"
+pip3 install -q -e "${ROOT_DIRECTORY}/integration_test/"
+pip3 install -q -e "${ROOT_DIRECTORY}/hvac_service/"
 
-exit $?
+set +e
+
+if [ "$USE_DAPR" = "0" ]; then
+	if true; then
+		echo "Rebuilding pre-release tags for seat and hvac services..."
+		export SEAT_TAG="prerelease"
+		export HVAC_TAG="prerelease"
+		"${ROOT_DIRECTORY}/seat_service/docker-build.sh" -l x86_64
+		"${ROOT_DIRECTORY}/hvac_service/docker-build.sh" -l x86_64
+	fi
+	"${ROOT_DIRECTORY}/integration_test/it-setup.sh" init
+
+	# ensure containers are re-created before test
+	"${ROOT_DIRECTORY}/integration_test/it-setup.sh" cleanup
+	"${ROOT_DIRECTORY}/integration_test/it-setup.sh" start
+	echo
+	# sleep is needed as sometimes feedercan was not able to register datapoints in time and integration test fails
+	sleep 1
+	"${ROOT_DIRECTORY}/integration_test/it-setup.sh" status --logs
+	echo
+fi
+
+# prevents dumping "E0617: Fork support is only compatible with the epoll1 and poll polling strategies"
+export GRPC_ENABLE_FORK_SUPPORT="false"
+
+# export GRPC_TRACE=all
+# export GRPC_VERBOSITY=DEBUG
+# export PYTHONVERBOSE=1
+# PYTEST_DEBUG="-v -s --log-cli-level=DEBUG"
+
+cd "${ROOT_DIRECTORY}/integration_test" || exit 1
+pytest -v $PYTEST_DEBUG \
+	--log-file="${ROOT_DIRECTORY}/results/IntegrationTest/integration.log" --log-file-level=DEBUG \
+	--asyncio-mode=auto "$@" \
+	--override-ini junit_family=xunit1 --junit-xml="${ROOT_DIRECTORY}/results/IntegrationTest/junit.xml" \
+	.
+
+rc=$?
+
+if [ "$USE_DAPR" = "0" ]; then
+	echo
+	if [ $rc -eq 0 ]; then
+		"${ROOT_DIRECTORY}/integration_test/it-setup.sh" status
+	else
+		"${ROOT_DIRECTORY}/integration_test/it-setup.sh" status --logs
+	fi
+	echo
+	# cleanup it containers and images
+	"${ROOT_DIRECTORY}/integration_test/it-setup.sh" cleanup
+fi
+
+exit $rc

@@ -19,28 +19,19 @@ echo "#######################################################"
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-DATABROKER_VERSION="databroker-v0.17.0"
-
-#Detect host environment (distinguish for Mac M1 processor)
-if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-	echo "Detected AArch64 architecture"
-	PROCESSOR="aarch64"
-else
-	echo "Detected x86_64 architecture"
-	PROCESSOR="x86_64"
+DATABROKER_VERSION=$(jq -r '.databroker.version // empty' "$CONFIG_JSON")
+if [ -z "$DATABROKER_VERSION" ]; then
+	echo "Coudln't find databroker version from $CONFIG_JSON"
+	exit 1
 fi
+
 DATABROKER_BINARY_NAME="databroker_$PROCESSOR.tar.gz"
 DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATABROKER_VERSION/$PROCESSOR"
+DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME"
 DATABROKERCLI_EXECUTABLE="$DATABROKER_BINARY_PATH/target/release/databroker-cli"
 
-DOWNLOAD_URL=https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME
-
-if [[ ! -f "$DATABROKERCLI_EXECUTABLE" ]]; then
-	echo "Downloading databroker-cli version $DATABROKER_VERSION"
-	curl -o "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" --create-dirs -L -H "Accept: application/octet-stream" "$DOWNLOAD_URL"
-	tar -xf "$DATABROKER_BINARY_PATH"/"$DATABROKER_BINARY_NAME" -C "$DATABROKER_BINARY_PATH"
-fi
+download_release "$DATABROKERCLI_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_NAME" || exit 1
 
 "$DATABROKERCLI_EXECUTABLE"

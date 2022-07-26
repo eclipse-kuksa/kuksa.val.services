@@ -19,17 +19,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 DAPR_KDB="vehicledatabroker"
-DAPR_SEATSVC="seatservice"
+DAPR_HVAC_SVC="hvacservice"
 
 set -e
-
-# parse 1st arg (optional as pos)
-pos="$1"
-[ -z "$pos" ] && pos="500"
-
-# pass extra args, e.g. "--wait" to wait reaching desired position
-shift
-args="$*"
 
 ### Checks if dapr application (name) is running
 __check_dapr_app() {
@@ -42,11 +34,14 @@ __check_dapr_app() {
 	fi
 }
 
-if ! __check_dapr_app "$DAPR_KDB" || ! __check_dapr_app "$DAPR_SEATSVC"; then
-	echo "Please run vs-code tasks: [run-databroker, run-seatservice]"
+if ! __check_dapr_app "$DAPR_KDB" || ! __check_dapr_app "$DAPR_HVAC_SVC"; then
+	echo "Please run vs-code tasks: [run-databroker, run-hvacservice]"
 	exit 10
 fi
 
-echo "### Moving SEAT to ${pos}"
-$SCRIPT_DIR/../.vscode/scripts/run-seatservice-cli.sh "$pos" $args
+temp="$1"
+mode="$2"
+
+echo "### Setting HVAC mode: ${mode}, temp: ${temp}"
+$SCRIPT_DIR/../.vscode/scripts/run-hvac-cli.sh "$temp" "$mode"
 exit $?

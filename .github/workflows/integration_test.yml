@@ -24,8 +24,13 @@ on:
       - main
 
 jobs:
-  setup:
+  integration-test:
     runs-on: ubuntu-latest
+    # container:
+    #   image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
+    #   credentials:
+    #     username: ${{ github.repository_owner }}
+    #     password: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Adding github workspace as safe directory
@@ -37,50 +42,64 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - id: repository-name-adjusted
-        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
-        uses: ASzc/change-string-case-action@v2
-        with:
-          string: ${{ github.repository }}
+      - name: Install dependencies
+        shell: bash
+        run: |
+          .github/workflows/scripts/install-ci-tooling.sh
+
+      - name: Build seat_service image
+        shell: bash
+        working-directory: ./seat_service
+        run: |
+          ./docker-build.sh -l x86_64
+
+      - name: Build hvac_service image
+        shell: bash
+        working-directory: ./hvac_service
+        run: |
+          ./docker-build.sh -l x86_64
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-
       - name: Setup VAL containers
         shell: bash
+        env:
+          SEAT_TAG: "prerelease"
+          HVAC_TAG: "prerelease"
         run: |
-          ${{github.workspace}}/integration_test/it-setup.sh init
-          ${{github.workspace}}/integration_test/it-setup.sh start
-          ${{github.workspace}}/integration_test/it-setup.sh status
-          echo "$ docker image ls"
-          docker image ls
-          echo "$ docker ps -a"
-          docker ps -a
-          echo "$ docker inspect val-int"
-          docker inspect val-int
+          ./integration_test/it-setup.sh init
+          ./integration_test/it-setup.sh start
+          sleep 1
+          ./integration_test/it-setup.sh status --logs
+          # echo "$ docker image ls"
+          # docker image ls
+          # echo "$ docker ps -a"
+          # docker ps -a
+          # echo "$ docker inspect val-int"
+          # docker inspect val-int
+
+      - name: Install Requirements
+        shell: bash
+        run: |
+          pip3 install -U -r integration_test/requirements.txt
+          pip3 install -U -e hvac_service/
+          pip3 install -U -e integration_test/
 
       - name: Run Integration Tests
         shell: bash
         env:
           # force using it-setup.sh (testing with ghcr.io tags), DAPR standalone mode does not work in CI
           USE_DAPR: "0"
+          GRPC_ENABLE_FORK_SUPPORT: "false"
         run: |
-          pip install -q -r integration_test/requirements.txt
-          pip install -q -r integration_test/requirements-dev.txt
-          pip install -e integration_test/
-          pytest -s ./integration_test --asyncio-mode=auto --override-ini \
-            junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
-            --log-file=./results/IntegrationTest/integration.log
+          pytest -v ./integration_test --asyncio-mode=auto \
+            --override-ini junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
+            --log-file=./results/IntegrationTest/integration.log --log-file-level=DEBUG
 
       - name: Publish Integration Test Results
         uses: EnricoMi/publish-unit-test-result-action@v1
@@ -94,12 +113,12 @@ jobs:
         with:
           name: integration_test.log
           path: |
-            ${{github.workspace}}/results/IntegrationTest/integration.log
+            ./results/IntegrationTest/integration.log
 
-      - name: Cleanup Integration Tests
+      - name: Integration logs and cleanup
         shell: bash
         run: |
-
-          ${{github.workspace}}/integration_test/it-setup.sh cleanup --force
+          ./integration_test/it-setup.sh status --logs
+          ./integration_test/it-setup.sh cleanup --force
           docker image ls
           docker ps -a
