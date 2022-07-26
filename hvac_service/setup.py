@@ -15,4 +15,6 @@ from setuptools import find_packages, setup
 
 PKG_VERSION = "v0.1.0"
 
-setup(name="kuksa.val_integration", packages=find_packages(), version=PKG_VERSION)
+pkg_packages = find_packages()
+
+setup(name="hvac_service", packages=pkg_packages, version=PKG_VERSION)

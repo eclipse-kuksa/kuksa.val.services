@@ -22,9 +22,8 @@ set -e
 
 ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
-source "$ROOT_DIRECTORY/.vscode/scripts/exec-check.sh" "$@"
+source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
-[ "$1" = "--task" ] && shift
 POS="$1"
 shift
 ARGS="$*"
@@ -34,16 +33,8 @@ if [ "$SEAT_WAIT" = "wait" ] && ! echo "$ARGS" | grep -q "\-\-wait"; then
 	ARGS="--wait $ARGS"
 fi
 
+# gRPC port of hvac service (no dapr!)
 SEATSERVICE_PORT='50051'
-
-#Detect host environment (distinguish for Mac M1 processor)
-if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
-	echo "Detected ARM architecture"
-	PROCESSOR="aarch64"
-else
-	echo "Detected x86_64 architecture"
-	PROCESSOR="x86_64"
-fi
 
 SEATSERVICE_EXEC_PATH="$ROOT_DIRECTORY/seat_service/target/$PROCESSOR/release/install/bin"
 

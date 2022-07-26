@@ -52,7 +52,7 @@ class HVACTestClient(object):
         request = pb2.SetTemperatureRequest(temperature=ac_temp)
         self.stub.SetTemperature(request)
 
-        logger.info("Done.")
+        logger.debug("Done.")
 
     def get_hvac_str(self, hvac_value) -> str:
         if hvac_value == 0:
@@ -112,5 +112,5 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=os.getenv("CLI_LOG_LEVEL", "INFO"))
     main(sys.argv[1:])
