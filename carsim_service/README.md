@@ -1,31 +1,11 @@
-# HVAC service example
+# CAR sim example
 
-The HVAC service is a service dummy allowing to control the state of the A/C and the desired cabin temperature.
-"Dummy" means, that changes of those two states are just forwarded and reflected as two respective data points in the data broker.
+The CAR sim service is a service which simulates a car.
 
-```text
-                      +----------------+
-                      |                |
-         ----( O------|  Data broker   |-----O )------ 
-         |    Broker  |                |  Collector  |
-         |            +----------------+             |
-         |                                           |
-         |                                           |
-+-----------------+                         +----------------+
-|                 |                         |                |
-|   HVAC client   |-----------( O-----------|  HVAC service  |
-|                 |            HVAC         |                |
-+-----------------+           service       +----------------+
-```
+1. Run data broker
 
-## Configuration
+    docker run --rm -it -p 55555:55555/tcp ghcr.io/eclipse/kuksa.val/databroker:master
 
-| parameter      | default value         | Env var                                                                          | description                     |
-|----------------|-----------------------|----------------------------------------------------------------------------------|---------------------------------|
-| listen_address | `"127.0.0.1:50052"`   | `HVAC_ADDR`                                                                      | Listen for rpc calls            |
-| broker_address | `"127.0.0.1:55555"`   | `"127.0.0.1:$DAPR_GRPC_PORT"` (if DAPR_GRPC_PORT is set)<br>`VDB_ADDRESS` (else) | Connect to data broker instance |
-| broker_app_id  | `"vehicledatabroker"` | `VEHICLEDATABROKER_DAPR_APP_ID`                                                  | Connect to data broker instance |
+2. Run car sim
 
-Configuration options have the following priority (highest at top):
-1. environment variable
-1. default value
+    python3 carsim.py

@@ -15,7 +15,6 @@
 
 PROTO_DIRS=(
 	"../kuksa_data_broker/proto"
-	"./proto"
 )
 
 for src_dir in "${PROTO_DIRS[@]}"; do
