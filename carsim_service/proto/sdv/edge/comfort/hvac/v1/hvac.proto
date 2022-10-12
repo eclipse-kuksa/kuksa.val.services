@@ -1,0 +1,78 @@
+/********************************************************************************
+* Copyright (c) 2022 Contributors to the Eclipse Foundation
+*
+* See the NOTICE file(s) distributed with this work for additional
+* information regarding copyright ownership.
+*
+* This program and the accompanying materials are made available under the
+* terms of the Apache License 2.0 which is available at
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* SPDX-License-Identifier: Apache-2.0
+********************************************************************************/
+
+syntax = "proto3";
+
+package sdv.edge.comfort.hvac.v1;
+
+/**
+ * @brief Example HVAC service for controlling the heating, ventilation, and air
+          conditioning elements of the vehicle cabin.
+ *        This definition is designed here according to the draft of the comfort seats
+ *        service definition of the COVESA Vehicle Service Catalog (VSC) (see
+ *        https://github.com/COVESA/vehicle_service_catalog) as a definition of an
+ *        HVAC service is currently missing in VSC.
+ */
+service Hvac {
+    /** Set the desired ac status
+     *
+     *  Returns gRPC status codes:
+     *   * OK - AcStatus set
+     *   * INVALID_ARGUMENT - The requested AcStatus is not supported by the service instance
+     *   * INTERNAL - A HVAC service internal error happened - see error message for details
+    */
+    rpc SetAcStatus(SetAcStatusRequest) returns (SetAcStatusReply);
+
+    /** Set the desired cabin temparature
+     *
+     *  Returns gRPC status codes:
+     *   * OK - Desired temperature set
+     *   * OUT_OF_RANGE - The specified temperature is not supported in this vehicle
+     *   * INTERNAL - A HVAC service internal error happened - see error message for details
+    */
+    rpc SetTemperature(SetTemperatureRequest) returns (SetTemperatureReply);
+
+}
+
+/**
+ * @brief
+ *
+ */
+message SetAcStatusRequest {
+    AcStatus status = 1; // The desired status of A/C
+}
+
+/**
+ * @brief
+ *
+ */
+message SetAcStatusReply {}
+
+/**
+ * @brief
+ *
+ */
+message SetTemperatureRequest {
+    float temperature = 1; // The desired cabin temperature in degree Celsius
+}
+
+/**
+ * @brief
+ *
+ */
+message SetTemperatureReply {}
+
+enum AcStatus {
+    OFF = 0;
+    ON  = 1;
+}
