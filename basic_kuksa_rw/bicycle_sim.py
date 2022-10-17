@@ -1,6 +1,6 @@
 import numpy as np
 from time import monotonic
-
+from collections import namedtuple
 
 class SimulatedCar:
     """

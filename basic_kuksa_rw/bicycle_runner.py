@@ -78,12 +78,13 @@ async def main():
                 DP_SPEED, car_sim.speed * 3.6
             )  # 1 m/s = 3.6 km/h
         )
-        pub_accel_lat = asyncio.create_task(
-            helper.set_float_datapoint(DP_ACCEL_LAT, car_sim.acceleration[0])  # m/s^2
-        )
         pub_accel_long = asyncio.create_task(
-            helper.set_float_datapoint(DP_ACCEL_LONG, car_sim.acceleration[1])  # m/s^2
+            helper.set_float_datapoint(DP_ACCEL_LONG, car_sim.acceleration[0])  # m/s^2
         )
+        pub_accel_lat = asyncio.create_task(
+            helper.set_float_datapoint(DP_ACCEL_LAT, car_sim.acceleration[1])  # m/s^2
+        )
+
         pub_accel_vert = asyncio.create_task(
             helper.set_float_datapoint(DP_ACCEL_LONG, 0.0)  # m/s^2
         )
