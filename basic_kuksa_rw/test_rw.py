@@ -44,10 +44,11 @@ async def run_carsim() -> None:
         helper.set_float_datapoint(datapoint_speed, 40.0)
     )
     
-    set_speed = asyncio.create_task(
+    set_speed_2 = asyncio.create_task(
         helper.set_float_datapoint(datapoint_speed, 80.0)
     )
     await set_speed
+    await set_speed_2
     await subscription
     print(events)
     logger.debug("Received events:{}".format(events))
