@@ -46,6 +46,7 @@ async def main():
     car_sim = SimulatedCar()
 
     def set_model_param(name: str, dp_raw: Datapoint) -> None:
+        logger.debug(f'{name=}, {dp_raw=}')
         dp = helper.datapoint_to_dict(name, dp_raw)
 
         if dp["type"] == "failure_value":
@@ -94,7 +95,6 @@ async def main():
         await pub_accel_lat
         await pub_accel_long
         await pub_accel_vert
-        print(car_sim._control_pos)
         logger.debug(f"Car State: {car_sim.__dict__}")
 
 
