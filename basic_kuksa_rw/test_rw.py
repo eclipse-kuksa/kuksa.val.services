@@ -51,7 +51,7 @@ async def run_carsim() -> None:
     await subscription
 
     logger.debug("Received events:{}".format(events))
-
+    print(events)
     await helper.close()
 
 
