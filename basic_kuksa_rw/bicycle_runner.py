@@ -62,9 +62,9 @@ async def main():
         if name == DP_STEER_ANGLE:
             car_sim.steer_angle = value * math.pi / 180  # deg too rad
             return
-
+    
     await flush_controls(helper)
-
+    
     # the databroker should probably be flushed to avoid updates with stale data
     while True:
         controls_update = asyncio.create_task(
@@ -94,7 +94,7 @@ async def main():
         await pub_accel_lat
         await pub_accel_long
         await pub_accel_vert
-
+        print(car_sim._control_pos)
         logger.debug(f"Car State: {car_sim.__dict__}")
 
 

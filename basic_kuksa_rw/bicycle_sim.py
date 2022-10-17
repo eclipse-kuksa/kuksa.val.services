@@ -5,10 +5,10 @@ from collections import namedtuple
 class SimulatedCar:
     """
     A simple (black-box) car kinematics simulator. It takes as input:
-    accelerator position (0, 1), brake position (0,1)
+    accelerator position [0, 1], brake position [0,1]
     and steering angle (-pi/2, pi/2).
     It is assumed that braking and accelerating are two antagonistic
-    effects that can't happen at the same time and that they
+    effects and the total effect is control = accelerator - brake
     are related linearly to the acceleration
     (this models the "jerk" when driving a car).
 
@@ -67,6 +67,9 @@ class SimulatedCar:
         self._speed = 0.0                   # m/s
         self._accel_x = 0.0                 # m/s^2
         self._accel_y = 0.0                 # m/s^2
+        self._brake_pos = 0.0               # [0, 1]
+        self._accelerator_pos = 0.0         # [0, 1]
+        self._control_pos = 0.0             # [-1, 1]
 
         # these two are needed in order to calculate the components of
         # the acceleration at the end of the update cycle
@@ -86,25 +89,20 @@ class SimulatedCar:
 
     @property
     def brake_position(self):
-        if self._control_pos > 0:
-            return 0
-        else:
-            return -self._control_pos
+        return self._brake_pos
 
     @brake_position.setter
     def brake_position(self, value):
-        self._control_pos = -value
+        self._brake_pos = value        
 
     @property
     def accelerator_position(self):
-        if self._control_pos < 0:
-            return 0
-        else:
-            return self._control_pos
+        return self._accelerator_pos
 
     @accelerator_position.setter
     def accelerator_position(self, value):
-        self._control_pos = value
+        self._accelerator_pos = value
+
 
     # read-only properties
     @property
@@ -150,24 +148,7 @@ class SimulatedCar:
         return np.sqrt(self._accel_x**2 + self._accel_y**2)
 
     def _acc_from_ctrl(self):
-        """Gas and brake are combined in a single variable 
-        "control position" that can take any value in the interval [-1,1].
-        An implicit assumption here is that you cannot press the gas
-        and the brake at the same time.
-        Where ctrl_position  > 0 implies acceleration and
-        ctrl_position < 0 implies braking.
-        A pieciewise linear relation betwen the ctrl_position and the
-        "signed norm" of the acceleration
-        (> 0 - acceleration, < 0 - braking)
-        is constructed based on the values
-        for max_acceleration and max_decleration provided at initialization.
-
-        Args:
-            ctrl_position (float): The control position
-
-        Returns:
-            float: The acceleration calculated from the control position
-        """
+        self._control_pos = self._accelerator_pos - self._brake_pos
         if self._control_pos >= 0:
             return self._max_acceleration * min(self._control_pos, 1)
         else:
