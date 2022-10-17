@@ -133,6 +133,16 @@ class SimulatedCar:
 
     @property
     def acceleration(self):
+        # acceleration as from acceleratometer, not implemented well right now
+        # TODO:
+        # project (ax, ay) to (vx, vy) and calculate normal and vert components
+        # https://math.libretexts.org/Bookshelves/Calculus/Map%3A_University_Calculus_(Hass_et_al)/12%3A_Vector-Valued_Functions_and_Motion_in_Space/12.5%3A_Tangential_and_Normal_Components_of_Acceleration
+        # 1) implemenet scalar product
+        # 2) implement normal vector finder
+        # 3) find normal to velocity
+        # 4) project (ax,ay) on velocity to find tan component
+        # 5) project (ax, ay) on normal to velocit to find norm component
+        # 6) return
         return (self._accel_x, self._accel_y)
 
     @property
