@@ -4,3 +4,4 @@ protobuf
 pytest
 pytest-ordering
 pytest-asyncio
+numpy

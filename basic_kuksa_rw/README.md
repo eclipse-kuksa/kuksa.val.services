@@ -2,14 +2,14 @@
 
 1) docker run -e RUST_LOG="debug" --rm -it -p 55555:55555/tcp ghcr.io/eclipse/kuksa.val/databroker:master
 
-2) pip3 install -r requirements-dev.txt
+2) pip3 install -r requirements.txt
 
 3) python3 test_rw.py
 
 
 # To run car simulator 
 1) run kuksa with `docker run -e RUST_LOG="debug" --rm -it -p 55555:55555/tcp ghcr.io/eclipse/kuksa.val/databroker:master`
-2) pip3 install -r requirements-dev.txt
+2) pip3 install -r requirements.txt
 3) python3 bicycle_runner.py
 
 The service will now listen for changes to:
