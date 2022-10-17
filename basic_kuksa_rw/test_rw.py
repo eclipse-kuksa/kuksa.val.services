@@ -1,5 +1,4 @@
 
-import json
 import logging
 import os
 
@@ -50,7 +49,7 @@ async def run_carsim() -> None:
     await set_speed
     await set_speed_2
     await subscription
-    print(events)
+
     logger.debug("Received events:{}".format(events))
 
     await helper.close()
