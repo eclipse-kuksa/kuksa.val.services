@@ -63,6 +63,8 @@ async def main():
             car_sim.steer_angle = value * math.pi / 180  # deg too rad
             return
 
+    await flush_controls(helper)
+
     # the databroker should probably be flushed to avoid updates with stale data
     while True:
         controls_update = asyncio.create_task(
