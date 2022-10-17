@@ -17,18 +17,29 @@ import os
 import signal
 import threading
 import time
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 
 import grpc
+
+# Broker for receiving Vehicle Data from Data Broker
+from sdv.databroker.v1.broker_pb2 import (
+    GetDatapointsRequest,
+    GetMetadataRequest,
+    SubscribeRequest,
+)
+from sdv.databroker.v1.broker_pb2_grpc import BrokerStub
+
+# Collector for sending Vehicle Data to Data Broker
 from sdv.databroker.v1.collector_pb2 import (
     RegisterDatapointsRequest,
     RegistrationMetadata,
     UpdateDatapointsRequest,
 )
 from sdv.databroker.v1.collector_pb2_grpc import CollectorStub
-from sdv.databroker.v1.types_pb2 import ChangeType, DataType
+from sdv.databroker.v1.types_pb2 import ChangeType, DataType, Datapoint
 
 log = logging.getLogger("carsim")
 event = threading.Event()
@@ -49,6 +60,10 @@ def is_grpc_fatal_error(e: grpc.RpcError) -> bool:
         log.warning("Unhandled RpcError(%s, '%s')", e.code(), e.details())
         return False
 
+def sigterm_handler(_signo, _stack_frame):
+    # Raises SystemExit(0):
+    log.info("Gracefully shutting down...")
+    sys.exit(0)
 
 class CarSim:
     """API to access signals."""
@@ -60,22 +75,39 @@ class CarSim:
         self._connected = False
         self._registered = False
         self._shutdown = False
+
+        # Some vehicle data
+        self._vehicle_speed = -1
+
+        self._console_thread = Thread(
+            target=self.print_console, daemon=True, name="console-printer"
+        )
+        self._console_thread.start()
+
         self._databroker_thread = Thread(
             target=self.connect_to_databroker, daemon=True, name="databroker-connector"
         )
         self._databroker_thread.start()
         # self.connect_to_databroker()
 
+    def print_console(self) -> None:
+        log.info("Starting console logger")
+        while self._shutdown is False:
+            log.info("Vehicle.Speed: %s", self._vehicle_speed)
+            time.sleep(1)
+    
+    def do_connectivity(self, connectivity):
+        self.on_broker_connectivity_change(connectivity)
+    
     def connect_to_databroker(self) -> None:
         log.info("Connecting to Data Broker [%s]", self._vdb_address)
         self._metadata = None
         self._channel: grpc.Channel = grpc.insecure_channel(self._vdb_address)
         self._stub = CollectorStub(self._channel)
-        log.info("Using gRPC metadata: %s", self._metadata)
-        self._channel.subscribe(
-            lambda connectivity: self.on_broker_connectivity_change(connectivity),
-            try_to_connect=False,
-        )
+
+        self._broker_stub = BrokerStub(self._channel)
+        log.info("Using gRPC metadata: %s", self._metadata)     
+        self._channel.subscribe(self.do_connectivity,try_to_connect=False)
         self._run()
 
     def on_broker_connectivity_change(self, connectivity):
@@ -135,20 +167,83 @@ class CarSim:
         if self._channel:
             await self._channel.close()
 
-    def __enter__(self) -> "HvacService":
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback) -> None:
-        asyncio.run_coroutine_threadsafe(self.close(), asyncio.get_event_loop())
-
     def register_datapoints(self):
         # Provided via CAN feeder:
         log.info("Try register datapoints")
         
+        # Input:
+        # Vehicle.Throttle.PedalPosition
+        self.subscribe("Vehicle.Throttle.PedalPosition", self.on_throttle_pedalposition, 1)
+        self.subscribe("Vehicle.Breaks.PedalPosition", self.on_break_pedalposition, 1)
+        self.subscribe("Vehicle.SteeringWheel.Angle", self.on_steeringwheel_angle, 1)
+        
+        # Output:
         # Vehicle.Acceleration
         # Vehicle.Speed
         self.register("Vehicle.Speed", DataType.FLOAT, ChangeType.CONTINUOUS)
         self.register("Vehicle.Acceleration", DataType.FLOAT, ChangeType.CONTINUOUS)     
+
+    def on_throttle_pedalposition(self, data):
+        log.info("on_throttle_pedalposition")
+
+    def on_break_pedalposition(self, data):
+        log.info("on_break_pedalposition")
+
+    def on_steeringwheel_angle(self, data):
+        log.info("on_steeringwheel_angle")
+
+    def subscribe(
+        self,
+        query: str,
+        sub_callback: Callable[[str, Datapoint], None],
+        timeout: Optional[int] = None,
+    ) -> None:
+        try:
+            request = SubscribeRequest(query=query)
+            log.info("broker.Subscribe('{}')".format(query))
+            response = self._broker_stub.Subscribe(
+                request, metadata=self._grpc_metadata, timeout=timeout
+            )
+            # NOTE:
+            # 'async for' before iteration is crucial here with aio.channel!
+            for subscribe_reply in response:
+                log.debug("Streaming SubscribeReply %s", subscribe_reply)
+                """ from broker.proto:
+                message SubscribeReply {
+                    // Contains the fields specified by the query.
+                    // If a requested data point value is not available, the corresponding
+                    // Datapoint will have it's respective failure value set.
+                    map<string, databroker.v1.Datapoint> fields = 1;
+                }"""
+                if not hasattr(subscribe_reply, "fields"):
+                    raise Exception("Missing 'fields' in {}".format(subscribe_reply))
+
+                log.debug("SubscribeReply.{}".format(subscribe_reply.fields))
+                for name in subscribe_reply.fields:
+                    dp = subscribe_reply.fields[name]
+                    try:
+                        log.debug("Calling sub_callback({}, dp:{})".format(name, dp))
+                        sub_callback(name, dp)
+                    except Exception:
+                        log.exception("sub_callback() error", exc_info=True)
+                        pass
+            log.debug("Streaming SubscribeReply done...")
+
+        except grpc.RpcError as e:
+            if (
+                e.code() == grpc.StatusCode.DEADLINE_EXCEEDED
+            ):  # expected code if we used timeout, just stop subscription
+                log.debug("Exitting after timeout: {}".format(timeout))
+            else:
+                log.error(
+                    "broker.Subscribe({}) failed!\n --> {}".format(
+                        query, self.__get_grpc_error(e)
+                    )
+                )
+                raise e
+        except Exception:
+            log.exception("broker.Subscribe() error", exc_info=True)
+
 
     def register(self, name, data_type, change_type):
         self._register(name, data_type, change_type)
@@ -180,12 +275,18 @@ class CarSim:
 async def main():
     """Main function"""
     carsim = CarSim()
-    await asyncio.sleep(120)
+    await asyncio.sleep(10)
+    
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     log.setLevel(logging.DEBUG)
+    signal.signal(signal.SIGTERM, sigterm_handler)
     LOOP = asyncio.get_event_loop()
     LOOP.add_signal_handler(signal.SIGTERM, LOOP.stop)
-    LOOP.run_until_complete(main())
+    LOOP.add_signal_handler(signal.SIGTERM, sigterm_handler)
+    try:
+        LOOP.run_until_complete(main())
+    except KeyboardInterrupt:
+        sigterm_handler()
     LOOP.close()
