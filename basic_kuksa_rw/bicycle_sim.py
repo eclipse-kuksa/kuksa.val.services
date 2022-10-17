@@ -132,18 +132,18 @@ class SimulatedCar:
         return self._speed
 
     @property
-    def acceleration(self):
-        # acceleration as from acceleratometer, not implemented well right now
-        # TODO:
-        # project (ax, ay) to (vx, vy) and calculate normal and vert components
-        # https://math.libretexts.org/Bookshelves/Calculus/Map%3A_University_Calculus_(Hass_et_al)/12%3A_Vector-Valued_Functions_and_Motion_in_Space/12.5%3A_Tangential_and_Normal_Components_of_Acceleration
-        # 1) implemenet scalar product
-        # 2) implement normal vector finder
-        # 3) find normal to velocity
-        # 4) project (ax,ay) on velocity to find tan component
-        # 5) project (ax, ay) on normal to velocit to find norm component
-        # 6) return
+    def acceleration_world(self):
         return (self._accel_x, self._accel_y)
+
+    @property
+    def acceleration(self):
+        # get the acceleration in path (local) coordinates as if read by accelerometer
+        a  = np.array([self._accel_x,self._accel_y])
+        v = np.array([self._v_x, self._v_y])
+        aT = np.dot(v, a)/np.linalg.norm(v,2) # longitudinal (tangential) component
+        aN = np.cross(v, a)/np.linalg.norm(v,2) # lateral (normal) component
+
+        return float(aT), float(aN) # convert to normal python floats from numpy.float64
 
     @property
     def acceleration_norm(self):
@@ -236,12 +236,11 @@ class SimulatedCar:
 def test_data():
     # this should simulate going in circles
     car = SimulatedCar()
-    car.steer_angle = 0
+    car.steer_angle = np.pi/10
     car.accelerator_position = 1
     for i in range(100_000):
         car.update_car()
         print(f"{car.position[0]}\t{car.position[1]}")
-
 
 if __name__ == "__main__":
     test_data()
