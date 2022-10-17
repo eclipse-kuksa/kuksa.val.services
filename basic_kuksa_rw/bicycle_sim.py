@@ -1,4 +1,4 @@
-import math
+import numpy as np
 from time import monotonic
 
 
@@ -147,7 +147,7 @@ class SimulatedCar:
 
     @property
     def acceleration_norm(self):
-        return math.sqrt(self._accel_x**2 + self._accel_y**2)
+        return np.sqrt(self._accel_x**2 + self._accel_y**2)
 
     def _acc_from_ctrl(self):
         """Gas and brake are combined in a single variable 
@@ -176,12 +176,12 @@ class SimulatedCar:
     def _cog_turning_angle(self):
         # The turning angle of the center of gravity.
         # See the angle "beta" in the reference text.
-        return math.atan(self._lr * math.tan(self._steer_angle) / self._carl_len)
+        return np.arctan(self._lr * np.tan(self._steer_angle) / self._carl_len)
 
     def _rotational_speed(self):
         return (
             self._speed
-            * (math.tan(self._steer_angle) * math.cos(self._cog_turning_angle()))
+            * (np.tan(self._steer_angle) * np.cos(self._cog_turning_angle()))
             / self._carl_len
         )
 
@@ -204,10 +204,10 @@ class SimulatedCar:
         self._old_v_x = self._v_x
         self._old_v_y = self._v_y
 
-        self._v_x = self._speed * math.cos(
+        self._v_x = self._speed * np.cos(
             self.heading_angle + self._cog_turning_angle()
         )
-        self._v_y = self._speed * math.sin(
+        self._v_y = self._speed * np.sin(
             self.heading_angle + self._cog_turning_angle()
         )
 
