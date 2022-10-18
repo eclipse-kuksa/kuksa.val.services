@@ -38,7 +38,7 @@ from gen_proto.sdv.databroker.v1.collector_pb2 import (
 from gen_proto.sdv.databroker.v1.collector_pb2_grpc import CollectorStub
 from gen_proto.sdv.databroker.v1.types_pb2 import ChangeType, Datapoint, DataType
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("helper")
 
 
 class Databroker:
@@ -249,7 +249,7 @@ class Databroker:
                         logger.debug("Calling sub_callback({}, dp:{})".format(name, dp))
                         sub_callback(name, dp)
                     except Exception:
-                        logging.exception("sub_callback() error", exc_info=True)
+                        logger.exception("sub_callback() error", exc_info=True)
                         pass
             logger.debug("Streaming SubscribeReply done...")
 
@@ -259,14 +259,14 @@ class Databroker:
             ):  # expected code if we used timeout, just stop subscription
                 logger.debug("Exitting after timeout: {}".format(timeout))
             else:
-                logging.error(
+                logger.error(
                     "broker.Subscribe({}) failed!\n --> {}".format(
                         query, self.__get_grpc_error(e)
                     )
                 )
                 raise e
         except Exception:
-            logging.exception("broker.Subscribe() error", exc_info=True)
+            logger.exception("broker.Subscribe() error", exc_info=True)
 
 
 def __on_subscribe_event(name: str, dp: Datapoint) -> None:

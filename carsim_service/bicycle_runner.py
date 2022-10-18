@@ -36,7 +36,17 @@ logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
 helperlogger = logging.getLogger("helper")
-helperlogger.setLevel(os.getenv("LOG_LEVEL", "WARN"))
+helperlogger.setLevel(os.getenv("LOG_LEVEL", "CRITICAL"))
+
+rootlogger = logging.getLogger("root")
+rootlogger.setLevel(os.getenv("LOG_LEVEL", "CRITICAL"))
+
+grpclogger = logging.getLogger("grpc")
+grpclogger.setLevel(os.getenv("LOG_LEVEL", "CRITICAL"))
+
+def general_exception_handler(loop, context):
+    logger.warning("General exception: %s", context['message'])
+    return
 
 # This example shows the usage with python typings
 def _retry_policy(info: RetryInfo) -> RetryPolicyStrategy:
@@ -49,9 +59,9 @@ async def _before_retry(info: RetryInfo) -> None:
         return True, 0
     elif isinstance(info.exception, grpc.aio._call.AioRpcError):
         # Do something
-        logger.warn("Retry grpc... %s, %s", info.fails, info.exception.code())
+        logger.warning("Retry grpc... %s, %s", info.fails, info.exception.code())
     else:
-        logger.warn("Retry... %s, Detailed exception: %s", info.fails, info.exception)
+        logger.warning("Retry... %s, Detailed exception: %s", info.fails, info.exception)
         
 async def setup_helper() -> Databroker:
     logger.info("Using DATABROKER_ADDRESS={}".format(DATABROKER_ADDRESS))
@@ -137,6 +147,7 @@ async def main():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     LOOP = asyncio.get_event_loop()
+    LOOP.set_exception_handler(general_exception_handler)
     LOOP.add_signal_handler(signal.SIGTERM, LOOP.stop)
     LOOP.run_until_complete(main())
     LOOP.close()
