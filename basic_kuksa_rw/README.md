@@ -36,7 +36,7 @@ python3 simple_driver.py
 ```
 
 This driver uses the differnece of two gaussians with different mean values to generate a smooth control curve
-With control > 0 meaning acceleration and control < 0 meaning breaking. This driver app also only goes in a straight line
+With control > 0 meaning acceleration and control < 0 meaning braking. This driver app also only goes in a straight line
 (does not use the steering controls).
 
 $$
