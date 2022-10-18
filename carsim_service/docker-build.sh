@@ -18,7 +18,10 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONTEXT_DIR="$SCRIPT_DIR"
 # name of docker image: ${DOCKER_ARCH)/${DOCKER_IMAGE}
-DOCKER_IMAGE="hvac_service"
+DOCKER_IMAGE="carsim"
+
+REPO_NAME="kuksa.val.services-carsim"
+REPO_OWNER="mikehaller"
 
 print_usage() {
 	echo "USAGE: $0 [OPTIONS] TARGETS"
@@ -86,7 +89,7 @@ if [ "$DOCKER_ARCH" = "multiarch" ]; then
 else
 	if [ $LOCAL -eq 1 ]; then
 		DOCKER_ARGS="--load -t $DOCKER_ARCH/$DOCKER_IMAGE"
-		DOCKER_EXPORT="($DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/eclipse/kuksa.val.services/$DOCKER_IMAGE:prerelease)"
+		DOCKER_EXPORT="($DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/${REPO_OWNER}/${REPO_NAME}/$DOCKER_IMAGE:latest)"
 	else
 		DOCKER_ARGS="--platform linux/$DOCKER_ARCH -t $DOCKER_ARCH/$DOCKER_IMAGE --output type=oci,dest=$DOCKER_EXPORT"
 	fi
@@ -101,8 +104,8 @@ echo "# docker buildx build $DOCKER_ARGS -f Dockerfile $CONTEXT_DIR"
 DOCKER_BUILDKIT=1 docker buildx build $DOCKER_ARGS -f Dockerfile "$CONTEXT_DIR" $DOCKER_EXT
 
 if [ $? -eq 0 ]; then
-	echo "docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/eclipse/kuksa.val.services/$DOCKER_IMAGE:prerelease"
-	docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/eclipse/kuksa.val.services/$DOCKER_IMAGE:prerelease
+	echo "docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/${REPO_OWNER}/${REPO_NAME}/$DOCKER_IMAGE:latest"
+	docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/${REPO_OWNER}/${REPO_NAME}/$DOCKER_IMAGE:latest
 	echo "# Exported $DOCKER_ARCH/$DOCKER_IMAGE in $DOCKER_EXPORT"
 	docker image ls | grep "/$DOCKER_IMAGE"
 fi

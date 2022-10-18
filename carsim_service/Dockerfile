@@ -35,10 +35,10 @@ RUN pip3 install wheel && pip3 install scons && pip3 install pyinstaller && pip3
 # install sdv package in edit mode
 RUN pip3 install --no-cache-dir -e .
 
-RUN pyinstaller --clean -F -s hvacservice.py # --debug=imports
+RUN pyinstaller --clean -F -s bicycle_runner.py # --debug=imports
 
 WORKDIR /dist
-RUN staticx hvacservice hvacservice-exe
+RUN staticx bicycle_runner bicycle_runner-exe
 
 # Runner stage, to copy in the virtual environment and the app
 FROM scratch
@@ -54,20 +54,23 @@ WORKDIR /conf
 
 WORKDIR /dist
 
-COPY --from=builder /dist/hvacservice-exe .
+COPY --from=builder /dist/bicycle_runner-exe .
 
 ENV PATH="/dist:$PATH"
 
 # useful dumps about feeding values
-ENV LOG_LEVEL="info,databroker=debug,hvac_service=debug"
+#ENV LOG_LEVEL="info,databroker=info,bicycle_runner=info"
+ENV LOG_LEVEL="INFO"
 
 # Vehicle Data Broker host:port
 #ENV VDB_ADDRESS="localhost:55555"
 # Override VDB_ADDRESS port if set
 #ENV DAPR_GRPC_PORT="55555"
 # VDB DAPR APP ID
-ENV VEHICLEDATABROKER_DAPR_APP_ID=vehicledatabroker
+#ENV VEHICLEDATABROKER_DAPR_APP_ID=vehicledatabroker
+
+ENV DATABROKER_ADDRESS="localhost:55555"
 
 ENV PYTHONUNBUFFERED=yes
 
-CMD ["./hvacservice-exe"]
+CMD ["./bicycle_runner-exe"]

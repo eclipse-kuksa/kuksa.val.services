@@ -1,71 +1,46 @@
-# CAR sim example
+# To run minimal kuksa read/write example
 
-The CAR sim service is a service which simulates a vehicle's basic physical movement, such as acceleration, speed and steering.
+1) docker run -e RUST_LOG="debug" --rm -it -p 55555:55555/tcp ghcr.io/eclipse/kuksa.val/databroker:master
 
-## Usage
+2) pip3 install -r requirements.txt
 
-1. Run Eclipse Kuksa.VAL Data Broker
+3) python3 test_rw.py
 
-    docker run --rm -it -p 55555:55555/tcp ghcr.io/eclipse/kuksa.val/databroker:master
 
-2. Run the CAR simulator
+# To run car simulator 
+1) run kuksa with `docker run -e RUST_LOG="debug" --rm -it -p 55555:55555/tcp ghcr.io/eclipse/kuksa.val/databroker:master`
+2) pip3 install -r requirements.txt
+3) python3 bicycle_runner.py
 
-    python3 carsim.py
+The service will now listen for changes to:
+- "Vehicle.Chassis.Brake.PedalPosition"
+- "Vehicle.Chassis.Accelerator.PedalPosition"
+- "Vehicle.Chassis.SteeringWheel.Angle"
 
-3. Run the DRIVER  simulator
+And publish updates for while running the simulation:
 
-    python3 driversim.py
+- "Vehicle.Speed"
+- "Vehicle.Acceleration.Lateral"
+- "Vehicle.Acceleration.Longitudinal"
+- "Vehicle.Acceleration.Vertical"
 
-# CAR sim
+Use the environmental variable `SIM_SPEED` (default=0.001 /seconds/) to change simulation update speed
+And `LOG_LEVEL` to set the logging level for the simulator runner.
 
-## Vehicle Signals
+# To run simple driver simulator:
 
-As a *Vehicle Service*, the CAR sim is supposed to update sensor data in the Vehicle Signal Specification tree. A real implementation would read sensor data via hardware/physical sensors while the CAR sim is simulating the sensor data. It is implemented as a Kuksa Feeder, interacting with the Kuksa Data Broker only. It is supposed to be deployed as a headless container running on the device.
+With the car simulator service already running, in a seperate terminal run:
 
-### Input
-
-```
-Vehicle.Chassis.Accelerator.PedalPosition : uint8 in percent
-Vehicle.Chassis.Break.PedalPosition : uint8 in percent
-Vehicle.Chassis.SteeringWheel.Angle : int16 in degrees (positive=left, negative=right)
-Vehicle.CurrentOverallWeight : uint16 in kg
-```
-
-#### Acceleration, Break and Steering
-
-These three values are the input for the CAR simulation. They will be provided by another Vehicle Service called `driversim` (see below).
-
-#### Vehicle Weight
-
-*Not to be implemented for now*
-The CAR sim will set the `Vehicle.CurrentOverallWeight` initially to a static value of `1500 kg`. It can not be changed.
-
-### Output
-
-The following vehicle signals or sensor values are calculated by the CAR sim algorithm and updated in a stream of vehicle signals into the Kuksa Data Broker:
-
-```
-Vehicle.Acceleration.Lateral : float in m/s^3
-Vehicle.Acceleration.Longitudinal : float in m/s^3
-Vehicle.Acceleration.Vertical : float in m/s^3
-Vehicle.Speed : float in km/h
+```python
+python3 simple_driver.py
 ```
 
-# Driver Sim App
+This driver uses the differnece of two gaussians with different mean values to generate a smooth control curve
+With control > 0 meaning acceleration and control < 0 meaning braking. This driver app also only goes in a straight line
+(does not use the steering controls).
 
-For the physical simulation of the vehicle, the model needs to have input as well, otherwise it would only be reflecting a parked car, which would be very boring.
+$$
+control(time)= \frac{1}{0.5\sqrt{\left(2\pi\right)}}\exp\left(-\left(\frac{time-2}{0.5}\right)^{2}\right)-\frac{3}{0.7\sqrt{\left(2\pi\right)}}\exp\left(-\left(\frac{time-15}{0.7}\right)^{2}\right)
+$$
 
-The driver sim app simulates a "human" driver with the following behavior:
-- Driver simulator start with a "good" driving style:
-    - He starts to drive around slowly, that means with low acceleration and low speeds
-    - Every 10 seconds, he changes the acceleration to reach a new target speed, which randomly selects either 30, 50 or 70 km/h
-            -> Requires https://en.wikipedia.org/wiki/PID_controller   == Cruise Control
-            Alternatibve: He changes the accleration randomly without knowing current speed?
-    - Every 20 seconds, he randomly steers to the left or to the right, smoothly with large turning radius
-- After 5 minutes of driving, the virtual driver switches to a "bad" driving style:
-    - He increases acceleration to a maximum until he is reaching maximum speed of 200 km/h
-    - Every 10 seconds, he changes the acceleration to reach a new target speed, which randomly selects either 30km/h, 100km/h or 200km/h
-    - Every 15 seconds, he randomly steers to the left or to the right harshly with small turning radius.
-    - Every 20 seconds, the break pedal position is pressed for 1 second in a random position between 50% and 100%
-- Every 5 minutes, the driver sim changes the driving style between "good" and "bad".
 

@@ -17,4 +17,4 @@ PKG_VERSION = "v0.1.0"
 
 pkg_packages = find_packages()
 
-setup(name="hvac_service", packages=pkg_packages, version=PKG_VERSION)
+setup(name="carsim_service", packages=pkg_packages, version=PKG_VERSION)

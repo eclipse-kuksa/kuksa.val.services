@@ -1,3 +1,9 @@
+asyncio
 grpcio
 protobuf
-types-protobuf
+pytest
+pytest-ordering
+pytest-asyncio
+numpy
+retry
+aioretry
