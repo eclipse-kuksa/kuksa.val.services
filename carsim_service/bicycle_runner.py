@@ -97,7 +97,7 @@ async def mainloop(car_sim, helper, set_model_param):
         await pub_accel_long
         await pub_accel_vert
         logger.debug(f"Car State: {car_sim.__dict__}")
-        logger.info(f"Time={car_sim._simul_time} Speed={car_sim.speed * 3.6} km/h Acceleration (Long)={car_sim.acceleration[0]} m/s^2 Acceleration (Lat)={car_sim.acceleration[1]} m/s^2")
+        logger.info(f"Time={car_sim.simul_time} Speed={car_sim.speed * 3.6} km/h Acceleration (Long)={car_sim.acceleration[0]} m/s^2 Acceleration (Lat)={car_sim.acceleration[1]} m/s^2")
         
         #max_acceleration=6.0,   # m/s^2
         #max_deceleration=10.0,  # m/s^2
