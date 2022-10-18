@@ -40,7 +40,7 @@ With control > 0 meaning acceleration and control < 0 meaning breaking. This dri
 (does not use the steering controls).
 
 $$
-control(time)= \frac{1}{0.5\sqrt{\left(2\pi\right)}}\exp\left(-\left(\frac{x-2}{0.5}\right)^{2}\right)-\frac{3}{0.7\sqrt{\left(2\pi\right)}}\exp\left(-\left(\frac{x-15}{0.7}\right)^{2}\right)
+control(time)= \frac{1}{0.5\sqrt{\left(2\pi\right)}}\exp\left(-\left(\frac{time-2}{0.5}\right)^{2}\right)-\frac{3}{0.7\sqrt{\left(2\pi\right)}}\exp\left(-\left(\frac{time-15}{0.7}\right)^{2}\right)
 $$
 
 
