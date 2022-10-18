@@ -28,6 +28,8 @@ rootlogger.setLevel(os.getenv("LOG_LEVEL", "CRITICAL"))
 grpclogger = logging.getLogger("grpc")
 grpclogger.setLevel(os.getenv("LOG_LEVEL", "CRITICAL"))
 
+SIM_SPEED = float(os.environ.get("SIM_SPEED", 0.5))  # timeout between updates
+
 
 # This example shows the usage with python typings
 def _retry_policy(info: RetryInfo) -> RetryPolicyStrategy:
@@ -85,16 +87,18 @@ async def main_loop(helper, t_current):
 
     await pub_accelerator
     await pub_brake
+    
 
 async def main():
-    t0 = monotonic()
-    t_max = 20  # seconds
-    t_current = monotonic() - t0
-    helper = await setup_helper()
+    simul_timestep = SIM_SPEED
+    t = 0
+    t_max = 20
     
-    while t_current < t_max:
-        await main_loop(helper, t_current)
-        t_current = monotonic() - t0
+    helper = await setup_helper() 
+    while t < t_max:
+        await main_loop(helper, t)
+        t += simul_timestep
+        await asyncio.sleep(SIM_SPEED)
     await helper.close()
 
 

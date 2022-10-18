@@ -114,7 +114,7 @@ async def main_loop(car_sim, helper, set_model_param):
 
 
 async def main():
-    car_sim = SimulatedCar()
+    car_sim = SimulatedCar(simulation_step=SIM_SPEED)
 
     with await setup_helper() as helper:
 
