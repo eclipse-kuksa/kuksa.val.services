@@ -87,10 +87,10 @@ async def main():
         pub_accel_lat = asyncio.create_task(
             helper.set_float_datapoint(DP_ACCEL_LAT, car_sim.acceleration[1])  # m/s^2
         )
-
         pub_accel_vert = asyncio.create_task(
             helper.set_float_datapoint(DP_ACCEL_LONG, 0.0)  # m/s^2
         )
+
         await pub_speed
         await pub_accel_lat
         await pub_accel_long
@@ -104,3 +104,4 @@ if __name__ == "__main__":
     LOOP.add_signal_handler(signal.SIGTERM, LOOP.stop)
     LOOP.run_until_complete(main())
     LOOP.close()
+ 
