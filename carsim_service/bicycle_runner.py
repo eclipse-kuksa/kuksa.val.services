@@ -113,45 +113,44 @@ async def mainloop(car_sim, helper, set_model_param):
         #max_deceleration=10.0,  # m/s^2
         #max_speed=60.0,         # m/s
 
-def register_signal_handlers():
+def register_signal_handlers(databroker: Databroker):
     LOOP = asyncio.get_running_loop()
-    # LOOP.add_signal_handler()    
+    databroker.close()
     
 async def main():
-    helper = await setup_helper()
     car_sim = SimulatedCar()
-    
-    def set_model_param(name: str, dp_raw: Datapoint) -> None:
-        logger.debug(f'{name=}, {dp_raw=}')
-        dp = helper.datapoint_to_dict(name, dp_raw)
+    with await setup_helper() as helper:
+        def set_model_param(name: str, dp_raw: Datapoint) -> None:
+            logger.debug(f'{name=}, {dp_raw=}')
+            dp = helper.datapoint_to_dict(name, dp_raw)
 
-        if dp["type"] == "failure_value":
-            value = 1
-        else:
-            value = dp["value"]
+            if dp["type"] == "failure_value":
+                value = 1
+            else:
+                value = dp["value"]
 
-        if name == DP_BRAKE_POS:
-            car_sim.brake_position = value / 100  # percent
-            return
-        if name == DP_ACCELR_POS:
-            car_sim.accelerator_position = value / 100  # percent
-            return
-        if name == DP_STEER_ANGLE:
-            car_sim.steer_angle = value * math.pi / 180  # deg too rad
-            return
-    
-    await flush_controls(helper)
-    
-    
-    # the databroker should probably be flushed to avoid updates with stale data
-    while True:
-        await mainloop(car_sim, helper, set_model_param)
+            if name == DP_BRAKE_POS:
+                car_sim.brake_position = value / 100  # percent
+                return
+            if name == DP_ACCELR_POS:
+                car_sim.accelerator_position = value / 100  # percent
+                return
+            if name == DP_STEER_ANGLE:
+                car_sim.steer_angle = value * math.pi / 180  # deg too rad
+                return
+        
+        await flush_controls(helper)
+        
+        
+        # the databroker should probably be flushed to avoid updates with stale data
+        while True:
+            await mainloop(car_sim, helper, set_model_param)
+        
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     LOOP = asyncio.get_event_loop()
     LOOP.set_exception_handler(general_exception_handler)
-    LOOP.add_signal_handler(signal.SIGTERM, LOOP.stop)
     LOOP.run_until_complete(main())
     LOOP.close()
  
