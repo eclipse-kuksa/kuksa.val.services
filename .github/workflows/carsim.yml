@@ -21,6 +21,10 @@ on:
   workflow_call:
   workflow_dispatch:
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/carsim
+  
 jobs:
   build-carsim-service-image:
     name: "Build multi-arch image"
@@ -42,22 +46,14 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: |
-            kuksa.val.services/carsim
-            ghcr.io/${{ github.repository_owner }}/kuksa.val.services/carsim
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.repository_owner }}
+          username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - id: repository-name-adjusted
-        name: Make repository name in lower case for docker upload.
-        uses: ASzc/change-string-case-action@v2
-        with:
-          string: ${{ github.repository }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -66,7 +62,6 @@ jobs:
         id: image_build
         uses: docker/build-push-action@v3
         with:
-          pull: true
           push: true
           context: ./carsim_service
           file: ./carsim_service/Dockerfile
