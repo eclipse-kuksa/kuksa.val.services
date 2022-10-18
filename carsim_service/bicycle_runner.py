@@ -113,11 +113,14 @@ async def mainloop(car_sim, helper, set_model_param):
         #max_deceleration=10.0,  # m/s^2
         #max_speed=60.0,         # m/s
 
+def register_signal_handlers():
+    LOOP = asyncio.get_running_loop()
+    # LOOP.add_signal_handler()    
     
 async def main():
     helper = await setup_helper()
     car_sim = SimulatedCar()
-
+    
     def set_model_param(name: str, dp_raw: Datapoint) -> None:
         logger.debug(f'{name=}, {dp_raw=}')
         dp = helper.datapoint_to_dict(name, dp_raw)
