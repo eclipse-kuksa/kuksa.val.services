@@ -141,7 +141,7 @@ class SimulatedCar:
         aT = np.dot(v, a)/np.linalg.norm(v,2) # longitudinal (tangential) component
         aN = np.cross(v, a)/np.linalg.norm(v,2) # lateral (normal) component
 
-        return float(aT), float(aN) # convert to normal python floats from numpy.float64
+        return float(np.nan_to_num(aT,0)), float(np.nan_to_num(aN,0)) # convert to normal python floats from numpy.float64
 
     @property
     def acceleration_norm(self):
@@ -177,7 +177,7 @@ class SimulatedCar:
         self._speed = max(0, min(new_speed, self._max_speed))
 
     def _update_heading_angle(self):
-        self._heading_angle = (
+        self._heading_angle = ( 
             self._heading_angle + self._rotational_speed() * self._simulation_step
         )
 
