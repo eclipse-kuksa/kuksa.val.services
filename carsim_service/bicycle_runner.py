@@ -1,21 +1,13 @@
-import logging
-import os
-import math
 import asyncio
-import signal
+import logging
+import math
+import os
+
 import grpc
-
-from aioretry import (
-    retry,
-    # Tuple[bool, Union[int, float]]
-    RetryPolicyStrategy,
-    RetryInfo,
-)
-
+from aioretry import RetryInfo, RetryPolicyStrategy, retry
+from bicycle_sim import SimulatedCar
 from gen_proto.sdv.databroker.v1.types_pb2 import Datapoint
 from helper import Databroker
-from bicycle_sim import SimulatedCar
-
 
 DATABROKER_ADDRESS = os.environ.get("DATABROKER_ADDRESS", "127.0.0.1:55555")
 
