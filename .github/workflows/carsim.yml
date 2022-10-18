@@ -60,18 +60,6 @@ jobs:
         with:
           pull: true
           push: true
-          outputs: |
-            type=oci,dest=./oci_vservice-carsim.tar
           context: ./carsim_service
           file: ./carsim_service/Dockerfile
           platforms: linux/amd64, linux/arm64
-          tags: ${{ github.sha }}
-          labels: |
-            org.opencontainers.image.source=https://github.com/${{steps.repository-name-adjusted.outputs.lowercase}}
-
-      - name: Temporarily save Docker image
-        uses: actions/upload-artifact@v3
-        with:
-          name: oci_vservice-carsim.tar
-          path: ${{github.workspace}}/oci_vservice-carsim.tar
-          retention-days: 1
