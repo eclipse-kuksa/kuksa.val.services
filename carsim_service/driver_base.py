@@ -9,7 +9,7 @@ class DriverBase(ABC):
     """
     
     def __init__(self, simulation_speed):
-        self.sim_speed = simulation_speed
+        self.simulation_speed = simulation_speed
 
     @property
     @abstractmethod
@@ -34,7 +34,7 @@ class DriverBase(ABC):
     @property
     @abstractmethod
     def steering_angle(self) -> int:
-        """Returns the current Steering wheel angle position
+        """Returns the current steering wheel angle position
 
         Returns:
             int: int16 - Steering wheel angle.

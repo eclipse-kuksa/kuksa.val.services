@@ -5,7 +5,7 @@ import traceback
 
 import grpc
 from aioretry import RetryInfo, RetryPolicyStrategy, retry
-from driver_base import DriverBase
+from driver import Driver
 from helper import Databroker
 
 DATABROKER_ADDRESS = os.environ.get("DATABROKER_ADDRESS", "127.0.0.1:55555")
@@ -58,21 +58,18 @@ async def setup_helper() -> Databroker:
 
 
 @retry(retry_policy=_retry_policy, before_retry=_before_retry)
-async def main_loop(helper: Databroker, driver: DriverBase):
+async def main_loop(helper: Databroker, driver: Driver):
     accelerator, brake, steering_angle = driver.get_controls()
-
+    logger.debug(f"Sending {accelerator=} {brake=} {steering_angle=}")
     await asyncio.create_task(helper.set_uint32_datapoint(DP_ACCELR_POS, accelerator))
     await asyncio.create_task(helper.set_uint32_datapoint(DP_BRAKE_POS, brake))
-    await asyncio.create_task(helper.set_float_datapoint(DP_STEER_ANGLE, steering_angle))
+    await asyncio.create_task(helper.set_int32_datapoint(DP_STEER_ANGLE, steering_angle))
     await asyncio.sleep(SIM_SPEED)
 
 
 async def main():
-    # TODO: Switch to an actual driver. DriverBase is an abstract class
-    # and will fail on instantiation
-
     helper = await setup_helper()
-    driver = DriverBase(SIM_SPEED)
+    driver = Driver(SIM_SPEED)
 
     with await setup_helper() as helper:
         while True:
