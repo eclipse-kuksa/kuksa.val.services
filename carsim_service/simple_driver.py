@@ -3,7 +3,6 @@ import logging
 import math
 import os
 import traceback
-from operator import add
 from time import monotonic
 
 import grpc
