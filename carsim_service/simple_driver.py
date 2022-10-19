@@ -2,7 +2,6 @@ import asyncio
 import logging
 import math
 import os
-import time
 import traceback
 from operator import add
 from time import monotonic
@@ -61,7 +60,7 @@ def control_curve(x):
     # negative values - braking
     c = normal_dist(x, mu=2*SIM_SPEED, sigma=6*SIM_SPEED) \
                     - normal_dist(x, mu=15*SIM_SPEED, sigma=3*SIM_SPEED)
-    logger.info("Sending acceleration control value %s", c)
+    logger.info("%s: Sending acceleration control value %s", monotonic(),c)
     return c
 
 
