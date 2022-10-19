@@ -123,7 +123,7 @@ async def main():
             dp = helper.datapoint_to_dict(name, dp_raw)
 
             if dp["type"] == "failure_value":
-                value = 1
+                value = 0 # if no value is posted in kuksa assume 0 as default
             else:
                 value = dp["value"]
 
