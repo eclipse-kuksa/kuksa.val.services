@@ -2,6 +2,7 @@ import asyncio
 import logging
 import math
 import os
+import traceback
 
 import grpc
 from aioretry import RetryInfo, RetryPolicyStrategy, retry
@@ -52,7 +53,8 @@ async def _before_retry(info: RetryInfo) -> None:
         logger.warning("Retry grpc... %s, %s", info.fails, info.exception.code())
     else:
         logger.warning(
-            "Retry... %s, Detailed exception: %s", info.fails, info.exception
+            "Retry... %s, Detailed exception: %s. \n Traceback: %s",
+            info.fails, info.exception, traceback.format_exc()
         )
 
 

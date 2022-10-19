@@ -1,9 +1,10 @@
 import asyncio
 import logging
 import math
-from operator import add
 import os
-import signal
+import time
+import traceback
+from operator import add
 from time import monotonic
 
 import grpc
@@ -28,7 +29,7 @@ rootlogger.setLevel(os.getenv("LOG_LEVEL", "CRITICAL"))
 grpclogger = logging.getLogger("grpc")
 grpclogger.setLevel(os.getenv("LOG_LEVEL", "CRITICAL"))
 
-SIM_SPEED = float(os.environ.get("SIM_SPEED", 0.5))  # timeout between updates
+SIM_SPEED = float(os.environ.get("SIM_SPEED", 2))  # timeout between updates
 
 
 # This example shows the usage with python typings
@@ -46,19 +47,22 @@ async def _before_retry(info: RetryInfo) -> None:
         logger.warning("Retry grpc... %s, %s", info.fails, info.exception.code())
     else:
         logger.warning(
-            "Retry... %s, Detailed exception: %s", info.fails, info.exception
+            "Retry... %s, Detailed exception: %s. \n Traceback: %s",
+            info.fails, info.exception, traceback.format_exc()
         )
 
-
 def normal_dist(x, mu, sigma):
-    prob_density = (math.pi * sigma) * math.exp(-0.5 * ((x - mu) / sigma) ** 2)
+    prob_density = (1/(sigma * math.sqrt(2*math.pi))) * math.exp( (-1/2) * ((x-mu)/sigma)**2)
     return prob_density
 
 
 def control_curve(x):
     # positive values - acceleration
     # negative values - braking
-    return normal_dist(x, mu=2, sigma=0.5) - 3 * normal_dist(x, mu=15, sigma=0.7)
+    c = normal_dist(x, mu=2*SIM_SPEED, sigma=6*SIM_SPEED) \
+                    - normal_dist(x, mu=15*SIM_SPEED, sigma=3*SIM_SPEED)
+    logger.info("Sending acceleration control value %s", c)
+    return c
 
 
 async def setup_helper() -> Databroker:
@@ -84,15 +88,13 @@ async def main_loop(helper, t_current):
         pub_brake = asyncio.create_task(
             helper.set_uint32_datapoint(DP_BRAKE_POS, int(-control * 100))
         )
-
     await pub_accelerator
-    await pub_brake
-    
+    await pub_brake    
 
 async def main():
     simul_timestep = SIM_SPEED
     t = 0
-    t_max = 20
+    t_max = 20*SIM_SPEED
     
     helper = await setup_helper() 
     while t < t_max:

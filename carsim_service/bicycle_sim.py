@@ -1,6 +1,8 @@
-import numpy as np
-from time import monotonic
 from collections import namedtuple
+from time import monotonic
+
+import numpy as np
+
 
 class SimulatedCar:
     """
@@ -139,14 +141,14 @@ class SimulatedCar:
         a  = np.array([self._accel_x,self._accel_y])
         v = np.array([self._v_x, self._v_y])
         
-        if np.isclose(np.linalg(v, 2),0): # prevents divide by zero errors
+        if np.isclose(np.linalg.norm(v, 2), 0): # prevents divide by zero errors
             return (0.0, 0.0)
         
-        aT = np.dot(v, a)/np.linalg.norm(v,2) # longitudinal (tangential) component
-        aN = np.cross(v, a)/np.linalg.norm(v,2) # lateral (normal) component
+        aT = np.dot(v, a)/np.linalg.norm(v, 2) # longitudinal (tangential) component
+        aN = np.cross(v, a)/np.linalg.norm(v, 2) # lateral (normal) component
 
         # convert to normal python floats from numpy.float64
-        return float(np.nan_to_num(aT,0)), float(np.nan_to_num(aN,0)) 
+        return float(np.nan_to_num(aT, 0)), float(np.nan_to_num(aN, 0)) 
 
     @property
     def acceleration_norm(self):
