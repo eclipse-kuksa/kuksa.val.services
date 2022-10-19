@@ -34,7 +34,7 @@ class DriverBase(ABC):
     @property
     @abstractmethod
     def steering_angle(self) -> int:
-        """Returns the current brake position
+        """Returns the current Steering wheel angle position
 
         Returns:
             int: int16 - Steering wheel angle.
