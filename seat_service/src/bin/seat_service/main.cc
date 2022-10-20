@@ -21,7 +21,10 @@
 
 #include "seat_adjuster.h"
 #include "seat_data_feeder.h"
+#include "seat_position_subscriber.h"
 #include "seats_grpc_service.h"
+
+#include "collector_client.h"
 
 #define SELF "[SeatSvc] "
 
@@ -86,12 +89,19 @@ void wait_for_signal(int fd) {
 
 void Run(std::string can_if_name, std::string listen_address, std::string port, std::string broker_addr) {
     auto seat_adjuster = sdv::SeatAdjuster::createInstance(can_if_name);
+    auto client = sdv::broker_feeder::CollectorClient::createInstance(broker_addr);
 
     // Setup feeder
     //
-    sdv::seat_service::SeatDataFeeder seat_data_feeder(seat_adjuster, broker_addr);
+    sdv::seat_service::SeatDataFeeder seat_data_feeder(seat_adjuster, client);
     std::cout << SELF "SeatDataFeeder connecting to " << broker_addr << std::endl;
     std::thread feeder_thread(&sdv::seat_service::SeatDataFeeder::Run, &seat_data_feeder);
+
+    // Setup target actuator subscriber
+    sdv::seat_service::SeatPositionSubscriber seat_position_subscriber(seat_adjuster, client);
+    std::cout << SELF "Start seat position subscription" << broker_addr << std::endl;
+
+    std::thread subscriber_thread(&sdv::seat_service::SeatPositionSubscriber::Run, &seat_position_subscriber);
 
     // Setup grpc server and register the services
     //
@@ -113,8 +123,10 @@ void Run(std::string can_if_name, std::string listen_address, std::string port, 
     std::cout << SELF "Shutting down..." << std::endl;
 
     seat_data_feeder.Shutdown();
+    seat_position_subscriber.Shutdown();
     server->Shutdown();
     server_thread.join();
+    subscriber_thread.join();
     feeder_thread.join();
 
     // Optional: Delete all global objects allocated by libprotobuf.

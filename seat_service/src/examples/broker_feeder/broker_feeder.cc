@@ -17,6 +17,8 @@
 
 #include <iostream>
 #include <string>
+#include <thread>
+#include <chrono>
 
 #include "data_broker_feeder.h"
 
@@ -46,7 +48,8 @@ int main(int argc, char** argv) {
         }
     }
 
-    auto feeder = sdv::broker_feeder::DataBrokerFeeder::createInstance(target_str, {});
+    auto client = sdv::broker_feeder::CollectorClient::createInstance(target_str);
+    auto feeder = sdv::broker_feeder::DataBrokerFeeder::createInstance(client, {});
 
     for (int i = 0; i < 1000; i += 10) {
         std::cout << "Feed Value "<< i <<" to 'Vehicle.Cabin.Seat.Row1.Pos1.Position'" << std::endl;
@@ -54,6 +57,8 @@ int main(int argc, char** argv) {
         datapoint.set_int32_value(i);
         feeder->FeedValue("Vehicle.Cabin.Seat.Row1.Pos1.Position", datapoint);
     }
+
+    std::this_thread::sleep_for(std::chrono::seconds(10));
 
     return 0;
 }
