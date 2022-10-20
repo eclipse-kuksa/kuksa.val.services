@@ -35,10 +35,10 @@ RUN pip3 install wheel && pip3 install scons && pip3 install pyinstaller && pip3
 # install sdv package in edit mode
 RUN pip3 install --no-cache-dir -e .
 
-RUN pyinstaller --clean -F -s bicycle_runner.py # --debug=imports
+RUN pyinstaller --clean -F -s driver_runner.py # --debug=imports
 
 WORKDIR /dist
-RUN staticx bicycle_runner bicycle_runner-exe
+RUN staticx driver_runner driver_runner-exe
 
 # Runner stage, to copy in the virtual environment and the app
 FROM scratch
@@ -54,12 +54,12 @@ WORKDIR /conf
 
 WORKDIR /dist
 
-COPY --from=builder /dist/bicycle_runner-exe .
+COPY --from=builder /dist/driver_runner-exe .
 
 ENV PATH="/dist:$PATH"
 
 # useful dumps about feeding values
-#ENV LOG_LEVEL="info,databroker=info,bicycle_runner=info"
+#ENV LOG_LEVEL="info,databroker=info,driver_runner=info"
 ENV LOG_LEVEL="INFO"
 
 # Vehicle Data Broker host:port
@@ -73,4 +73,4 @@ ENV DATABROKER_ADDRESS="localhost:55555"
 
 ENV PYTHONUNBUFFERED=yes
 
-CMD ["./bicycle_runner-exe"]
+CMD ["./driver_runner-exe"]

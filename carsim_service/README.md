@@ -18,5 +18,5 @@ And publish updates for while running the simulation:
 Use the environmental variable `SIM_SPEED` (default=2 /seconds/) to change simulation update speed
 And `LOG_LEVEL` to set the logging level for the simulator runner.
 
-
+(or run the pre-built container in the registry)
 
