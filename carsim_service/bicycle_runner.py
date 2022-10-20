@@ -136,7 +136,6 @@ async def main():
                 car_sim.accelerator_position = value / 100  # percent
                 return
             if name == DP_STEER_ANGLE:
-                logger.info(f"Steering angle {value} degs")
                 car_sim.steer_angle = value * math.pi / 180  # deg too rad
                 return
 
