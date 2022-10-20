@@ -1,0 +1,9 @@
+asyncio
+grpcio
+protobuf
+pytest
+pytest-ordering
+pytest-asyncio
+numpy
+retry
+aioretry
