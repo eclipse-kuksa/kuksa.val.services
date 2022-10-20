@@ -35,7 +35,8 @@ using sdv::databroker::v1::DataType;
 using sdv::databroker::v1::ChangeType;
 using sdv::databroker::v1::Datapoint_Failure;
 
-SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, const std::string& broker_addr)
+
+SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std::shared_ptr<broker_feeder::CollectorClient> collector_client)
     : seat_adjuster_(seat_adjuster)
 {
     /* Define datapoints (metadata) of seat service
@@ -61,7 +62,7 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, cons
 
     /* Init feeder
      */
-    broker_feeder_ = sdv::broker_feeder::DataBrokerFeeder::createInstance(broker_addr, std::move(metadata));
+    broker_feeder_ = sdv::broker_feeder::DataBrokerFeeder::createInstance(collector_client, std::move(metadata));
 
     /* Internally subscribe to signals to be fed to broker
      */

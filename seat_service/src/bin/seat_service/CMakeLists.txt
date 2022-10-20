@@ -13,6 +13,7 @@
 
 add_executable(seat_service
   "seat_data_feeder.cc"
+  "seat_position_subscriber.cc"
   "main.cc"
 )
 

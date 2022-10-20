@@ -38,6 +38,7 @@ get_filename_component(GRPC_CPP_PLUGIN_PROGRAM_ENV "${GRPC_CPP_PLUGIN_PROGRAM_EN
 add_library(data_broker_feeder
   STATIC
     data_broker_feeder.cc
+    collector_client.cc
 )
 
 target_link_libraries(data_broker_feeder
@@ -85,6 +86,9 @@ protobuf_generate(
   IMPORT_DIRS
     ${PROTO_SOURCE_DIR}
 )
+
+get_property(DB_FEEDER_INCLUDE_DIRS TARGET data_broker_feeder PROPERTY INCLUDE_DIRECTORIES)
+message(INFO ${DB_FEEDER_INCLUDE_DIRS})
 
 target_link_libraries(data_broker_feeder
   PUBLIC
