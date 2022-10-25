@@ -224,7 +224,7 @@ class Databroker:
     ) -> None:
         try:
             request = SubscribeRequest(query=query)
-            logger.info("broker.Subscribe('{}')".format(query))
+            logger.debug("broker.Subscribe('{}')".format(query))
             response = self._broker_stub.Subscribe(
                 request, timeout=timeout
             )

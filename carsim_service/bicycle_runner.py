@@ -75,7 +75,7 @@ async def flush_controls(helper):
 
 
 @retry(retry_policy=_retry_policy, before_retry=_before_retry)
-async def main_loop(car_sim, helper, set_model_param):
+async def main_loop(car_sim: SimulatedCar, helper: Databroker, set_model_param):
     controls_update = asyncio.create_task(
         helper.subscribe_datapoints(
             KUKSA_QUERY, timeout=SIM_SPEED, sub_callback=set_model_param
@@ -107,7 +107,8 @@ async def main_loop(car_sim, helper, set_model_param):
         f"Time={car_sim.simul_time}\
             Speed={car_sim.speed * 3.6} km/h\
             Acceleration (Long)={car_sim.acceleration[0]} m/s^2\
-            Acceleration (Lat)={car_sim.acceleration[1]} m/s^2"
+            Acceleration (Lat)={car_sim.acceleration[1]} m/s^2 \
+            Steering angle (deg)={car_sim.steer_angle*180/math.pi}"
     )
 
     # max_acceleration=6.0,   # m/s^2

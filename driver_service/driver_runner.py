@@ -60,10 +60,17 @@ async def setup_helper() -> Databroker:
 @retry(retry_policy=_retry_policy, before_retry=_before_retry)
 async def main_loop(helper: Databroker, driver: Driver):
     accelerator, brake, steering_angle = driver.get_controls()
-    logger.debug(f"Sending {accelerator=} {brake=} {steering_angle=}")
+    logger.info(
+        f"Sending Time={driver.simulation_time} \
+        Accelerator(%)={accelerator} \
+        Brake(%)={brake} \
+        Steering Angle (deg)={steering_angle}"
+    )
     await asyncio.create_task(helper.set_uint32_datapoint(DP_ACCELR_POS, accelerator))
     await asyncio.create_task(helper.set_uint32_datapoint(DP_BRAKE_POS, brake))
-    await asyncio.create_task(helper.set_int32_datapoint(DP_STEER_ANGLE, steering_angle))
+    await asyncio.create_task(
+        helper.set_int32_datapoint(DP_STEER_ANGLE, steering_angle)
+    )
     await asyncio.sleep(SIM_SPEED)
 
 
