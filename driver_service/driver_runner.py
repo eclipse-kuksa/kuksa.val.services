@@ -75,7 +75,6 @@ async def main_loop(helper: Databroker, driver: Driver):
 
 
 async def main():
-    helper = await setup_helper()
     driver = Driver(SIM_SPEED)
 
     with await setup_helper() as helper:
