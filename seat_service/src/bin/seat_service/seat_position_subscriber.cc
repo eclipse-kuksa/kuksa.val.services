@@ -39,6 +39,9 @@ SeatPositionSubscriber::SeatPositionSubscriber(std::shared_ptr<SeatAdjuster> sea
 void SeatPositionSubscriber::Run() {
     std::cout << "SeatPositionSubscriber::Run()" << std::endl;
 
+    auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(2);
+
+    collector_client_->WaitForConnected(deadline);
     sdv::databroker::v1::SubscribeActuatorTargetRequest request;
     request.add_paths(seat_pos_name_);
 
@@ -47,24 +50,27 @@ void SeatPositionSubscriber::Run() {
     std::unique_ptr<::grpc::ClientReader<sdv::databroker::v1::SubscribeActuatorTargetReply>> reader(
         collector_client_->SubscribeActuatorTargets(subscriber_context_.get(), request));
     while (reader->Read(&reply)) {
-        std::cout << "got an actuator target" << std::endl;
         for (auto& pair : reply.actuator_targets()) {
             auto path = pair.first;
             auto actuator_target = pair.second;
 
             switch (actuator_target.value_case()) {
-                case sdv::databroker::v1::Datapoint::ValueCase::kInt32Value: {
-                    std::cout << actuator_target.int32_value() << std::endl;
-                    seat_adjuster_->SetSeatPosition(actuator_target.int32_value());
-                } break;
                 case sdv::databroker::v1::Datapoint::ValueCase::kUint32Value: {
-                    std::cout << actuator_target.uint32_value() << std::endl;
-                    seat_adjuster_->SetSeatPosition(actuator_target.int32_value());
+                    auto position = actuator_target.uint32_value();
+                    std::cout << "Got actuator target: " << position << std::endl;
+                    if (position < 0 || 1000 < position) {
+                        std::cout << "Invalid position" << std::endl;
+                        continue;
+                    }
+
+                    int position_in_percent = (position + 5) / 10;
+
+                    seat_adjuster_->SetSeatPosition(position_in_percent);
                 }
             }
         }
     }
-    std::cout << "SeatPositionSubscriber::Run exiting" << std::endl;
+    std::cout << "SeatPositionSubscriber::Run() exiting" << std::endl;
 }
 
 void SeatPositionSubscriber::Shutdown() {
