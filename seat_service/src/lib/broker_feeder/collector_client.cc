@@ -14,6 +14,8 @@ static GrpcMetadata getGrpcMetadata() {
     std::string dapr_app_id = getEnvVar("VEHICLEDATABROKER_DAPR_APP_ID");
     if (!dapr_app_id.empty()) {
         grpc_metadata["dapr-app-id"] = dapr_app_id;
+        std::cout << "setting dapr-app-id: " << dapr_app_id << std::endl;
+
     }
     return grpc_metadata;
 }
@@ -32,8 +34,9 @@ CollectorClient::CollectorClient(std::string broker_addr)
     stub_ = sdv::databroker::v1::Collector::NewStub(channel_);
 }
 
-void CollectorClient::WaitForConnected(std::chrono::_V2::system_clock::time_point deadline) {
+bool CollectorClient::WaitForConnected(std::chrono::_V2::system_clock::time_point deadline) {
     connected_ = channel_->WaitForConnected(deadline);
+    return connected_;
 }
 
 grpc_connectivity_state CollectorClient::GetState() { return channel_->GetState(false); }
@@ -49,9 +52,7 @@ void CollectorClient::changeToDaprPortIfSet(std::string& broker_addr) {
     if (!dapr_port.empty()) {
         std::string::size_type colon_pos = broker_addr.find_last_of(':');
         broker_addr = broker_addr.substr(0, colon_pos + 1) + dapr_port;
-        // if (dbf_debug > 0) {
-        //     std::cout << "DataBrokerFeederImpl::changeToDaprPortIfSet() -> " << broker_addr << std::endl;
-        // }
+        std::cout << "changing to DAPR GRPC port:" << broker_addr << std::endl;
     }
 }
 
