@@ -22,6 +22,7 @@
  */
 #pragma once
 
+#include <atomic>
 #include <memory>
 
 namespace grpc {
@@ -58,6 +59,8 @@ class SeatPositionSubscriber {
     std::shared_ptr<broker_feeder::CollectorClient> collector_client_;
     std::unique_ptr<grpc::ClientContext> subscriber_context_;
     std::string seat_pos_name_;
+
+    std::atomic_bool running_;
 };
 
 }  // namespace seat_service

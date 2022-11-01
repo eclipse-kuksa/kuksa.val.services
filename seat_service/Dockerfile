@@ -56,6 +56,6 @@ ENV SERVICE_PORT=50051
 EXPOSE 50051
 
 # Override this variable to change DataBroker address. Port can be also overridden by DAPR_GRPC_PORT variable.
-ENV BROKER_ADDR=0.0.0.0:55555
+ENV BROKER_ADDR=127.0.0.1:55555
 
 CMD [ "./val_start.sh" ]

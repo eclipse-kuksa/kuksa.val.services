@@ -30,7 +30,8 @@ namespace seat_service {
 SeatPositionSubscriber::SeatPositionSubscriber(std::shared_ptr<SeatAdjuster> seat_adjuster,
                                                std::shared_ptr<broker_feeder::CollectorClient> collector_client)
     : seat_adjuster_(seat_adjuster)
-    , collector_client_(collector_client) {
+    , collector_client_(collector_client)
+    , running_(false) {
     /* Define datapoints (metadata) of seat service
      */
     seat_pos_name_ = "Vehicle.Cabin.Seat.Row1.Pos1.Position";
@@ -39,41 +40,52 @@ SeatPositionSubscriber::SeatPositionSubscriber(std::shared_ptr<SeatAdjuster> sea
 void SeatPositionSubscriber::Run() {
     std::cout << "SeatPositionSubscriber::Run()" << std::endl;
 
-    auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(2);
+    running_ = true;
+    while (running_) {
+        auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(2);
+        if (!collector_client_->WaitForConnected(deadline)) {
+            std::cout << "SeatPositionSubscriber: not connected" << std::endl;
+            continue;
+        }
 
-    collector_client_->WaitForConnected(deadline);
-    sdv::databroker::v1::SubscribeActuatorTargetRequest request;
-    request.add_paths(seat_pos_name_);
+        std::cout << "SeatPositionSubscriber: connected" << std::endl;
 
-    sdv::databroker::v1::SubscribeActuatorTargetReply reply;
-    subscriber_context_ = collector_client_->createClientContext();
-    std::unique_ptr<::grpc::ClientReader<sdv::databroker::v1::SubscribeActuatorTargetReply>> reader(
-        collector_client_->SubscribeActuatorTargets(subscriber_context_.get(), request));
-    while (reader->Read(&reply)) {
-        for (auto& pair : reply.actuator_targets()) {
-            auto path = pair.first;
-            auto actuator_target = pair.second;
+        sdv::databroker::v1::SubscribeActuatorTargetRequest request;
+        request.add_paths(seat_pos_name_);
 
-            switch (actuator_target.value_case()) {
-                case sdv::databroker::v1::Datapoint::ValueCase::kUint32Value: {
-                    auto position = actuator_target.uint32_value();
-                    std::cout << "Got actuator target: " << position << std::endl;
-                    if (position < 0 || 1000 < position) {
-                        std::cout << "Invalid position" << std::endl;
-                        continue;
+        sdv::databroker::v1::SubscribeActuatorTargetReply reply;
+        subscriber_context_ = collector_client_->createClientContext();
+        std::unique_ptr<::grpc::ClientReader<sdv::databroker::v1::SubscribeActuatorTargetReply>> reader(
+            collector_client_->SubscribeActuatorTargets(subscriber_context_.get(), request));
+        while (reader->Read(&reply)) {
+            for (auto& pair : reply.actuator_targets()) {
+                auto path = pair.first;
+                auto actuator_target = pair.second;
+
+                switch (actuator_target.value_case()) {
+                    case sdv::databroker::v1::Datapoint::ValueCase::kUint32Value: {
+                        auto position = actuator_target.uint32_value();
+                        std::cout << "Got actuator target: " << position << std::endl;
+                        if (position < 0 || 1000 < position) {
+                            std::cout << "Invalid position" << std::endl;
+                            continue;
+                        }
+
+                        int position_in_percent = (position + 5) / 10;
+
+                        seat_adjuster_->SetSeatPosition(position_in_percent);
                     }
-
-                    int position_in_percent = (position + 5) / 10;
-
-                    seat_adjuster_->SetSeatPosition(position_in_percent);
                 }
             }
         }
+        subscriber_context_ = nullptr;
+        std::cout << "SeatPositionSubscriber: disconnected" << std::endl;
     }
-    std::cout << "SeatPositionSubscriber::Run() exiting" << std::endl;
+    std::cout << "SeatPositionSubscriber: exiting" << std::endl;
 }
 
 void SeatPositionSubscriber::Shutdown() {
+    running_ = false;
     if (subscriber_context_) {
         subscriber_context_->TryCancel();
     }

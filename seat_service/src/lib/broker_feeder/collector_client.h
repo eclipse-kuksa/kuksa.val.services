@@ -26,7 +26,7 @@ class CollectorClient {
 
     CollectorClient(std::string broker_addr);
 
-    void WaitForConnected(std::chrono::_V2::system_clock::time_point deadline);
+    bool WaitForConnected(std::chrono::_V2::system_clock::time_point deadline);
 
     grpc_connectivity_state GetState();
     bool Connected();
