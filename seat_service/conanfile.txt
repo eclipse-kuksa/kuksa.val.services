@@ -14,10 +14,10 @@
 
 [requires]
 gtest/1.10.0
-grpc/1.37.1
+grpc/1.38.0
 
 [build_requires]
-grpc/1.37.1 # Is needed in the build context to run generate code from proto files
+grpc/1.38.0 # Is needed in the build context to run generate code from proto files
 
 [generators]
 cmake_find_package
