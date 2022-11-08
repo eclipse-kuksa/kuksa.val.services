@@ -29,3 +29,9 @@ The HVAC service is a service dummy allowing to control the state of the A/C and
 Configuration options have the following priority (highest at top):
 1. environment variable
 1. default value
+
+For using the HVAC GUI you need to have dearpygui installed: 
+
+''' pip install dearpygui '''
+
+Then start an instance of the databroker, the HVAC Service and the HVAC GUI. Now you will see a little demonstration of how the HVAC service works.

@@ -54,6 +54,22 @@ class HVACTestClient(object):
 
         logger.debug("Done.")
 
+    def setAC(self, ac_status: AcStatus) -> None:
+        """
+        Client function to call the rpc for HVACService setAcStatus method
+        """
+        logger.info("Setting AC Status: %s", self.get_hvac_str(ac_status))
+        request = pb2.SetAcStatusRequest(status=ac_status)
+        self.stub.SetAcStatus(request)
+    
+    def setTemp(self, ac_temp: float) -> None:
+        """
+        Client function to call the rpc for HVACService setTemperature method
+        """
+        logger.info("Setting Temperature: %s", ac_temp)
+        request = pb2.SetTemperatureRequest(temperature=ac_temp)
+        self.stub.SetTemperature(request)
+
     def get_hvac_str(self, hvac_value) -> str:
         if hvac_value == 0:
             return "AcStatus.OFF"
