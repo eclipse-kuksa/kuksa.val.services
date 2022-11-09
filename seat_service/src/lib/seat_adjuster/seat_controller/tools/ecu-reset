@@ -52,10 +52,6 @@ done
 
 echo "### Normalizing SeatAdjust ECU on $CAN"
 
-if ! ifconfig $CAN | grep -q "UP"; then
-    echo "CAN interface $CAN not up"
-    exit 1
-fi
 
 motor_off() {
     frame=`printf "cansend $CAN 705#00.00.00.00.00.00.00.00"`
