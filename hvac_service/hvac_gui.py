@@ -3,7 +3,8 @@ import os
 import testclient
 
 def main():
-    client = testclient.HVACTestClient("127.0.0.1:50052")
+    hvac_addr = os.getenv("HVAC_ADDR", "127.0.0.1:50052")
+    client = testclient.HVACTestClient(hvac_addr)
     count = 0
 
     dpg.create_context()
