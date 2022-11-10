@@ -31,8 +31,8 @@ def main():
         dpg.add_slider_int(tag="TargetTempSlider", label="target temperature in celsius", default_value=20, vertical=True, max_value=40, height=160)
         dpg.add_button(tag="ToggleButton", label="OFF", callback=OnOffButton)
         dpg.add_checkbox(tag="SetAutomation", label="automate", default_value=True)
-        dpg.add_input_int(tag="TempRatio", label="Ratio to change temperature", default_value=30)
-        dpg.add_input_int(tag="SensorRatio", label="Ratio to poll sensor", default_value=10)
+        dpg.add_input_int(tag="TempRatio", label="Ratio to change temperature", default_value=30, min_clamped=True, min_value=1)
+        dpg.add_input_int(tag="SensorRatio", label="Ratio to poll sensor", default_value=10, min_clamped=True, min_value=1)
 
     dpg.show_viewport()
     while dpg.is_dearpygui_running():
