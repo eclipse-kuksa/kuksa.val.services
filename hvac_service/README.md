@@ -30,4 +30,4 @@ Configuration options have the following priority (highest at top):
 1. environment variable
 1. default value
 
-For using the HVAC GUI you need to start an instance of the databroker, the HVAC Service and the HVAC GUI. THen you will see a little demonstration of how the HVAC service works.
+For using the HVAC GUI you need to start an instance of the databroker, the HVAC Service and the HVAC GUI. Then you will see a little demonstration of how the HVAC service works.
