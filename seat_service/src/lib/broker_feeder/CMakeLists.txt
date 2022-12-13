@@ -12,7 +12,7 @@
 #*******************************************************************************/
 
 # Data Broker Proto file
-set(PROTO_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../kuksa_data_broker/proto/)
+set(PROTO_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../proto/)
 
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
@@ -62,9 +62,10 @@ protobuf_generate(
   LANGUAGE
     cpp
   PROTOS
-    ${PROTO_SOURCE_DIR}/sdv/databroker/v1/broker.proto
     ${PROTO_SOURCE_DIR}/sdv/databroker/v1/collector.proto
     ${PROTO_SOURCE_DIR}/sdv/databroker/v1/types.proto
+    ${PROTO_SOURCE_DIR}/kuksa/val/v1/val.proto
+    ${PROTO_SOURCE_DIR}/kuksa/val/v1/types.proto
   IMPORT_DIRS
     ${PROTO_SOURCE_DIR}
 )
@@ -80,7 +81,7 @@ protobuf_generate(
     .grpc.pb.cc
   PROTOS
     ${PROTO_SOURCE_DIR}/sdv/databroker/v1/collector.proto
-    ${PROTO_SOURCE_DIR}/sdv/databroker/v1/broker.proto
+    ${PROTO_SOURCE_DIR}/kuksa/val/v1/val.proto
   PLUGIN
     "protoc-gen-grpc=${GRPC_CPP_PLUGIN_PROGRAM_ENV}"
   IMPORT_DIRS
