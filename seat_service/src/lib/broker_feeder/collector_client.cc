@@ -32,6 +32,7 @@ CollectorClient::CollectorClient(std::string broker_addr)
     metadata_ = getGrpcMetadata();
     channel_ = grpc::CreateChannel(broker_addr, grpc::InsecureChannelCredentials());
     stub_ = sdv::databroker::v1::Collector::NewStub(channel_);
+    kuksa_stub_ = kuksa::val::v1::VAL::NewStub(channel_);
 }
 
 bool CollectorClient::WaitForConnected(std::chrono::_V2::system_clock::time_point deadline) {
@@ -68,10 +69,10 @@ void CollectorClient::changeToDaprPortIfSet(std::string& broker_addr) {
     return stub_->UpdateDatapoints(context, request, response);
 }
 
-std::unique_ptr<::grpc::ClientReader<::sdv::databroker::v1::SubscribeActuatorTargetReply>>
-CollectorClient::SubscribeActuatorTargets(::grpc::ClientContext* context,
-                                          const ::sdv::databroker::v1::SubscribeActuatorTargetRequest& request) {
-    return stub_->SubscribeActuatorTargets(context, request);
+std::unique_ptr<::grpc::ClientReader<::kuksa::val::v1::SubscribeResponse>>
+CollectorClient::Subscribe(::grpc::ClientContext *context,
+                           const ::kuksa::val::v1::SubscribeRequest &request) {
+    return kuksa_stub_->Subscribe(context, request);
 }
 
 

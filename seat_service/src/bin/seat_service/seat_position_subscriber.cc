@@ -50,30 +50,34 @@ void SeatPositionSubscriber::Run() {
 
         std::cout << "SeatPositionSubscriber: connected" << std::endl;
 
-        sdv::databroker::v1::SubscribeActuatorTargetRequest request;
-        request.add_paths(seat_pos_name_);
+        kuksa::val::v1::SubscribeRequest request;
+        {
+            auto entry = request.add_entries();
+            entry->set_path(seat_pos_name_);
+            entry->add_fields(kuksa::val::v1::Field::FIELD_ACTUATOR_TARGET);
+        }
 
-        sdv::databroker::v1::SubscribeActuatorTargetReply reply;
+        kuksa::val::v1::SubscribeResponse response;
         subscriber_context_ = collector_client_->createClientContext();
-        std::unique_ptr<::grpc::ClientReader<sdv::databroker::v1::SubscribeActuatorTargetReply>> reader(
-            collector_client_->SubscribeActuatorTargets(subscriber_context_.get(), request));
-        while (reader->Read(&reply)) {
-            for (auto& pair : reply.actuator_targets()) {
-                auto path = pair.first;
-                auto actuator_target = pair.second;
+        std::unique_ptr<::grpc::ClientReader<kuksa::val::v1::SubscribeResponse>> reader(
+            collector_client_->Subscribe(subscriber_context_.get(), request));
+        while (reader->Read(&response)) {
+            for (auto& update : response.updates()) {
+                if (update.entry().path() == seat_pos_name_) {
+                    auto actuator_target = update.entry().actuator_target();
+                    switch (actuator_target.value_case()) {
+                        case sdv::databroker::v1::Datapoint::ValueCase::kUint32Value: {
+                            auto position = actuator_target.uint32();
+                            std::cout << "Got actuator target: " << position << std::endl;
+                            if (position < 0 || 1000 < position) {
+                                std::cout << "Invalid position" << std::endl;
+                                continue;
+                            }
 
-                switch (actuator_target.value_case()) {
-                    case sdv::databroker::v1::Datapoint::ValueCase::kUint32Value: {
-                        auto position = actuator_target.uint32_value();
-                        std::cout << "Got actuator target: " << position << std::endl;
-                        if (position < 0 || 1000 < position) {
-                            std::cout << "Invalid position" << std::endl;
-                            continue;
+                            int position_in_percent = (position + 5) / 10;
+
+                            seat_adjuster_->SetSeatPosition(position_in_percent);
                         }
-
-                        int position_in_percent = (position + 5) / 10;
-
-                        seat_adjuster_->SetSeatPosition(position_in_percent);
                     }
                 }
             }
