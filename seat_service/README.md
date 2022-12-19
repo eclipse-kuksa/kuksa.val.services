@@ -29,11 +29,11 @@ This represents the example seat control service. More elaborate or completely d
 1. Install and configure (if needed) local authentication proxy e.g. CNTLM or Px
 2. Install and configure docker
    - [Get Docker](https://docs.docker.com/get-docker/)
-3. Build base development docker Image
+3. Build base development docker. Go to the top-level of the repo
 
    ``` bash
-   cd tools/ && \
-   docker build -t oci_kuksa-val-services-ci:latest .
+   cd ..
+   docker build -t oci_kuksa-val-services-ci:latest  -f tools/Dockerfile  .
    ```
 
 ### Usage on CLI
