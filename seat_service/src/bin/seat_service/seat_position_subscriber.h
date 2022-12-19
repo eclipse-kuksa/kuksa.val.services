@@ -24,6 +24,8 @@
 
 #include <atomic>
 #include <memory>
+#include <string>
+
 
 namespace grpc {
 class ClientContext;
