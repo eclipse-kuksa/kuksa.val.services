@@ -48,7 +48,7 @@ sudo apt-get -qqy install \
 # conan needed > 1.43 for gtest
 # cantools: code generation from .dbc file
 pip3 install \
-	'conan' \
+	'conan==1.55.0' \
 	'cantools==37.0.1'
 
 # install docker
