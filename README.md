@@ -8,7 +8,7 @@
 
 ## Overview
 
-This repository provides you a set of exemplary **vehicle services** showing how to define and implement these important pieces of the **Eclipse KUKSA Vehicle Abstraction Layer (VAL)**. 
+This repository provides you a set of example **vehicle services** showing how to define and implement these important pieces of the **Eclipse KUKSA Vehicle Abstraction Layer (VAL)**. 
 The KUKSA.VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*.
 Vehicle data is provided in form of a data model, which is accessible via the KUKSA Data Broker (formerly known as Vehicle Data Broker) - see [kuksa.val repository](https://github.com/eclipse/kuksa.val).
 Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*).
@@ -50,6 +50,7 @@ When you are inside the seat_service directory, create binaries:
 ./build-release.sh aarch64
 ```
 Build a tar file of all binaries.
+
 ``` bash
 #Replace x86_64 with aarch64 for arm64 architecture
 tar -czvf bin_vservice-seat_x86_64_release.tar.gz \
@@ -57,13 +58,16 @@ tar -czvf bin_vservice-seat_x86_64_release.tar.gz \
     target/x86_64/release/licenses/ \
     proto/
 ```
+
 To build the image execute following commands from root directory as context.
+
 ``` bash
 docker build -f seat_service/Dockerfile -t seat_service:<tag> .
 
 #Use following command if buildplatform is required
 DOCKER_BUILDKIT=1 docker build -f seat_service/Dockerfile -t seat_service:<tag> .
 ```
+
 The image creation may take around 2 minutes.
 
 ## Running Seat Service / Data Broker Containers

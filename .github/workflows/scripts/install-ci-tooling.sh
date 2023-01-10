@@ -48,9 +48,7 @@ fi
 # conan: dependency management
 # conan needed > 1.43 for gtest
 # cantools: code generation from .dbc file
-pip3 install \
-	'conan==1.48.1' \
-	'cantools==37.0.1'
+pip3 install -U conan cantools
 
 # install docker
 # curl -fsSL https://get.docker.com -o - | bash -
