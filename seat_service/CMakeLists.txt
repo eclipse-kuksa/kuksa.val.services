@@ -19,6 +19,8 @@ include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
 
 option(SDV_BUILD_TESTING "Build with Tests" ON)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "If enabled, generates a compile_commands.json file")
+
 message("--- CMAKE_SOURCE_DIR = ${CMAKE_SOURCE_DIR}")
 
 if(MSVC)

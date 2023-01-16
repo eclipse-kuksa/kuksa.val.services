@@ -71,7 +71,7 @@ RUN apt-get -y install --fix-missing \
 # conan needed > 1.43 for gtest
 # cantools: code generation from .dbc file
 RUN pip3 install \
-  'conan==1.48.1' \
+  'conan' \
   'cantools==37.0.1'
   
 # Install Rust tools and prerequists needed for the databroker
