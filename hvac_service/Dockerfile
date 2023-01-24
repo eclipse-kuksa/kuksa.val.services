@@ -30,7 +30,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN /opt/venv/bin/python3 -m pip install --upgrade pip \
     && pip3 install --no-cache-dir -r requirements.txt
 
-RUN pip3 install wheel && pip3 install scons && pip3 install pyinstaller && pip3 install patchelf && pip3 install staticx
+RUN pip3 install wheel && \
+    pip3 install scons && \
+    pip3 install pyinstaller && \
+    pip3 install patchelf==0.17.0.0 && \
+    pip3 install staticx
 
 # install sdv package in edit mode
 RUN pip3 install --no-cache-dir -e .
