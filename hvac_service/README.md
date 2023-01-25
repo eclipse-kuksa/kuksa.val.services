@@ -31,3 +31,13 @@ Configuration options have the following priority (highest at top):
 1. default value
 
 For using the HVAC GUI you need to start an instance of the databroker, the HVAC Service and the HVAC GUI. Then you will see a little demonstration of how the HVAC service works.
+
+## GUI
+To visualize the capabilities of the HVAC service you need to install the requirements from requirements-gui.txt:
+```
+pip install -r requirements-gui.txt
+```
+Then run the HVAC service and an instance of the KUKSA.val databroker. To visualize the whole thing start the HVAC GUI:
+```
+python3 -m hvac_gui.py
+```
