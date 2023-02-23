@@ -88,12 +88,12 @@ jobs:
 
       - id: repository-name-adjusted
         name: Make repository name in lower case for docker upload.
-        uses: ASzc/change-string-case-action@v2
+        uses: ASzc/change-string-case-action@v5
         with:
           string: ${{ github.repository }}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v2
 
       - name: "Build seat service image"
         id: image_build

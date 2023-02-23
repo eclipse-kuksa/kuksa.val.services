@@ -40,7 +40,6 @@ sudo apt-get -qqy install \
 	cppcheck \
 	valgrind
 
-
 # Install PIP
 [ -z "$(which pip3)" ] && sudo apt-get -qqy install --fix-missing python3-pip
 
