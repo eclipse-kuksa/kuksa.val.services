@@ -18,6 +18,7 @@
 
 # shellcheck disable=SC2086
 # shellcheck disable=SC2230
+# shellcheck disable=SC2046
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 TARGET_ARCH="$1"

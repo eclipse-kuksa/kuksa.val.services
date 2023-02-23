@@ -12,10 +12,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
 
+# shellcheck disable=SC2046
+
 # Specify:
 #   first argument: TARGET_ARCH = "x86_64" or "aarch64"; default: "x86_64"
 #   second argument: TARGET_ARCH = "<string>; default: "$SCRIPT_DIR/target/$TARGET_ARCH/Debug"
-
 set -ex
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

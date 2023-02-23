@@ -24,7 +24,8 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # reduce runtime requirements from libc/libc++
+    runs-on: ubuntu-20.04
     name: Build
     strategy:
       matrix:
