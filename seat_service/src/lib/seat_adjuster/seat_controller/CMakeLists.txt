@@ -54,6 +54,11 @@ set(CANTOOLS_GENERATED_C "${CMAKE_CURRENT_BINARY_DIR}/generated/CAN.c")
 # Generated sources
 add_custom_target(cangen ALL DEPENDS "${CANTOOLS_GENERATED_C}" "${CANTOOLS_GENERATED_H}")
 
+message("--- cantools version:")
+execute_process (
+  COMMAND cantools --version
+)
+
 # generate c stubs from dbc
 message("--- Generating can C sources from: ${DBC_FILE}")
 add_custom_command(OUTPUT "${CANTOOLS_GENERATED_C}" "${CANTOOLS_GENERATED_H}"

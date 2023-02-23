@@ -45,10 +45,11 @@ sudo apt-get -qqy install \
 [ -z "$(which pip3)" ] && sudo apt-get -qqy install --fix-missing python3-pip
 
 # conan: dependency management
-# conan needed > 1.43 for gtest
+# - conan needed > 1.43 for gtest
+# - conan >= 2.0 breaks commandline interface
 # cantools: code generation from .dbc file
 pip3 install \
-	'conan==1.55.0' \
+	'conan==1.56.0' \
 	'cantools==37.0.1'
 
 # install docker
