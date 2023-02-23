@@ -13,8 +13,8 @@
 #*******************************************************************************/
 
 [requires]
+grpc/1.38.0@#a93eb68eaa39bd69ddb2c0d85e6eb490
 gtest/1.10.0
-grpc/1.38.0
 
 [build_requires]
 grpc/1.38.0 # Is needed in the build context to run generate code from proto files

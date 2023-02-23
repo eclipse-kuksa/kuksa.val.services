@@ -35,6 +35,12 @@ find_program(GRPC_CPP_PLUGIN_PROGRAM_ENV
 )
 get_filename_component(GRPC_CPP_PLUGIN_PROGRAM_ENV "${GRPC_CPP_PLUGIN_PROGRAM_ENV}" ABSOLUTE)
 
+message("--- [broker_feedder] Using protoc: ${PROTOC_PROGRAM_TEMP}")
+message("--- [broker_feedder] Using grpc_cpp_plugin: ${GRPC_CPP_PLUGIN_PROGRAM_ENV}")
+execute_process (
+  COMMAND "${PROTOC_PROGRAM_TEMP}" --version
+)
+
 add_library(data_broker_feeder
   STATIC
     data_broker_feeder.cc
@@ -89,7 +95,7 @@ protobuf_generate(
 )
 
 get_property(DB_FEEDER_INCLUDE_DIRS TARGET data_broker_feeder PROPERTY INCLUDE_DIRECTORIES)
-message(INFO ${DB_FEEDER_INCLUDE_DIRS})
+# message("Using DB Feeder includes: ${DB_FEEDER_INCLUDE_DIRS}")
 
 target_link_libraries(data_broker_feeder
   PUBLIC

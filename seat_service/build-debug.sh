@@ -27,12 +27,23 @@ BUILD_DIR="$2"
 [ -z "$BUILD_DIR" ] && BUILD_DIR="$SCRIPT_DIR"/target/"$TARGET_ARCH"/debug
 
 cmake -E make_directory "$BUILD_DIR"
+
+# install last known good boost version before conan v2 mess...
+### experimental stuff
+export CONAN_REVISIONS_ENABLED=1
+echo "###############################"
+conan --version
+echo "########## Conan Info #########"
+conan info .
+echo "###############################"
+
 # build with dependencies of build_type Release
 conan install -if="$BUILD_DIR" --build=missing --profile:build=default --profile:host="${SCRIPT_DIR}/toolchains/target_${TARGET_ARCH}_Release" "$SCRIPT_DIR"
+
 cd "$BUILD_DIR" || exit
 # shellcheck disable=SC1091
 source activate.sh # Set environment variables for cross build
 cmake "$SCRIPT_DIR" -DCMAKE_BUILD_TYPE=Debug -DSDV_COVERAGE=ON -DSDV_BUILD_TESTING=ON -DCONAN_CMAKE_SILENT_OUTPUT=ON -DCMAKE_INSTALL_PREFIX="./install"
 sleep 1
-cmake --build . -j
+cmake --build . -j $(nproc)
 cmake --install .
