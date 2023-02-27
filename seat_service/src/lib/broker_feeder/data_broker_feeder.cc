@@ -186,7 +186,7 @@ private:
             reg_data.set_data_type(metadata.data_type);
             reg_data.set_change_type(metadata.change_type);
             reg_data.set_description(metadata.description);
-            reg_data.
+            // TODO: set entry_type to Actuator
             request.mutable_list()->Add(std::move(reg_data));
         }
 
