@@ -99,7 +99,7 @@ void Run(std::string can_if_name, std::string listen_address, std::string port, 
 
     // Setup target actuator subscriber
     sdv::seat_service::SeatPositionSubscriber seat_position_subscriber(seat_adjuster, client);
-    std::cout << SELF "Start seat position subscription" << broker_addr << std::endl;
+    std::cout << SELF "Start seat position subscription " << broker_addr << std::endl;
 
     std::thread subscriber_thread(&sdv::seat_service::SeatPositionSubscriber::Run, &seat_position_subscriber);
 

@@ -55,7 +55,6 @@ private:
     google::protobuf::Map<std::string, DatapointId> id_map_;
 
     std::atomic<bool> feeder_active_;
-    std::string broker_addr_;
     std::mutex stored_values_mutex_;
     std::condition_variable feeder_thread_sync_;
 
@@ -80,7 +79,7 @@ private:
          */
         while (feeder_active_) {
             if (dbf_debug > 0) {
-                std::cout << "DataBrokerFeederImpl: Connecting to data broker [" << broker_addr_ << "] ..." << std::endl;
+                std::cout << "DataBrokerFeederImpl: Connecting to data broker ..." << std::endl;
             }
             auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(5);
             client_->WaitForConnected(deadline);
@@ -187,6 +186,7 @@ private:
             reg_data.set_data_type(metadata.data_type);
             reg_data.set_change_type(metadata.change_type);
             reg_data.set_description(metadata.description);
+            reg_data.
             request.mutable_list()->Add(std::move(reg_data));
         }
 
