@@ -40,9 +40,10 @@ if [ -z "$DATABROKER_VERSION" ]; then
 	exit 1
 fi
 
-DATABROKER_BINARY_NAME="databroker_$PROCESSOR.tar.gz"
-DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATABROKER_VERSION/$PROCESSOR"
-DATABROKER_EXECUTABLE="$DATABROKER_BINARY_PATH/target/release/databroker"
+# https://github.com/eclipse/kuksa.val/releases/download/0.3.0/databroker-amd64.tar.gz
+DATABROKER_BINARY_NAME="databroker-$PROCESSOR_ALT.tar.gz"
+DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATABROKER_VERSION/$PROCESSOR_ALT"
+DATABROKER_EXECUTABLE="$DATABROKER_BINARY_PATH/databroker/databroker"
 DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME"
 
 download_release "$DATABROKER_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_NAME" || exit 1
@@ -50,7 +51,9 @@ download_release "$DATABROKER_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PA
 ### Data Broker environment setup ###
 
 ## Uncomment for feed values debug
-#export RUST_LOG="info,databroker=debug,vehicle_data_broker=debug"
+export RUST_LOG="debug,databroker=debug,vehicle_data_broker=debug,h2=info"
+##export GRPC_TRACE=all,-timer,-timer_check
+##export GRPC_VERBOSITY=DEBUG
 
 ## Uncomment to preregister vehicle model metadata in vss.json
 #DATABROKER_METADATA="--metadata $ROOT_DIRECTORY/.vscode/scripts/vss.json"

@@ -31,6 +31,7 @@ source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 # export VEHICLEDATABROKER_DAPR_APP_ID="vehicledatabroker"
 
 # NOTE: use dapr sidecar's grpc port, don't connect directly to sidecar of vdb (DATABROKER_GRPC_PORT)
+
 export DAPR_GRPC_PORT=$SEATSERVICE_GRPC_PORT
 
 build_seatservice() {
@@ -63,8 +64,17 @@ export SAE_STOP=0
 # DataBrokerFeeder Debug level (0, 1, 2)
 export DBF_DEBUG=0
 
+### Uncomment for DEBUG
+export SA_DEBUG=2
+export DBF_DEBUG=3
+export SEAT_DEBUG=1
+
 # needed to override vdb address
 export BROKER_ADDR="127.0.0.1:$DAPR_GRPC_PORT"
+
+### Uncomment for direct connection to databroker
+# export GRPC_TRACE=all,-timer,-timer_check
+# export GRPC_VERBOSITY=DEBUG
 
 echo
 echo "*******************************************"
@@ -72,6 +82,7 @@ echo "* Seat Service app-id: $SEATSERVICE_DAPR_APP_ID"
 echo "* Seat Service APP port: $SEATSERVICE_PORT"
 echo "* Seat Service Dapr sidecar port: $SEATSERVICE_GRPC_PORT"
 echo "* DAPR_GRPC_PORT=$DAPR_GRPC_PORT"
+echo "* BROKER_ADDR=$BROKER_ADDR"
 echo "* metadata: [ VEHICLEDATABROKER_DAPR_APP_ID=$VEHICLEDATABROKER_DAPR_APP_ID ]"
 echo "*******************************************"
 echo

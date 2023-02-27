@@ -86,7 +86,7 @@ download_release() {
 		return 0
 	fi
 	echo "- Downloading from: $download_url"
-	curl -o "$binary_path/$binary_name" --create-dirs -L -H "Accept: application/octet-stream" "$download_url"
+	curl -s -o "$binary_path/$binary_name" --create-dirs -L -H "Accept: application/octet-stream" "$download_url"
 	echo
 	echo "- downloaded: $(file $binary_path/$binary_name)"
 
@@ -120,9 +120,12 @@ _check_prerequisite
 if [ "$(uname -m)" = "aarch64" ] || [ "$(uname -m)" = "arm64" ]; then
 	echo "- Detected AArch64 architecture"
 	PROCESSOR="aarch64"
+	PROCESSOR_ALT="arm64"
 else
 	echo "- Detected x86_64 architecture"
 	PROCESSOR="x86_64"
+	PROCESSOR_ALT="amd64"
 fi
 echo
 export PROCESSOR
+export PROCESSOR_ALT

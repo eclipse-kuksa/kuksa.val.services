@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <thread>
 
 #include "collector_client.h"
 #include "seat_adjuster.h"
@@ -82,8 +83,15 @@ void SeatPositionSubscriber::Run() {
                 }
             }
         }
+        grpc::Status status = reader->Finish();
+        if (status.ok()) {
+            std::cout << "SeatPositionSubscriber: disconnected." << std::endl;
+        } else {
+            std::cerr << "SeatPositionSubscriber: disconnected with status: " << subscriber_context_->debug_error_string() << std::endl;
+            // prevent busy polling if subscribe failed with error
+            std::this_thread::sleep_for(std::chrono::seconds(5));
+        }
         subscriber_context_ = nullptr;
-        std::cout << "SeatPositionSubscriber: disconnected" << std::endl;
     }
     std::cout << "SeatPositionSubscriber: exiting" << std::endl;
 }
