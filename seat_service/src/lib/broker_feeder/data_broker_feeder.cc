@@ -74,7 +74,7 @@ private:
          * Once connection is present, it starts registering the data points (metadata)
          * with the broker and feeds the initial values (plus possible already stored values
          * to the broker.
-         * Afterwards it is forwarding values stored by the feeding medthods and trys
+         * Afterwards it is forwarding values stored by the feeding methods and tries
          * re-establishing a lost connection to the broker.
          */
         while (feeder_active_) {
