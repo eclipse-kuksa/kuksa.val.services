@@ -218,6 +218,23 @@
       }
     },
     {
+      "label": "run-kuksa-cli",
+      // "detail": "Runs Kuksa Client",
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-kuksa-cli.sh",
+      "group": "test",
+      "isBackground": false,
+      "runOptions": {
+        "instanceLimit": 1
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared",
+        "showReuseMessage": false
+      }
+    },
+    {
       "label": "Start VAL",
       "dependsOn": [
         // "Clean VAL binaries",

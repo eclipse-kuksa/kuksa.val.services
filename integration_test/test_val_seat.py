@@ -67,7 +67,7 @@ async def test_vdb_metadata_get(setup_helper: VDBHelper) -> None:
     name = os.getenv("TEST_NAME", "Vehicle.Cabin.Seat.Row1.Pos1.Position")
 
     meta = await helper.get_vdb_metadata()
-    logger.debug("# get_vdb_metadata() -> \n{}".format(str(meta).replace('\n', ' ')))
+    logger.debug("# get_vdb_metadata() -> \n{}".format(str(meta).replace("\n", " ")))
 
     assert len(meta) > 0, "VDB Metadata is empty"  # nosec B101
     meta_list = helper.vdb_metadata_to_json(meta)

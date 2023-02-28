@@ -69,7 +69,7 @@ void SeatPositionSubscriber::Run() {
                     switch (actuator_target.value_case()) {
                         case sdv::databroker::v1::Datapoint::ValueCase::kUint32Value: {
                             auto position = actuator_target.uint32();
-                            std::cout << "Got actuator target: " << position << std::endl;
+                            std::cout << "SeatPositionSubscriber: Got actuator target: " << position << std::endl;
                             if (position < 0 || 1000 < position) {
                                 std::cout << "Invalid position" << std::endl;
                                 continue;
