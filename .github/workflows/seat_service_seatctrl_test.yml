@@ -48,7 +48,7 @@ jobs:
         shell: bash
 
       - name: cobertura-report
-        uses: 5monkeys/cobertura-action@v12
+        uses: 5monkeys/cobertura-action@v13
         with:
           path: ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_vservice-seat-ctrl.xml
           repo_token: ${{ secrets.GITHUB_TOKEN }}
