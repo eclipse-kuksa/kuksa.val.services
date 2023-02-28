@@ -44,17 +44,17 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std:
     std::string seat_pos_name = "Vehicle.Cabin.Seat.Row1.Pos1.Position";
     sdv::broker_feeder::DatapointConfiguration metadata = {
         {"Vehicle.Cabin.SeatRowCount",
-            DataType::UINT32,
+            DataType::UINT16, // Changed from UINT32 to match VSS 3.0
             ChangeType::STATIC,
             broker_feeder::createDatapoint(1U),
             "Number of rows of seats"},
         {"Vehicle.Cabin.Seat.Row1.PosCount",
-            DataType::UINT32,
+            DataType::UINT8, // Changed from UINT32 to match VSS 3.0
             ChangeType::STATIC,
             broker_feeder::createDatapoint(1U),
             "Number of seats in row 1"},
         {seat_pos_name,
-            DataType::UINT32,
+            DataType::UINT8, // Changed from UINT32 to match VSS 3.0
             ChangeType::ON_CHANGE,
             broker_feeder::createNotAvailableValue(),
             "Longitudinal position of overall seat"}
@@ -72,6 +72,7 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std:
             std::cout << self << "got pos: " << position_in_percent << "%" << std::endl;
         }
         Datapoint datapoint;
+        // NOTE: we are using uint32 value as grpc does not have smaller integers
         if (0 <= position_in_percent && position_in_percent <= 100) {
             datapoint.set_uint32_value(position_in_percent * 10); // scale up to [0..1000]
         } else

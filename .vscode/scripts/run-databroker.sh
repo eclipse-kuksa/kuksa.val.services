@@ -56,7 +56,13 @@ export RUST_LOG="debug,databroker=debug,vehicle_data_broker=debug,h2=info"
 ##export GRPC_VERBOSITY=DEBUG
 
 ## Uncomment to preregister vehicle model metadata in vss.json
-#DATABROKER_METADATA="--metadata $ROOT_DIRECTORY/.vscode/scripts/vss.json"
+DATABROKER_METADATA="--metadata $DATABROKER_BINARY_PATH/vss.json"
+
+### handle vss json
+if [ -n "$DATABROKER_METADATA" ] && [ ! -f $DATABROKER_BINARY_PATH/vss.json ]; then
+	echo "# Downloading $DATABROKER_BINARY_PATH/vss.json ..."
+	wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_3.0.json" -O "$DATABROKER_BINARY_PATH/vss.json"
+fi
 
 echo
 echo "*******************************************"

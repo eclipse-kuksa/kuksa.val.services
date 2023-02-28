@@ -131,9 +131,10 @@ cd "$CONTEXT_DIR" || exit 1
 echo "# docker buildx build $DOCKER_ARGS --f seat_service/Dockerfile $CONTEXT_DIR"
 DOCKER_BUILDKIT=1 docker buildx build $DOCKER_ARGS -f seat_service/Dockerfile "$CONTEXT_DIR" $DOCKER_EXT
 
-if [ $? -eq 0 ]; then
+if [ "$DOCKER_ARCH" != "multiarch" ]; then
 	echo "docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/eclipse/kuksa.val.services/$DOCKER_IMAGE:prerelease"
 	docker image tag $DOCKER_ARCH/$DOCKER_IMAGE ghcr.io/eclipse/kuksa.val.services/$DOCKER_IMAGE:prerelease
-	echo "# Exported $DOCKER_ARCH/$DOCKER_IMAGE in $DOCKER_EXPORT"
-	docker image ls | grep "/$DOCKER_IMAGE"
 fi
+
+echo "# Exported $DOCKER_ARCH/$DOCKER_IMAGE in $DOCKER_EXPORT"
+docker image ls | grep "/$DOCKER_IMAGE"
