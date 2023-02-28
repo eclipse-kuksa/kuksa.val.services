@@ -41,8 +41,10 @@ pip3 install -q -e "${ROOT_DIRECTORY}/hvac_service/"
 
 set +e
 
+REBUILD=1
+
 if [ "$USE_DAPR" = "0" ]; then
-	if true; then
+	if [ "$REBUILD" = "1" ]; then
 		echo "Rebuilding pre-release tags for seat and hvac services..."
 		export SEAT_TAG="prerelease"
 		export HVAC_TAG="prerelease"
