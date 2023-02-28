@@ -23,7 +23,7 @@ on:
 
 jobs:
   bump-vdb-version:
-    runs-on: [ubuntu-latest]
+    runs-on: ubuntu-latest
 
     steps:
       - name: adding github workspace as safe directory
