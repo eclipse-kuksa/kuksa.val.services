@@ -14,7 +14,7 @@
 name: release
 
 on:
-  # workflow_dispatch:   #TODO: input versions manually
+  workflow_dispatch:   
   push:
     tags:
       - "v*.*.*"
