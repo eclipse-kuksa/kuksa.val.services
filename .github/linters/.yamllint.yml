@@ -1,5 +1,5 @@
 ---
-extends: relaxed
+extends: default
 
 rules:
   new-lines:
