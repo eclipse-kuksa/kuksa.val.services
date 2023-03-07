@@ -26,7 +26,6 @@ on:
       - "v*.*.*"
 
 jobs:
-
   get_version:
     runs-on: ubuntu-latest
     # Map a step output to a job output
