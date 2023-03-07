@@ -66,8 +66,7 @@ jobs:
           JSON_JSONLINT_FILTER_REGEX_EXCLUDE: .vscode
           # ADD YOUR CUSTOM ENV VARIABLES HERE OR DEFINE THEM IN A FILE .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
           # DISABLE: COPYPASTE,SPELL # Uncomment to disable copy-paste and spell checks
-          # recently yamllint started to complain a lot for github actions
-          YAML_YAMLLINT_DISABLE_ERRORS: true
+          YAML_YAMLLINT_DISABLE_ERRORS: true # recently yamllint started to complain a lot for github actions
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
@@ -77,6 +76,7 @@ jobs:
           name: MegaLinter reports
           path: |
             report
+            megalinter-reports
             mega-linter.log
 
       # Create pull request if applicable (for now works only on PR from same repository, not from forks)
