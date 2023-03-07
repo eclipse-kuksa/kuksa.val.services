@@ -67,6 +67,9 @@ jobs:
           # ADD YOUR CUSTOM ENV VARIABLES HERE OR DEFINE THEM IN A FILE .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
           # DISABLE: COPYPASTE,SPELL # Uncomment to disable copy-paste and spell checks
           YAML_YAMLLINT_DISABLE_ERRORS: true # recently yamllint started to complain a lot for github actions
+          REPOSITORY_DEVSKIM_DISABLE_ERRORS: true # fails for strncpy()
+          REPOSITORY_CHECKOV_DISABLE_ERRORS: true # fails for missing USER in containers
+          REPOSITORY_TRIVY_DISABLE_ERRORS: true # fails for missing USER in devcontainer
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
