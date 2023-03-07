@@ -14,7 +14,7 @@ env: # Comment env block if you do not want to apply fixes
   APPLY_FIXES_EVENT: none # Decide which event triggers application of fixes in a commit or a PR (pull_request, push, all)
   APPLY_FIXES_MODE: commit # If APPLY_FIXES is used, defines if the fixes are directly committed (commit) or posted in a PR (pull_request)
   DEFAULT_BRANCH: main
-  #TODO: Enable the following DOCKERFILE_DOCKERFILELINT, DOCKERFILE_HADOLINT, ACTION_ACTIONLINT
+  # TODO: Enable the following DOCKERFILE_DOCKERFILELINT, DOCKERFILE_HADOLINT, ACTION_ACTIONLINT
   # Disable MyPy linter
   DISABLE_LINTERS: SPELL_CSPELL,COPYPASTE_JSCPD,DOCKERFILE_DOCKERFILELINT,DOCKERFILE_HADOLINT,ACTION_ACTIONLINT,C_CPPLINT,CPP_CPPLINT,RUST_CLIPPY,PROTOBUF_PROTOLINT,PYTHON_MYPY
   MARKDOWN_MARKDOWN_TABLE_FORMATTER_FILTER_REGEX_EXCLUDE: NOTICE-3RD-PARTY-CONTENT.md
@@ -66,6 +66,8 @@ jobs:
           JSON_JSONLINT_FILTER_REGEX_EXCLUDE: .vscode
           # ADD YOUR CUSTOM ENV VARIABLES HERE OR DEFINE THEM IN A FILE .mega-linter.yml AT THE ROOT OF YOUR REPOSITORY
           # DISABLE: COPYPASTE,SPELL # Uncomment to disable copy-paste and spell checks
+          # recently yamllint started to complain a lot for github actions
+          YAML_YAMLLINT_DISABLE_ERRORS: true
 
       # Upload MegaLinter artifacts
       - name: Archive production artifacts
