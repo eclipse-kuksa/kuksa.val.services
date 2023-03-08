@@ -30,10 +30,10 @@ jobs:
     runs-on: ubuntu-latest
     # Map a step output to a job output
     outputs:
-      version: ${{ steps.set_version.outputs.version }}
+      version: ${{ steps.eval_version.outputs.version }}
     steps:
       - name: Get tag or user release version
-        id: set_version
+        id: eval_version
         run: |
           GIT_VER="${GITHUB_REF/refs\/tags\//}"
           echo "### Detected tag: $GIT_VER"

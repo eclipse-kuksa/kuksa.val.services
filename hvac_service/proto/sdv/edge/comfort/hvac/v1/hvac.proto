@@ -33,7 +33,7 @@ service Hvac {
     */
     rpc SetAcStatus(SetAcStatusRequest) returns (SetAcStatusReply);
 
-    /** Set the desired cabin temparature
+    /** Set the desired cabin temperature
      *
      *  Returns gRPC status codes:
      *   * OK - Desired temperature set
