@@ -24,15 +24,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install basic utils needed inside devcontainer
 RUN apt-get update && \
-  apt-get install -qqy curl wget zip && \
-  apt-get install -qqy git && \
-  apt-get install -qqy bash && \
-  apt-get install -qqy xz-utils && \
-  apt-get install -qqy apt-transport-https
+  apt-get install -qqy curl wget zip  \
+  git \
+  bash \
+  xz-utils \
+  apt-transport-https \
+  jq
   
 # Set the locale
-RUN apt-get update && \
-  apt-get install -qqy locales locales-all
+RUN apt-get install -qqy locales locales-all
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8

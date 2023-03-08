@@ -14,7 +14,7 @@
 # shellcheck disable=SC2086
 
 PROTO_DIRS=(
-	"../kuksa_data_broker/proto"
+	"../proto"
 	"./proto"
 )
 
