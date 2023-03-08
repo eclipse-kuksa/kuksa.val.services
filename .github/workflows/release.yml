@@ -32,13 +32,10 @@ jobs:
     outputs:
       version: ${{ steps.set_version.outputs.version }}
     steps:
-      - id: get_git_tag
-        uses: battila7/get-version-action@v2
-
       - name: Get tag or user release version
         id: set_version
         run: |
-          GIT_VER="${{ steps.get_git_tag_version.outputs.version }}"
+          GIT_VER="${GITHUB_REF/refs\/tags\//}"
           echo "### Detected tag: $GIT_VER"
           if [ -n "${{ github.event.inputs.tag }}" ]; then
             GIT_VER="${{ github.event.inputs.tag }}"
