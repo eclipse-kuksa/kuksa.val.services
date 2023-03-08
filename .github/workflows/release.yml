@@ -67,19 +67,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Get the version
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
 
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
           path: bin/
+
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v1
+        # if: startsWith(github.ref, 'refs/tags/'
         with:
           draft: true
+          tag_name: ${{ needs.get_version.outputs.version }}
           fail_on_unmatched_files: true
           files: |
             bin/**
