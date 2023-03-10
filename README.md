@@ -121,3 +121,32 @@ For accessing data broker from seat service container there are two ways of runn
 
 1. Another option is to use `<container-name>:<port>` and bind to `0.0.0.0` inside containers
 
+## Running the full driver-car simulation locally
+
+1) Create a custom docker bridge network :
+
+```bash
+docker network create --driver bridge sim-net
+```
+
+In 3 seperate terminals:
+
+
+2) Run the kuksa container
+
+    ```bash
+    docker run --name databroker_cont --network sim-net --rm -it ghcr.io/eclipse/kuksa.val/databroker:master
+    ```
+
+3) Run the car simulator
+
+    ```bash
+    docker run --name simulator  --network sim-net -e "LOG_LEVEL=INFO" -e "DATABROKER_ADDRESS=databroker_cont:55555" --rm -it ghcr.io/mikehaller/carsim:main
+    ```
+
+4) Run the driver simulator 
+
+    ```bash
+    docker run --name driver  --network sim-net -e "LOG_LEVEL=INFO" -e "DATABROKER_ADDRESS=databroker_cont:55555" --rm -it ghcr.io/mikehaller/driver:main
+    ```
+

@@ -1,0 +1,5 @@
+__pycache__/
+.mypy_cache/
+.venv/
+*.pyo
+hvac_service.egg-info/
