@@ -25,7 +25,7 @@
  * @brief
  *
  */
-extern int seatctrl_controll_loop(seatctrl_context_t *ctx);
+extern int seatctrl_control_loop(seatctrl_context_t *ctx);
 /**
  * @brief
  *
@@ -87,7 +87,7 @@ class TestSeatCtrlApi : public ::testing::Test {
     }
 
     /**
-     * @brief Generates SECU_STAT can frame with specified position, movment state and learning state for motor1
+     * @brief Generates SECU_STAT can frame with specified position, movement state and learning state for motor1
      *
      * @param frame Pointer to can_frame
      * @param motor_pos desired motor pos
@@ -415,7 +415,7 @@ TEST_F(TestSeatCtrlApi, TestInternals) {
 
 
 /**
- * @brief Tests seatctrl_controll_loop() - Happy Path for increasing direction
+ * @brief Tests seatctrl_control_loop() - Happy Path for increasing direction
  */
 TEST_F(TestSeatCtrlApi, ControlLoopINC) {
 
@@ -440,7 +440,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     ctx.motor1_mov_state = MotorDirection::OFF;
     ctx.motor1_learning_state = LearningState::Learned;
     ctx.motor1_pos = initial_pos; // can't start with MOTOR_POS_INVALID, as it needs another thread to change it
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     auto now_ts = get_ts();
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
@@ -480,7 +480,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
                 ctx.motor1_mov_state = MotorDirection::INC; // == desired direction
             }
         }
-        EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+        EXPECT_EQ(0, seatctrl_control_loop(&ctx));
         if (captured) {
             std::string output = testing::internal::GetCapturedStdout();
             std::cout << output << std::endl;
@@ -492,7 +492,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
         usleep(1 * 1000L);  // 1ms
     }
 
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     EXPECT_EQ(target_pos, ctx.motor1_pos) << "Motor should be at " << target_pos << "%";
     EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
@@ -504,7 +504,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
 }
 
 /**
- * @brief Tests seatctrl_controll_loop() - Happy Path for decreasing direction
+ * @brief Tests seatctrl_control_loop() - Happy Path for decreasing direction
  */
 TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
 
@@ -531,7 +531,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     ctx.motor1_mov_state = MotorDirection::OFF;
     ctx.motor1_learning_state = LearningState::Learned;
     ctx.motor1_pos = initial_pos; // can't start with MOTOR_POS_INVALID, as it needs another thread to change it
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     // well, socket write fails
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
@@ -573,7 +573,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
                 ctx.motor1_mov_state = MotorDirection::DEC; // == desired direction
             }
         }
-        EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+        EXPECT_EQ(0, seatctrl_control_loop(&ctx));
         if (captured) {
             std::string output = testing::internal::GetCapturedStdout();
             std::cout << output << std::endl;
@@ -587,7 +587,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     }
 
     // command should be handled already
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     EXPECT_EQ(target_pos, ctx.motor1_pos) << "Motor should be at " << target_pos << "%";
     EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
@@ -601,7 +601,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
 
 
 /**
- * @brief Tests seatctrl_controll_loop() - Happy Path for increasing direction
+ * @brief Tests seatctrl_control_loop() - Happy Path for increasing direction
  */
 TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
 
@@ -633,7 +633,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
     ctx.motor1_mov_state = MotorDirection::OFF;
     ctx.motor1_learning_state = LearningState::Learned;
     ctx.motor1_pos = initial_pos; // can't start with MOTOR_POS_INVALID, as it needs another thread to change it
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     auto now_ts = get_ts();
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
@@ -650,10 +650,10 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
         } else {
             ctx.motor1_mov_state = MotorDirection::INC; // == desired direction
         }
-        EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+        EXPECT_EQ(0, seatctrl_control_loop(&ctx));
         usleep(1 * 1000L);  // 1ms
     }
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
 
     EXPECT_NE(target_pos, ctx.motor1_pos) << "Motor should be at dofferent position than: " << target_pos << "%";
@@ -673,7 +673,7 @@ TEST_F(TestSeatCtrlApi, TestNotLearnedMode) {
     EXPECT_EQ(0, seatctrl_default_config(&config));
     EXPECT_EQ(0, seatctrl_init_ctx(&ctx, &config));
 
-    // state is needed to call seatctrl_controll_loop()
+    // state is needed to call seatctrl_control_loop()
     ctx.running = true;
     // enable full dumps
     ctx.config.debug_raw = true;
@@ -687,7 +687,7 @@ TEST_F(TestSeatCtrlApi, TestNotLearnedMode) {
     EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
 
     testing::internal::CaptureStdout();
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
     output = testing::internal::GetCapturedStdout();
     EXPECT_TRUE(output.find("ECU in not-learned state") != std::string::npos) << "Expected not-learned state warning, got: " << output;
 
@@ -695,20 +695,20 @@ TEST_F(TestSeatCtrlApi, TestNotLearnedMode) {
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 0, MotorDirection::OFF, LearningState::Learned));
     EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
     testing::internal::CaptureStdout();
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
     output = testing::internal::GetCapturedStdout();
     EXPECT_FALSE(output.find("ECU in not-learned state") != std::string::npos) << "Dublicate not-learned state warning: " << output;
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 0, MotorDirection::OFF, LearningState::NotLearned));
     EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 1, MotorDirection::OFF, LearningState::Learned));
     EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     testing::internal::CaptureStdout();
-    EXPECT_EQ(0, seatctrl_controll_loop(&ctx));
+    EXPECT_EQ(0, seatctrl_control_loop(&ctx));
     output = testing::internal::GetCapturedStdout();
     EXPECT_TRUE(output.find("ECU changed to: learned state") == std::string::npos) << "Dublicate learned state: " << output;
 

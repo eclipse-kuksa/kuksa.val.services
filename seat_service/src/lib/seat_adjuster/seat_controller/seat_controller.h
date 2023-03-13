@@ -247,7 +247,7 @@ error_t seatctrl_open(seatctrl_context_t *ctx);
 
 /**
  * @brief Main business logic, sends command to change seat position based on current position and desired_position.
- * Must follow a successfull seatctrl_open() call.
+ * Must follow a successful seatctrl_open() call.
  *
  * @param ctx opened seatctrl context.
  * @param desired_position motor1 absolute position(%). Range is [0%..100%], 255=invalid position.
