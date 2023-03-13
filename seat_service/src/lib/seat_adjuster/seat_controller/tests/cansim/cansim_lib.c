@@ -178,7 +178,7 @@ void _initialize(void) {
         exit(1);
     }
     // dlclose(handle);
-    fprintf(sim_log, SELF_INIT "Initialized sucessfully.");
+    fprintf(sim_log, SELF_INIT "Initialized successfully.");
     fprintf(sim_log, "WARNING: Hooked libc socket(),bind(),read(),write(),ioctl(),setsockopt(),close() ...\n");
 
     sim_initialized = true;

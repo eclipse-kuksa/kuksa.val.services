@@ -70,7 +70,7 @@ void print_ctl_stats(seatctrl_context_t *ctx, const char* prefix);
 
 error_t handle_secu_stat(seatctrl_context_t *ctx, const struct can_frame *frame);
 error_t seatctrl_send_cmd1(seatctrl_context_t *ctx, uint8_t motor1_dir, uint8_t motor1_rpm);
-error_t seatctrl_controll_loop(seatctrl_context_t *ctx);
+error_t seatctrl_control_loop(seatctrl_context_t *ctx);
 
 
 /**
@@ -330,7 +330,7 @@ static int64_t learned_mode_changed = 0; // rate limit state change dumps
  * @param ctx SeatCtrl context
  * @return SEAT_CTRL_OK on success, SEAT_CTRL_ERR* (<0) on error
  */
-error_t seatctrl_controll_loop(seatctrl_context_t *ctx)
+error_t seatctrl_control_loop(seatctrl_context_t *ctx)
 {
     error_t rc = SEAT_CTRL_OK;
     // FIXME: Handle ctx->motor1_learning_state == LearningState::NotLearned
@@ -502,7 +502,7 @@ void *seatctrl_threadFunc(void *arg)
         if (frame.can_id == CAN_SECU1_STAT_FRAME_ID)
         {
             if (handle_secu_stat(ctx, &frame) == SEAT_CTRL_OK) {
-                seatctrl_controll_loop(ctx);
+                seatctrl_control_loop(ctx);
             }
         }
         ::usleep(1000);

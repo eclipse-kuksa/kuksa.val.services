@@ -96,7 +96,7 @@ int sae_init(sae_context_t *ctx);
  *
  * @param ctx SAE context pointer
  * @param fd Opened file descriptor for simulation
- * @return int 0 on sucess.
+ * @return int 0 on success.
  */
 int sae_start(sae_context_t *ctx, int fd);
 
@@ -106,7 +106,7 @@ int sae_start(sae_context_t *ctx, int fd);
  * @param ctx SAE context pointer
  * @param buf socketcan buffer (can_frame) from hooked write() call
  * @param len must be sizeof(struct can_frame)
- * @return ssize_t write result from callback (=len if successfull).
+ * @return ssize_t write result from callback (=len if successful).
  */
 ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len);
 
@@ -117,7 +117,7 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len);
  * @param ctx SAE context pointer
  * @param buf socketcan buffer (can_frame) from hooked read() call
  * @param len must be sizeof(struct can_frame)
- * @return ssize_t read result from callback (=len if successfull).
+ * @return ssize_t read result from callback (=len if successful).
  */
 ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len);
 

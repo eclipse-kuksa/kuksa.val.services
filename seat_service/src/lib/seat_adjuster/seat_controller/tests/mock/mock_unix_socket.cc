@@ -44,7 +44,7 @@ namespace test {
  * @brief Construct a new Socket Mock object for specified Unix socket file.
  *
  * @param sock_name Opens server and client sockets running on specified sock_name Unix socket
- * @param debug enable verbose dumps from this object, can be overriden with ```export SOCKETMOCK_DEBUG=1```
+ * @param debug enable verbose dumps from this object, can be overridden with ```export SOCKETMOCK_DEBUG=1```
  */
 SocketMock::SocketMock(const std::string &sock_name, bool debug) :
     _serv_sock(SOCKET_INVALID),

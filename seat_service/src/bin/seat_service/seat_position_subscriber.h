@@ -17,7 +17,7 @@
  *             * It defines the metadata of those data points.
  *             * It subscribes to the signals provided via the seat service
  *               internal SeatAdjuster interface for receiving updates of those.
- *             * It uses the generic class DataBrokerFeeder to foward the updates
+ *             * It uses the generic class DataBrokerFeeder to forward the updates
  *               to the Data Broker.
  */
 #pragma once

@@ -112,20 +112,28 @@ void Run(std::string can_if_name, std::string listen_address, std::string port, 
     builder.RegisterService(&seat_service);
 
     std::shared_ptr<grpc::Server> server(builder.BuildAndStart());
+    // fix SIGSEGV if server bind failed
+    std::shared_ptr<std::thread> server_thread(nullptr);
+    if (server) {
+        std::cout << SELF "Server listening on " << server_address << std::endl;
+        server_thread = std::shared_ptr<std::thread>(new std::thread(&grpc::Server::Wait, server));
 
-    std::cout << SELF "Server listening on " << server_address << std::endl;
-    std::thread server_thread(&grpc::Server::Wait, server);
+        // Setup signal handler & wait for signal
+        auto fd = setup_signal_handler();
+        wait_for_signal(fd);
 
-    // Setup signal handler & wait for signal
-    auto fd = setup_signal_handler();
-    wait_for_signal(fd);
+    } else {
+        std::cerr << SELF "Server failed to listen on " << server_address << std::endl;
+    }
 
     std::cout << SELF "Shutting down..." << std::endl;
 
     seat_data_feeder.Shutdown();
     seat_position_subscriber.Shutdown();
-    server->Shutdown();
-    server_thread.join();
+    if (server) {
+        server->Shutdown();
+        server_thread->join();
+    }
     subscriber_thread.join();
     feeder_thread.join();
 
