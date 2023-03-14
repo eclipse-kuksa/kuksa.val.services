@@ -27,6 +27,7 @@ env:
   BUILD_TYPE: Debug
 
 jobs:
+
   build:
     # reduce runtime requirements from libc/libc++
     runs-on: ubuntu-20.04
@@ -48,6 +49,7 @@ jobs:
         shell: bash
 
       - name: cobertura-report
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
         uses: 5monkeys/cobertura-action@v13
         with:
           path: ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_vservice-seat-ctrl.xml
@@ -60,7 +62,7 @@ jobs:
           name: report_codecov_vservice-seat-ctrl
           path: |
             ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_*/**
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v3
@@ -68,4 +70,4 @@ jobs:
           name: report_test_vservice-seat-ctrl
           path: |
             ${{github.workspace}}/seat_service/build_seat_controller/x86_64/Testing/
-          if-no-files-found: error
+          if-no-files-found: warn
