@@ -34,9 +34,29 @@ on:
         default: "latest"
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
 
+  get_tag:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.eval_tag.outputs.tag }}
+    steps:
+      - name: Get tag from workflow / workflow dispatch or fallback to main
+        id: eval_tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag }}" ]; then
+            IMAGE_TAG="${{ github.event.inputs.tag }}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            IMAGE_TAG="${{ inputs.tag }}"
+          else
+            ### if not called from dispatch or call, it must be merging to main
+            IMAGE_TAG="main"
+          fi
+          echo "### Using image tag: $IMAGE_TAG"
+          echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
+
+  build-devcontainer:
+    runs-on: ubuntu-latest
+    needs: get_tag
     steps:
       - name: adding github workspace as safe directory
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
@@ -61,10 +81,10 @@ jobs:
         # github.event.inputs.tag - used when triggered by workflow_dispatch
         #              inputs.tag - used when triggered by workflow_call
         run: |
-          docker build --build-arg version=latest --build-arg USER_ID=0 --build-arg GROUP_ID=0 -t ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_kuksa-val-services-ci:${{ github.event.inputs.tag }}${{ inputs.tag }} -f tools/Dockerfile .
+          docker build --build-arg version=latest --build-arg USER_ID=0 --build-arg GROUP_ID=0 -t ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_kuksa-val-services-ci:${{ needs.get_tag.outputs.tag }} -f tools/Dockerfile .
       # push docker
       - name: Push docker
         # github.event.inputs.tag - used when triggered by workflow_dispatch
         #              inputs.tag - used when triggered by workflow_call
         run: |
-          docker push ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_kuksa-val-services-ci:${{ github.event.inputs.tag }}${{ inputs.tag }}
+          docker push ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_kuksa-val-services-ci:${{ needs.get_tag.outputs.tag }}
