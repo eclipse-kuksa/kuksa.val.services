@@ -9,4 +9,4 @@ __pycache__/
 .vscode/launch.json
 /results/
 megalinter-reports/
-
+.DS_Store

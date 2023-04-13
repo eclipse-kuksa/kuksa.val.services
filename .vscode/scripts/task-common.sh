@@ -48,6 +48,10 @@ export FEEDERCAN_GRPC_PORT='52008'
 # feedercan dapr app id
 export FEEDERCAN_DAPR_APP_ID="feedercan"
 
+export MOCKSERVICE_PORT='50053'
+export MOCKSERVICE_GRPC_PORT='59009'
+export MOCKSERVICE_DAPR_APP_ID="mockservice"
+
 _check_prerequisite() {
 	local MISSING_PKG=""
 	if [ -z "$(which jq)" ]; then
