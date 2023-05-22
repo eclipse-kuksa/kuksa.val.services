@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #********************************************************************************
 # Copyright (c) 2022 Contributors to the Eclipse Foundation
 #
@@ -11,6 +11,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
+# shellcheck disable=SC3043
+# shellcheck disable=SC2181
 
 # how many can read timeouts are accepted before bailing out (no can hw)
 MAX_RETRIES=3
@@ -54,42 +56,42 @@ echo "### Normalizing SeatAdjust ECU on $CAN"
 
 
 motor_off() {
-    frame=`printf "cansend $CAN 705#00.00.00.00.00.00.00.00"`
+    frame=$(printf "cansend %s 705#00.00.00.00.00.00.00.00" "$CAN")
     echo "TX: [motor-OFF] $frame"
-    `$frame`
+    eval "$frame"
     sleep 0.5
 }
 
 motor_inc() {
-    local rpm=$1
-    frame=`printf "cansend $CAN 705#02.%02X.00.00.00.00.00.00" $rpm`
+    local rpm="$1"
+    frame=$(printf "cansend $CAN 705#02.%02X.00.00.00.00.00.00" "$rpm")
     echo "TX: [motor-INC] $frame"
-    `$frame`
+    eval "$frame"
     sleep 0.2
 }
 
 motor_dec() {
-    local rpm=$1
-    frame=`printf "cansend $CAN 705#01.%02X.00.00.00.00.00.00" $rpm`
+    local rpm="$1"
+    frame=$(printf "cansend $CAN 705#01.%02X.00.00.00.00.00.00" "$rpm")
     echo "TX: [motor-DEC] $frame"
-    `$frame`
+    eval "$frame"
     sleep 0.2
 }
 
 read_can_frame() {
-    local can=$1
-    candump -T 1000 -n 1 -L $can,712:7FF | cut -d ' ' -f 3
+    local can="$1"
+    candump -T 1000 -n 1 -L "$can",712:7FF | cut -d ' ' -f 3
 }
 
 parse_motor_pos() {
     local frame="$1"
     # only handle 0x712 canid
-    if [ "${frame:0:4}" != "712#" ]; then
+    if [ "$(echo "$frame" | cut -c1-4)" != "712#" ]; then
         return 1;
     fi
-    local data=${frame#*#}
+    local data="${frame#*#}"
     # pos_hex is 3rd byte
-    pos_hex=${data:4:2}
+    pos_hex=$(echo "$data" | cut -c5-6)
     echo $(( 0x${pos_hex} ))
     return 0
 }
@@ -97,14 +99,14 @@ parse_motor_pos() {
 parse_motor_mov() {
     local frame="$1"
     # only handle 0x712 canid
-    if [ "${frame:0:4}" != "712#" ]; then
+    if [ "$(echo "$frame" | cut -c1-4)" != "712#" ]; then
         return 1;
     fi
-    local data=${frame#*#}
+    local data="${frame#*#}"
     # mov_hex is 2nd & 0x0F
-    mov_hex=${data:1:1}
+    mov_hex=$(echo "$data" | cut -c2)
     #echo -n " ($mov_hex)="
-    case $(( $mov_hex & 0x03 )) in
+    case $(( mov_hex & 0x03 )) in
         0) echo "OFF";;
         1) echo "DEC";;
         2) echo "INC";;
@@ -116,14 +118,14 @@ parse_motor_mov() {
 parse_motor_lrn() {
     local frame="$1"
     # only handle 0x712 canid
-    if [ "${frame:0:4}" != "712#" ]; then
+    if [ "$(echo "$frame" | cut -c1-4)" != "712#" ]; then
         return 1;
     fi
-    local data=${frame#*#}
+    local data="${frame#*#}"
     # mov_hex is 2nd & 0x0F
-    mov_hex=${data:1:1}
+    mov_hex=$(echo "$data" | cut -c2)
     #echo -n " ($mov_hex)="
-    case $(( ($mov_hex >> 2) & 0x03 )) in
+    case $(( (mov_hex >> 2) & 0x03 )) in
         0) echo "NOT";;
         1) echo "LRN";;
         2) echo "INV";;
@@ -140,14 +142,14 @@ state=0 # 0=motor_inc; 1=
 ts_start=$(date '+%s')
 failures=0
 while true; do
-    frame=`read_can_frame $CAN`
+    frame=$(read_can_frame "$CAN")
     if [ $? -ne 0 ]; then
         echo "Aborted. Can't read from $CAN ..."
         exit 1
     fi
     ts_now=$(date '+%s')
     ts_elapsed=$((ts_now - ts_start))
-    if [ $ts_elapsed -ge $TIMEOUT ]; then
+    if [ $ts_elapsed -ge "$TIMEOUT" ]; then
         echo "### Aborted after $ts_elapsed sec." 1>&2
         exit 1
     fi
@@ -166,9 +168,9 @@ while true; do
         continue
     fi
 
-    pos=`parse_motor_pos "$frame"`
-    mov=`parse_motor_mov "$frame"`
-    lrn=`parse_motor_lrn "$frame"`
+    pos=$(parse_motor_pos "$frame")
+    mov=$(parse_motor_mov "$frame")
+    lrn=$(parse_motor_lrn "$frame")
 
     [ -n "$frame" ] && [ "$STAT" = "1" ] && printf 'RX: SECU1_STAT {pos:%3d%% mov:%3s, lrn:%3s} \tframe: %s\n' "$pos" "$mov" "$lrn" "$frame"
     old_frame="$frame"

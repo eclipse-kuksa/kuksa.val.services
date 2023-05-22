@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #********************************************************************************
 # Copyright (c) 2022 Contributors to the Eclipse Foundation
 #
@@ -11,9 +11,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
-# shellcheck disable=SC2086
 
-INSTALL="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL="$(cd "$(dirname "$0")" && pwd)"
 
 # Used can interface, if hw is missing set it to "vcan0" and run:
 #   ~/vehicle_hal/tools/setup-vcan; ~/vehicle_hal/tools/sim-SECU1_STAT vcan0 0
@@ -35,17 +34,17 @@ sig_handler() {
 	exit 42
 }
 
-trap sig_handler SIGTERM SIGINT
+trap sig_handler TERM INT
 
 ### Wait for can device available
 if [ -n "$CAN_WAIT" ] && [ "$CAN" != "cansim" ]; then
 	echo "[$0] Waiting for $CAN ($CAN_WAIT s)..."
 	# avoid ip tool dependency
 	sec=0
-	while [ ! -e /sys/class/net/$CAN ]; do
+	while [ ! -e "/sys/class/net/$CAN" ]; do
 		sleep 1
 		sec=$((sec + 1))
-		if [ $sec -ge $CAN_WAIT ]; then
+		if [ $sec -ge "$CAN_WAIT" ]; then
 			echo "[$0] Timedout waiting for: /sys/class/net/$CAN"
 			exit 3
 		fi
@@ -103,8 +102,8 @@ fi
 
 if [ "$CAN" = "cansim" ]; then
 	echo "### Starting VAL Seat Service [$SERVICE_HOST:$SERVICE_PORT] on Simulated SocketCAN!"
-	exec stdbuf --output=L $INSTALL/tools/cansim $INSTALL/seat_service "$CAN" "$SERVICE_HOST" $SERVICE_PORT
+	exec stdbuf --output=L "$INSTALL/tools/cansim" "$INSTALL/seat_service" "$CAN" "$SERVICE_HOST" "$SERVICE_PORT"
 else
 	echo "### Starting VAL Seat Service [$SERVICE_HOST:$SERVICE_PORT] on $CAN..."
-	exec stdbuf --output=L $INSTALL/seat_service "$CAN" "$SERVICE_HOST" $SERVICE_PORT
+	exec stdbuf --output=L "$INSTALL/seat_service" "$CAN" "$SERVICE_HOST" "$SERVICE_PORT"
 fi

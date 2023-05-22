@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #********************************************************************************
 # Copyright (c) 2022 Contributors to the Eclipse Foundation
 #
@@ -31,15 +31,15 @@ VERBOSE="$3"
 
 echo "# Running $ITERATIONS interations on: $CAN ..."
 iter=0
-while [ $ITERATIONS -eq 0 ] || [ $iter -lt $ITERATIONS ]; do
+while [ "$ITERATIONS" -eq 0 ] || [ $iter -lt "$ITERATIONS" ]; do
 	echo
 	echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: 'learned', MOTOR1_POS: 0..100 ]"
-	for pos in `seq 0 +1 100`; do
-		frame=`printf "cansend $CAN 712#46.44.%02X.00.00.00.00.00" $pos`
+	for pos in $(seq 0 +1 100); do
+		frame=$(printf "cansend $CAN 712#46.44.%02X.00.00.00.00.00" "$pos")
 		[ -n "$VERBOSE" ] && echo "$frame"
-		`$frame`
+		eval "$frame"
 		sleep 0.01
-		`$frame`
+		eval "$frame"
 		sleep 0.01
 	done
 
@@ -47,15 +47,15 @@ while [ $ITERATIONS -eq 0 ] || [ $iter -lt $ITERATIONS ]; do
 
 	[ -n "$VERBOSE" ] && echo
 	echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'DEC', MOTOR1_LEARNING_STATE: 'learned', MOTOR1_POS: 100..0 ]"
-	for pos in `seq 100 -1 0`; do
-		frame=`printf "cansend $CAN 712#45.44.%02X.00.00.00.00.00" $pos`
+	for pos in $(seq 100 -1 0); do
+		frame=$(printf "cansend $CAN 712#45.44.%02X.00.00.00.00.00" "$pos")
 		[ -n "$VERBOSE" ] && echo "$frame"
-		`$frame`
+		eval "$frame"
 		sleep 0.01
-		`$frame`
+		eval "$frame"
 		sleep 0.01
 	done
 	[ -n "$VERBOSE" ] && echo
 
-	((iter=iter+1))
+	iter=$((iter+1))
 done
