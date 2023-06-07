@@ -1,9 +1,15 @@
-// Copyright Robert Bosch GmbH, 2022. Part of the Eclipse Kuksa Project.
-//
-// All rights reserved. This configuration file is provided to you under the
-// terms and conditions of the Eclipse Distribution License v1.0 which
-// accompanies this distribution, and is available at
-// http://www.eclipse.org/org/documents/edl-v10.php
+/********************************************************************************
+ * Copyright (c) 2022 Contributors to the Eclipse Foundation
+ *
+ * See the NOTICE file(s) distributed with this work for additional
+ * information regarding copyright ownership.
+ *
+ * This program and the accompanying materials are made available under the
+ * terms of the Apache License 2.0 which is available at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ ********************************************************************************/
 
 syntax = "proto3";
 
@@ -11,9 +17,7 @@ syntax = "proto3";
 package kuksa.val.v1;
 import "google/protobuf/timestamp.proto";
 
-// Should probably be changed to something like:
-// option go_package = "github.com/eclipse/kuksa.val/proto/v1";
-option go_package = "/kuksa_grpc_proto";
+option go_package = "kuksa/val/v1";
 
 // Describes a VSS entry
 // When requesting an entry, the amount of information returned can

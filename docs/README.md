@@ -17,7 +17,7 @@ The data broker and the vehicle services are offering gRPC based interfaces.
 A developer of a Vehicle Applications could either use the gRPC/Protobuf tooling for generating gRPC skeletons in the preferred programming language and bind his/her code directy to those.
 A more comfortable way to develop vehicle applications is offered by the [Eclipse Velocitas project](https://eclipse-velocitas.github.io/velocitas-docs/).
 The Eclipse Velocitas project cares for supporting the developer of an vehicle app to abstract from the gRPC-based access to the VAL. 
-It offers a toolchain and programing language-specific SDKs and data models for interacting with the vehicle.
+It offers a toolchain and programming language-specific SDKs and data models for interacting with the vehicle.
 
 
 ## Architecture

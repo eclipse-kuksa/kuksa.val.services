@@ -57,8 +57,6 @@ service Collector {
   // Returns: any errors encountered updating the datapoints
   //
   rpc StreamDatapoints(stream StreamDatapointsRequest) returns (stream StreamDatapointsReply);
-
-  rpc SubscribeActuatorTargets(SubscribeActuatorTargetRequest) returns (stream SubscribeActuatorTargetReply);
 }
 
 message UpdateDatapointsRequest {
@@ -79,14 +77,6 @@ message StreamDatapointsReply {
 
 message RegisterDatapointsRequest {
   repeated RegistrationMetadata list = 1;
-}
-
-message SubscribeActuatorTargetRequest {
-  repeated string paths = 1;
-}
-
-message SubscribeActuatorTargetReply {
-  map<string, Datapoint> actuator_targets = 1;
 }
 
 message RegistrationMetadata {
