@@ -8,9 +8,9 @@
 
 ## Overview
 
-This repository provides you a set of exemplary **vehicle services** showing how to define and implement these important pieces of the **Eclipse KUKSA Vehicle Abstraction Layer (VAL)**. 
-The KUKSA.VAL is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*.
-Vehicle data is provided in form of a data model, which is accessible via the KUKSA Data Broker (formerly known as Vehicle Data Broker) - see [kuksa.val repository](https://github.com/eclipse/kuksa.val).
+This repository provides you a set of example **vehicle services** showing how to define and implement these important pieces of the **Eclipse KUKSA Vehicle Abstraction Layer (VAL)**. 
+[KUKSA.val](https://github.com/eclipse/kuksa.val) is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*.
+Vehicle data is provided in form of a data model, which is accessible via the [KUKSA.val Databroker](https://github.com/eclipse/kuksa.val/tree/master/kuksa_databroker).
 Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*).
 
 You'll find a more [detailed overview here](docs/README.md).
@@ -121,3 +121,36 @@ For accessing data broker from seat service container there are two ways of runn
 
 1. Another option is to use `<container-name>:<port>` and bind to `0.0.0.0` inside containers
 
+## KUKSA.val and VSS version dependency
+
+The service examples and related tests in this repository use VSS signals. VSS signals may change over time,
+and backward incompatible changes may be introduced as part of major releases.
+Some of the tests in this repository relies on using latest version
+of [KUKSA.val Databroker](https://github.com/eclipse/kuksa.val/pkgs/container/kuksa.val%2Fdatabroker) and
+[KUKSA.val DBC Feeder](https://github.com/eclipse/kuksa.val.feeders/pkgs/container/kuksa.val.feeders%2Fdbc2val).
+Some code in the repository (like [Proto](https://github.com/eclipse/kuksa.val.services/tree/main/proto) definitions)
+have been copied from [KUKSA.val](https://github.com/eclipse/kuksa.val).
+
+This means that regressions may occur when KUKSA.val or KUKSA.val Feeders are updated. The intention for other KUKSA.val
+repositories is to use the latest official VSS release as default.
+
+As of today the services are based on using VSS 3.X. As part of VSS 4.0 the instance scheme for seat positions was
+changed to be based on DriverSide/Middle/PassengerSide rather than Pos1, Pos2, Pos3.
+This means a refactoring would be required to update to VSS 4.0.
+
+### Known locations where an explicit VSS or KUKSA.val version is mentioned
+
+
+
+In [integration_test.yml](https://github.com/eclipse/kuksa.val.services/blob/main/.github/workflows/integration_test.yml)
+it is hardcoded which VSS version to use when starting Databroker.
+
+`KDB_OPT: "--vss vss_release_3.1.1.json"`
+
+In [run-databroker.sh](https://github.com/eclipse/kuksa.val.services/blob/main/.vscode/scripts/run-databroker.sh)
+it is hardcoded to use VSS 3.0.
+
+`wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_3.0.json" -O "$DATABROKER_BINARY_PATH/vss.json"`
+
+In [prerequisite_settings.json](https://github.com/eclipse/kuksa.val.services/blob/main/prerequisite_settings.json)
+hardcoded versions are mentioned for KUKSA.val Databroker, KUKSA.val DBC Feeder and KUKSA.val Client.

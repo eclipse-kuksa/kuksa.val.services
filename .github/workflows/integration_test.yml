@@ -69,6 +69,11 @@ jobs:
       - name: Setup VAL containers
         shell: bash
         env:
+          # We may need to specify a VSS version compatible with the code in this repository
+          # This is needed if the default VSS version used by Databroker has backward incompatible changes
+          # affecting integration tests for this repository
+          # The file specified must exist in the Databroker container
+          KDB_OPT: "--vss vss_release_3.1.1.json"
           SEAT_TAG: "prerelease"
           HVAC_TAG: "prerelease"
         run: |

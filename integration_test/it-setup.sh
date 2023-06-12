@@ -157,7 +157,8 @@ start_containers() {
 	echo "- Running ${KDB_CONTAINER} ..."
 	# DataBroker container options
 	rc=0
-	docker run -d ${DOCKER_OPT} ${KDB_DOCKER_OPT} "${KDB_IMAGE}" || rc=1
+	# For successful run it might be important to specify VSS JSON file as part of KDB_OPT
+	docker run -d ${DOCKER_OPT} ${KDB_DOCKER_OPT} ${KDB_IMAGE} ${KDB_OPT} || rc=1
 
 	echo "- Running ${SEAT_CONTAINER} ..."
 	# SeatService container options. BROKER_ADDR is needed to reach it-databroker ports within val-test network
