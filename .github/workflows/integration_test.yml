@@ -106,11 +106,13 @@ jobs:
             --override-ini junit_family=xunit1 --junit-xml=./results/IntegrationTest/junit.xml \
             --log-file=./results/IntegrationTest/integration.log --log-file-level=DEBUG
 
-      - name: Publish Integration Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
-        with:
-          files: ./results/IntegrationTest/junit.xml
+# Step below disabled, only triggered for pull requests internally within repository
+# and that is typically not used, and is not working as action does not have sufficient permissions
+#     - name: Publish Integration Test Results
+#       uses: EnricoMi/publish-unit-test-result-action@v2
+#       if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+#       with:
+#         files: ./results/IntegrationTest/junit.xml
 
       - name: Upload Integration Test Logs
         uses: actions/upload-artifact@v3
