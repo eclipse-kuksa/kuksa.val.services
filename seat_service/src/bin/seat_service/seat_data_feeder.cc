@@ -54,7 +54,7 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std:
             broker_feeder::createDatapoint(1U),
             "Number of seats in row 1"},
         {seat_pos_name,
-            DataType::UINT8, // Changed from UINT32 to match VSS 3.0
+            DataType::UINT16, // Changed from UINT32 to match VSS 3.0
             ChangeType::ON_CHANGE,
             broker_feeder::createNotAvailableValue(),
             "Longitudinal position of overall seat"}
