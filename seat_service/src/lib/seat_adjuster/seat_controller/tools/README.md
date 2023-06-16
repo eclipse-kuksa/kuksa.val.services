@@ -63,7 +63,6 @@ Runs the motors in endless increasing / decreasing position loop with specified 
 - _rpm_ values below 30 (3000 rpm) are too low to start moving.
 - _rpm_ values above 120 (12000 rpm) no longer increase the speed of movement.
 
-
 ## Scripts for testing without CAN HW
 
 ### `setup-vcan`
@@ -74,17 +73,20 @@ Both `grpc` server and `sim-SECU1_STAT` should run on `vcan0`.
 
 ### `sim-SECU1_STAT`
 
-  Simulate `SECU1_STAT.motor1_pos` changing from _[0..100]_ and _[100..0]_
+Simulate `SECU1_STAT.motor1_pos` changing from _[0..100]_ and _[100..0]_
 
-  This script is required if you don't have CAN hardware for Seat Adjuster as Control Loop requires a defined initial `motor1_pos` to initiate the move command.
+This script is required if you don't have CAN hardware for Seat Adjuster as Control Loop requires a defined initial `motor1_pos` to initiate the move command.
 
-  **NOTE:** It is recommended to run both `hal_service` and `sim-SECU1_STAT` on `vcan0`.
+    Usage: ./sim-SECU1_STAT {-i iterations} {-t timeout_sec} {-r} <can_if>
+        can_if: CAN interface to use. Default: vcan0
+        -i: Force calibration even if motor reports learned state. Default: 0
+        -t: timeout in seconds to abort operation. Default: 5 sec
+        -r: Simulate ECU reset (start in unlearned state)
+        -v: prints generated cansend commands
+        -h: Prints this message
 
-    Usage: ./sim-SECU1_STAT <can_if> {iterations} {verbose}
-        can_if - use specified can interface. Default: vcan0
-        iterations - runs pos change [0..100]-[100..0] in a loop. 0=infinite, Default: 0
-        verbose - if 3rd arg is provided - prints generated cansend commands
-
+**NOTE:** It is recommended to run both `seat_service` and `sim-SECU1_STAT` on `vcan0`.
+Simulation of ECU reset (motor in unlearned state) is possible with `-r` option
 
 ## CAN Troubleshooting scripts
 

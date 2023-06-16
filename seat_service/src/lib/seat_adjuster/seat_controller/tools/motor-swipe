@@ -29,10 +29,10 @@ echo "# Running on can: $CAN, timeout: $TIMEOUT"
 
 while true; do 
   echo ">>> Motor ++++"
-  cansend $CAN 705#00.00.00.00.00.00.00.00; sleep 0.1; cansend $CAN 705#02.50.00.00.00.00.00.00
-  sleep $TIMEOUT
+  cansend "$CAN" "705#00.00.00.00.00.00.00.00"; sleep 0.1; cansend "$CAN" "705#02.50.00.00.00.00.00.00"
+  sleep "$TIMEOUT"
   echo ">>> Motor ----"
-  cansend $CAN 705#00.00.00.00.00.00.00.00; sleep 0.1; cansend $CAN 705#01.50.00.00.00.00.00.00 
-  sleep $TIMEOUT
+  cansend "$CAN" "705#00.00.00.00.00.00.00.00"; sleep 0.1; cansend "$CAN" "705#01.50.00.00.00.00.00.00"
+  sleep "$TIMEOUT"
   echo "###############"
 done

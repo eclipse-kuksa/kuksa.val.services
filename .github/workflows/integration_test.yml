@@ -25,7 +25,8 @@ on:
 
 jobs:
   integration-test:
-    runs-on: ubuntu-latest
+    # reduce runtime requirements from libc/libc++
+    runs-on: ubuntu-20.04
     # container:
     #   image: ghcr.io/${{ github.repository }}/oci_kuksa-val-services-ci:v0.1.0
     #   credentials:
@@ -78,7 +79,11 @@ jobs:
           HVAC_TAG: "prerelease"
         run: |
           ./integration_test/it-setup.sh init
-          ./integration_test/it-setup.sh start
+          if ! ./integration_test/it-setup.sh start; then
+            echo "### Container startup failed logs:"
+            ./integration_test/it-setup.sh status --logs
+            exit 1
+          fi
           sleep 1
           ./integration_test/it-setup.sh status --logs
           # echo "$ docker image ls"

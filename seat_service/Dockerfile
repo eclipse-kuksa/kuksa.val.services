@@ -12,7 +12,7 @@
 # ********************************************************************************/
 
 
-FROM --platform=$BUILDPLATFORM alpine:latest as builder
+FROM --platform=$BUILDPLATFORM ubuntu:20.04 as builder
 
 ARG TARGETPLATFORM
 
@@ -27,12 +27,13 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] ; \
     then tar -xf bin_vservice-seat_x86_64_release.tar.gz && cp -rv ./target/x86_64/release/install/ ./bins; \
     else tar -xf bin_vservice-seat_aarch64_release.tar.gz && cp -rv ./target/aarch64/release/install/ ./bins; fi
 
-FROM --platform=$TARGETPLATFORM ubuntu:latest as runtime
+FROM --platform=$TARGETPLATFORM ubuntu:20.04 as runtime
 
 LABEL org.opencontainers.image.description "VAL Seat Service container, providing VSC Seat impl and supporting simulated/real can ECU"
 
 ## Uncomment for ip/can tools
 #RUN apt-get -qqy update && apt-get install -qqy net-tools can-utils iproute2 && apt clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qqy update && apt-get install --no-install-recommends can-utils && apt clean && rm -rf /var/lib/apt/lists/*
 # make sure localhost can be resolved!
 RUN cat /etc/hosts | grep -q localhost || echo "127.0.0.1 localhost" >> /etc/hosts
 
@@ -42,6 +43,8 @@ WORKDIR /app/bin
 
 ### "cansim" is special value for using SeatAdjuster CAN simulator (even without vcan support in container)
 ENV CAN=cansim
+### if set to 1, forces running ecu-reset script on startup that does not work with cansim and also delays 3s the startup of can stup without actual Seat ECU
+# ENV SC_RESET=0
 
 ### [vxcan] options
 # By default, wait for can-forward.sh to move vxcan1 in container's namespace after container start
