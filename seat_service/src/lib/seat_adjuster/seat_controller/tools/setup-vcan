@@ -17,10 +17,11 @@
 CAN=$1
 [ -z "$CAN" ] && CAN="vcan0"
 
-ifconfig $CAN 2>/dev/null | grep -q UP && exit 0
+# NOTE: needs `apt-get install net-tools iproute2 `
+ifconfig "$CAN" 2>/dev/null | grep -q UP && exit 0
 
 sudo modprobe vcan
-sudo sudo ip link add dev $CAN type vcan
-sudo sudo ip link set up $CAN
+sudo sudo ip link add dev "$CAN" type vcan
+sudo sudo ip link set up "$CAN"
 
-ifconfig $CAN
+ifconfig "$CAN"

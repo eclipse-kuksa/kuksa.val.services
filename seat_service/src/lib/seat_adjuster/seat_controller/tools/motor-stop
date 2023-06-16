@@ -12,6 +12,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
 
-CAN="can0"
+# change manually if needed e.g. to "vcan0"
+[ -z "$CAN" ] && CAN="can0"
 
-cansend $CAN 705#00.00.00.00.00.00.00.00
+cansend "$CAN" "705#00.00.00.00.00.00.00.00"

@@ -22,13 +22,13 @@ rpm=$1
 [ -z "$rpm" ] && rpm=80
 
 # change manually if needed e.g. to "vcan0"
-CAN="can0"
+[ -z "$CAN" ] && CAN="can0"
 
 # stop motors (always required!)
 echo "cansend $CAN 705#00.00.00.00.00.00.00.00"
-cansend $CAN 705#00.00.00.00.00.00.00.00
+cansend "$CAN" "705#00.00.00.00.00.00.00.00"
 sleep 0.1
 
-BUF=`printf "705#01.%02X.00.00.00.00.00.00" $rpm`
+BUF=$(printf "705#01.%02X.00.00.00.00.00.00" "$rpm")
 echo "cansend $CAN $BUF"
-cansend $CAN $BUF
+cansend "$CAN" "$BUF"

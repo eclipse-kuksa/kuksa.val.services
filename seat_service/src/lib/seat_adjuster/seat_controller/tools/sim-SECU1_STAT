@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #********************************************************************************
 # Copyright (c) 2022 Contributors to the Eclipse Foundation
 #
@@ -12,50 +12,115 @@
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
 
+# Motor Move constants
+MOV_OFF=0
+MOV_DEC=1
+MOV_INC=2
 
-if [ "$1" = "--help" ]; then
-    echo "Usage: $0 <can_if> {iterations} {verbose}"
-    echo "	can_if - use specified can interface. Default: vcan0"
-    echo "	iterations - runs pos change [0..100]-[100..0] in a loop. 0=infinite, Default: 0"
-	echo "	verbose - if 3rd arg is provided - prints generated cansend commands"
-    exit 0
+# Motor learned constants
+STATE_NOT=0
+STATE_LRN=1
+
+
+# argument defaults
+CAN="vcan0"
+ITERATIONS=0
+TIMEOUT=1.0
+VERBOSE=0
+RESET=0
+
+while [ $# -gt 0 ]; do
+    if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+        echo "Usage: $0 {-i iterations} {-t timeout_sec} {-r} can_if"
+        echo "   can_if: CAN interface to use. Default: $CAN";
+        echo "   -i: Force calibration even if motor reports learned state. Default: $ITERATIONS";
+        echo "   -t: timeout in seconds to abort operation. Default: $TIMEOUT sec";
+        echo "   -r: Simulate ECU reset (start in unlearned state)";
+        echo "   -v: prints generated cansend commands";
+        echo "   -h: Prints this message";
+        exit 0
+    elif [ "$1" = "-v" ]; then
+        VERBOSE=1
+    elif [ "$1" = "-r" ]; then
+        RESET=1
+    elif [ "$1" = "-i" ]; then
+        shift # get next arg
+        ITERATIONS="$1"
+    elif [ "$1" = "-t" ]; then
+        shift # get next arg
+        TIMEOUT=$1
+    else
+        CAN="$1"
+    fi
+    shift
+done
+
+
+send_frame()
+{
+    _frame="$1"
+    [ "$VERBOSE" != "0" ] && echo "TX: $_frame"
+    eval "$_frame"
+    sleep 0.01
+    eval "$_frame"
+    sleep 0.01
+}
+
+send_secu1_stat()
+{
+    _mov="$1"
+    _lrn="$2"
+    _pos="$3"
+
+    # printf "### Sending SECU1_STAT [ MOTOR1_MOV_STATE:%d, MOTOR1_LEARNING_STATE:%d, MOTOR1_POS:%d ]\n" "$mov" "$lrn" "$pos" 1>&2
+
+    _nibble=$(( (_lrn & 0x3) * 4 | (_mov & 0x3) ))
+    _sframe=$(printf "cansend %s 712#0%d.00.%02X.00.00.00.00.00" "$CAN" $_nibble "$_pos")
+    send_frame "$_sframe"
+}
+
+if [ -n "$RESET" ]; then
+    # Simulate ECU reset, state unlearned
+    send_secu1_stat $MOV_OFF $STATE_NOT 0
+    LEARN_STATE=$STATE_NOT
+else
+    LEARN_STATE=$STATE_LRN
 fi
-
-CAN=$1
-[ -z "$CAN" ] && CAN="vcan0"
-
-ITERATIONS="$2" # optional, assume infinite
-[ -z "$ITERATIONS" ] && ITERATIONS=0
-
-VERBOSE="$3"
 
 echo "# Running $ITERATIONS interations on: $CAN ..."
 iter=0
-while [ $ITERATIONS -eq 0 ] || [ $iter -lt $ITERATIONS ]; do
-	echo
-	echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: 'learned', MOTOR1_POS: 0..100 ]"
-	for pos in `seq 0 +1 100`; do
-		frame=`printf "cansend $CAN 712#46.44.%02X.00.00.00.00.00" $pos`
-		[ -n "$VERBOSE" ] && echo "$frame"
-		`$frame`
-		sleep 0.01
-		`$frame`
-		sleep 0.01
-	done
+while [ "$ITERATIONS" -eq 0 ] || [ $iter -lt "$ITERATIONS" ]; do
+    echo
+    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'DEC', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: 100..0 ]"
+    for pos in $(seq 100 -1 0); do
+        #frame=$(printf "cansend %s 712#45.44.%02X.00.00.00.00.00" "$CAN" "$pos")
+        send_secu1_stat $MOV_DEC $LEARN_STATE "$pos"
+    done
+    [ "$VERBOSE" != "0" ] && echo
 
-	sleep 5
+    # Simulate learning mode after 3 full swipes
+    if [ $iter -eq 1 ] && [ $LEARN_STATE = $STATE_NOT ]; then
+        echo "// Setting Learned state"
+        LEARN_STATE=$STATE_LRN
+    fi
 
-	[ -n "$VERBOSE" ] && echo
-	echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'DEC', MOTOR1_LEARNING_STATE: 'learned', MOTOR1_POS: 100..0 ]"
-	for pos in `seq 100 -1 0`; do
-		frame=`printf "cansend $CAN 712#45.44.%02X.00.00.00.00.00" $pos`
-		[ -n "$VERBOSE" ] && echo "$frame"
-		`$frame`
-		sleep 0.01
-		`$frame`
-		sleep 0.01
-	done
-	[ -n "$VERBOSE" ] && echo
+    # Motor OFF
+    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'OFF', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: $pos"
+    send_secu1_stat $MOV_OFF $LEARN_STATE "$pos"
 
-	((iter=iter+1))
+    sleep "$TIMEOUT"
+
+    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: 0..100 ]"
+    for pos in $(seq 0 +1 100); do
+        #frame=$(printf "cansend %s 712#46.44.%02X.00.00.00.00.00" "$CAN" "$pos")
+        send_secu1_stat $MOV_INC $LEARN_STATE "$pos"
+    done
+    [ "$VERBOSE" != "0" ] && echo
+
+    iter=$(( iter+1 ))
+
+    # Motor OFF
+    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'OFF', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: $pos"
+    send_secu1_stat $MOV_OFF $LEARN_STATE "$pos"
+
 done

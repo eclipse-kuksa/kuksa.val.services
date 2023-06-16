@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #********************************************************************************
 # Copyright (c) 2022 Contributors to the Eclipse Foundation
 #
@@ -12,7 +12,7 @@
 # SPDX-License-Identifier: Apache-2.0
 #*******************************************************************************/
 
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 if [ $# -eq 0 ]; then
     echo "Usage $0 <command> {arg0} {arg1} .."

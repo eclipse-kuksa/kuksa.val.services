@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #********************************************************************************
 # Copyright (c) 2022 Contributors to the Eclipse Foundation
 #
@@ -13,7 +13,7 @@
 #*******************************************************************************/
 # shellcheck disable=SC2086
 
-INSTALL="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL="$(cd "$(dirname "$0")" && pwd)"
 
 # Used can interface, if hw is missing set it to "vcan0" and run:
 #   ~/vehicle_hal/tools/setup-vcan; ~/vehicle_hal/tools/sim-SECU1_STAT vcan0 0
@@ -35,17 +35,17 @@ sig_handler() {
 	exit 42
 }
 
-trap sig_handler SIGTERM SIGINT
+trap sig_handler TERM INT
 
 ### Wait for can device available
 if [ -n "$CAN_WAIT" ] && [ "$CAN" != "cansim" ]; then
 	echo "[$0] Waiting for $CAN ($CAN_WAIT s)..."
 	# avoid ip tool dependency
 	sec=0
-	while [ ! -e /sys/class/net/$CAN ]; do
+	while [ ! -e "/sys/class/net/$CAN" ]; do
 		sleep 1
 		sec=$((sec + 1))
-		if [ $sec -ge $CAN_WAIT ]; then
+		if [ $sec -ge "$CAN_WAIT" ]; then
 			echo "[$0] Timedout waiting for: /sys/class/net/$CAN"
 			exit 3
 		fi
@@ -73,8 +73,13 @@ fi
 
 # 1=Exit process on CAN I/O or other fatal error
 [ -z "$SA_EXIT" ] && export SA_EXIT=1
+
+# Enforce ecu-reset on any CAN interface
+#[ -z "$SC_RESET" ] && export SC_RESET=0
+
 # attempt to do grpc cleanup on exit (may hang the exit!)
 #export GRPC_CLEANUP=1
+
 
 ### DataFeeder configuration ###
 
@@ -94,17 +99,16 @@ fi
 [ -z "$SERVICE_HOST" ] && SERVICE_HOST="0.0.0.0"
 [ -z "$SERVICE_PORT" ] && SERVICE_PORT=50051
 
-### Calibrate motor before service start (needs to be done after ECU reset, or not in learned state )
-if [ "$CAN" = "can0" ]; then
-	echo "### Calibrating ECU on $CAN"
-	# timeout 30s, usually it takes ~25s for calibration
-	"$INSTALL/tools/ecu-reset" -s "$CAN"
-fi
-
 if [ "$CAN" = "cansim" ]; then
 	echo "### Starting VAL Seat Service [$SERVICE_HOST:$SERVICE_PORT] on Simulated SocketCAN!"
-	exec stdbuf --output=L $INSTALL/tools/cansim $INSTALL/seat_service "$CAN" "$SERVICE_HOST" $SERVICE_PORT
+	exec stdbuf --output=L "$INSTALL/tools/cansim" "$INSTALL/seat_service" "$CAN" "$SERVICE_HOST" $SERVICE_PORT
 else
+	### Calibrate motor before service start (needs to be done after ECU reset, or not in learned state)
+	if [ "$SC_RESET" != "0" ]; then
+		echo "### Calibrating ECU on $CAN"
+		# timeout 30s, usually it takes ~25s for calibration
+		"$INSTALL/tools/ecu-reset" -s "$CAN"
+	fi
 	echo "### Starting VAL Seat Service [$SERVICE_HOST:$SERVICE_PORT] on $CAN..."
-	exec stdbuf --output=L $INSTALL/seat_service "$CAN" "$SERVICE_HOST" $SERVICE_PORT
+	exec stdbuf --output=L "$INSTALL/seat_service" "$CAN" "$SERVICE_HOST" "$SERVICE_PORT"
 fi

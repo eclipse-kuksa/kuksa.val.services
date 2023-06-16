@@ -54,3 +54,6 @@ pip3 install \
 # install docker
 # curl -fsSL https://get.docker.com -o - | bash -
 # docker --version
+
+echo "### Running on:"
+cat /etc/os-release
