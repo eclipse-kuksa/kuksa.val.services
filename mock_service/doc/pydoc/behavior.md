@@ -47,8 +47,7 @@ Return the type of the trigger.
 #### execute
 
 ```python
-def execute(trigger: TriggerResult, execution_context: ExecutionContext,
-            datapoint: MockedDataPoint, animators: List[Animator])
+def execute(action_context: ActionContext, animators: List[Animator])
 ```
 
 Execute the programmed action.

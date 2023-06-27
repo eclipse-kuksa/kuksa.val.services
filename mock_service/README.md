@@ -50,3 +50,21 @@ This allows the mock service to be used with the [Velocitas Seat Adjuster](https
 If the mocked datapoints are not enough, the `mock.py` in this repository can be modified and mounted into the mock service container - it will then overwrite the default mock configuration with the custom one.
 
 The full Python mocking DSL can be found [here](./doc/pydoc/mocking-dsl.md)
+
+# Running mockservice
+
+Firstly, you will need to install all necessary Python dependencies by issuing the following command in your favorite terminal:
+
+```bash
+python3 -m pip install -r ./requirements.txt
+```
+
+To run mock service, use the provided VSCode task `run-mockservice` which will set up all necessary environment variables and parameters for the service to start up properly.
+
+# Generating API documentation
+
+API documentation is generated from Python docs and embedded into markdown files for easy rendering on Github without external hosting. The workflow `ensure-docs-up2date` makes sure that the API docs are up to date before merging a pull request. To update the docs, run 
+
+```bash
+./update-api-docs.sh
+```
