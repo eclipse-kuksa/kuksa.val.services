@@ -15,6 +15,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, List, NamedTuple, Tuple
 
+from lib.action import ActionContext
 from lib.behavior import Behavior
 from lib.datapoint import MockedDataPoint
 from lib.dsl import _mocked_datapoints, _required_datapoint_paths
@@ -103,13 +104,15 @@ class PythonDslLoader(MockLoader):
                     else:
                         raise TypeError("Unsupported TriggerResult type!")
                     behavior.execute(
-                        trigger,
-                        exe_context,
-                        MockedDataPoint(
-                            datapoint["path"],
-                            mocked_datapoints[datapoint["path"]].data_type,
-                            mocked_datapoints[datapoint["path"]].value,
-                            True,
+                        ActionContext(
+                            trigger,
+                            exe_context,
+                            MockedDataPoint(
+                                datapoint["path"],
+                                mocked_datapoints[datapoint["path"]].data_type,
+                                mocked_datapoints[datapoint["path"]].value,
+                                True,
+                            ),
                         ),
                         list(),
                     )

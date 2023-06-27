@@ -50,13 +50,11 @@ class Behavior:
 
     def execute(
         self,
-        trigger: TriggerResult,
-        execution_context: ExecutionContext,
-        datapoint: MockedDataPoint,
+        action_context: ActionContext,
         animators: List[Animator],
     ):
         """Execute the programmed action."""
-        self._action.execute(trigger, execution_context, datapoint, animators)
+        self._action.execute(action_context, animators)
 
 
 class BehaviorExecutor:
