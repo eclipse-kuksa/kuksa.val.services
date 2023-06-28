@@ -136,7 +136,6 @@ class MockService(BaseService):
         """Provide initial values of all mocked datapoints to data broker."""
         for datapoint in self._mocked_datapoints.values():
             if datapoint.data_type is not None:
-                log.error(datapoint.value)
                 self._set_datapoint(
                     datapoint.path, datapoint.data_type, datapoint.value
                 )

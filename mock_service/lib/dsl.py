@@ -25,7 +25,7 @@ _required_datapoint_paths: List[str] = list()
 log = logging.getLogger("dsl")
 
 
-def mock_datapoint(path: str, initial_value: Any, behaviors: List[Behavior]):
+def mock_datapoint(path: str, initial_value: Any, behaviors: List[Behavior] = list()):
     """Mock a single datapoint.
 
     Args:
