@@ -115,7 +115,8 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
 
 
 def create_set_action(value: Any) -> SetAction:
-    """Create a SetAction with dynamic value resolution.
+    """Create a SetAction with dynamic value resolution. See `__resolve_value`
+    for documentation of value resolution.
 
     Args:
         value (Any): The value to set or a dynamic literal.
@@ -131,6 +132,7 @@ def create_animation_action(
 ) -> AnimationAction:
     """Create an AnimationAction with dynamic value resolution.
     Values are dynamically resolved at trigger activation time of the owning behavior.
+    See `__resolve_value` for documentation of value resolution.
 
     Args:
         values (List[Any]): The list of values to animate over. May contain dynamic values.

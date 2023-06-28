@@ -126,3 +126,20 @@ class EventTrigger(Trigger)
 
 Data broker event-based trigger.
 
+<a id="lib.trigger.EventTrigger.__init__"></a>
+
+#### \_\_init\_\_
+
+```python
+def __init__(event_type: EventType, datapoint_path: Optional[str] = None)
+```
+
+Creates a new trigger for the given event type.
+
+**Arguments**:
+
+- `event_type` _EventType_ - The type of event which will invoke the trigger.
+- `datapoint_path` _Optional[str], optional_ - The path of the datapoint which invokes the trigger.
+  If not specified, the path of the parent mocked datapoint will be used instead.
+  Defaults to None.
+

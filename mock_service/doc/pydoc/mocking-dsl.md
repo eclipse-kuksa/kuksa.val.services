@@ -77,7 +77,8 @@ Get the value of a datapoint or, if its not available yet, a default value is re
 def create_set_action(value: Any) -> SetAction
 ```
 
-Create a SetAction with dynamic value resolution.
+Create a SetAction with dynamic value resolution. See `__resolve_value`
+for documentation of value resolution.
 
 **Arguments**:
 
@@ -101,6 +102,7 @@ def create_animation_action(
 
 Create an AnimationAction with dynamic value resolution.
 Values are dynamically resolved at trigger activation time of the owning behavior.
+See `__resolve_value` for documentation of value resolution.
 
 **Arguments**:
 

@@ -63,12 +63,11 @@ class AnimationAction(Action):
 
         self._duration = duration
         self._values: List[Any] = values
+        self._resolved_values = self._values.copy()
         self._animator: Optional[Animator] = None
         self._previously_resolved_target_value = None
         self._repeat_mode = repeat_mode
         self._target_value_resolver = target_value_resolver
-
-        self._values_resolved = False
 
     def _resolve_target_values(self, context: ActionContext):
         """Resolve all dynamic target values.
@@ -77,16 +76,16 @@ class AnimationAction(Action):
             context (ActionContext): The context in which to resolve the target values.
         """
         for i in range(len(self._values)):
-            self._values[i] = self._target_value_resolver(context, self._values[i])
-
-        self._values_resolved = True
+            self._resolved_values[i] = self._target_value_resolver(
+                context, self._values[i]
+            )
 
     def execute(
         self,
         action_context: ActionContext,
         animators: List[Animator],
     ):
-        if not self._values_resolved and self._target_value_resolver is not None:
+        if self._target_value_resolver is not None:
             self._resolve_target_values(action_context)
 
         # remove previous reference of this animator instance
@@ -94,7 +93,7 @@ class AnimationAction(Action):
             animators.remove(self._animator)
 
         self._animator = ValueAnimator(
-            self._values,
+            self._resolved_values,
             self._duration,
             self._repeat_mode,
             lambda x: action_context.datapoint.set_value(x),
@@ -114,14 +113,16 @@ class SetAction(Action):
 
         self._value = value
         self._target_value_resolver = target_value_resolver
-        self._target_value_resolved = False
 
     def execute(
         self,
         action_context: ActionContext,
         _: List[Animator],
     ):
-        if not self._target_value_resolved and self._target_value_resolver is not None:
-            self._value = self._target_value_resolver(action_context, self._value)
+        self._resolved_value = self._value
+        if self._target_value_resolver is not None:
+            self._resolved_value = self._target_value_resolver(
+                action_context, self._value
+            )
 
-        action_context.datapoint.set_value(self._value)
+        action_context.datapoint.set_value(self._resolved_value)

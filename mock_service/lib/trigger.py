@@ -105,7 +105,7 @@ class ClockTrigger(Trigger):
 class EventType(Enum):
     """All possible event types."""
 
-    ACTUATOR_TARGET = ("actuator_target",)
+    ACTUATOR_TARGET = "actuator_target"
     VALUE = "value"
 
 
@@ -113,6 +113,15 @@ class EventTrigger(Trigger):
     """Data broker event-based trigger."""
 
     def __init__(self, event_type: EventType, datapoint_path: Optional[str] = None):
+        """Creates a new trigger for the given event type.
+
+        Args:
+            event_type (EventType): The type of event which will invoke the trigger.
+            datapoint_path (Optional[str], optional): The path of the datapoint which invokes the trigger.
+                If not specified, the path of the parent mocked datapoint will be used instead.
+                Defaults to None.
+        """
+
         super().__init__()
         self._event_type = event_type
         self._datapoint_path = datapoint_path

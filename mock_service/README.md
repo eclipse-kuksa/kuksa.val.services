@@ -63,7 +63,7 @@ To run mock service, use the provided VSCode task `run-mockservice` which will s
 
 # Generating API documentation
 
-API documentation is generated from Python docs and embedded into markdown files for easy rendering on Github without external hosting. The workflow `ensure-docs-up2date` makes sure that the API docs are up to date before merging a pull request. To update the docs, run 
+API documentation is generated from Python docs and embedded into markdown files for easy rendering on Github without external hosting. The workflow `ensure-docs-up2date` makes sure that the API docs are up to date before merging a pull request. To update the docs, run
 
 ```bash
 ./update-api-docs.sh
