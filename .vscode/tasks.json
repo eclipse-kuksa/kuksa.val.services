@@ -184,6 +184,39 @@
       }
     },
     {
+      "label": "run-mockservice",
+      "dependsOn": ["ensure-dapr", "run-databroker"],
+      "dependsOrder": "sequence",
+      "type": "shell",
+      "command": "./.vscode/scripts/run-mockservice.sh",
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "showReuseMessage": false
+      },
+      "isBackground": true,
+      "runOptions": {
+        "instanceLimit": 1,
+        "reevaluateOnRerun": true
+      },
+      "problemMatcher": {
+        "pattern": [
+          {
+            "regexp": ".",
+            "file": 1,
+            "location": 2,
+            "message": 3
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "(?!)", // Negative Lookahead (match nothing)
+          "endsPattern": "You're up and running! .* logs will appear here.$"
+        }
+      }
+    },
+    {
       "label": "run-feedercan",
       // "detail": "Starts Generic CAN Feeder",
       "dependsOn": ["run-databroker"],

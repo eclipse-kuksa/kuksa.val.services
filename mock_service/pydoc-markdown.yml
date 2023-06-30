@@ -1,0 +1,38 @@
+loaders:
+  - type: python
+processors:
+  - type: filter
+  - type: smart
+  - type: crossref
+renderer:
+  type: mkdocs
+  pages:
+    - title: Mocking DSL
+      contents:
+        - 'lib.dsl.*'
+    - title: Action
+      contents:
+        - 'lib.action.*'
+    - title: Animator
+      contents:
+        - 'lib.animator.*'
+    - title: Behavior
+      contents:
+        - 'lib.behavior.*'
+    - title: Datapoint
+      contents:
+        - 'lib.datapoint.*'
+    - title: Loader
+      contents:
+        - 'lib.loader.*'
+    - title: Trigger
+      contents:
+        - 'lib.trigger.*'
+    - title: Types
+      contents:
+        - 'lib.types.*'
+  output_directory: doc
+  content_directory_name: pydoc
+  mkdocs_config:
+    site_name: Mocking Service
+    theme: readthedocs
