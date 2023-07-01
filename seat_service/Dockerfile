@@ -12,7 +12,7 @@
 # ********************************************************************************/
 
 
-FROM --platform=$BUILDPLATFORM ubuntu:20.04 as builder
+FROM --platform=$BUILDPLATFORM ubuntu:22.04 as builder
 
 ARG TARGETPLATFORM
 
@@ -27,7 +27,7 @@ RUN if [ "$TARGETPLATFORM" = "linux/amd64" ] ; \
     then tar -xf bin_vservice-seat_x86_64_release.tar.gz && cp -rv ./target/x86_64/release/install/ ./bins; \
     else tar -xf bin_vservice-seat_aarch64_release.tar.gz && cp -rv ./target/aarch64/release/install/ ./bins; fi
 
-FROM --platform=$TARGETPLATFORM ubuntu:20.04 as runtime
+FROM --platform=$TARGETPLATFORM ubuntu:22.04 as runtime
 
 LABEL org.opencontainers.image.description "VAL Seat Service container, providing VSC Seat impl and supporting simulated/real can ECU"
 
