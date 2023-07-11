@@ -33,14 +33,15 @@ source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 # NOTE: use curent sidecar's grpc port, don't connect directly to sidecar of kdb (DATABROKER_GRPC_PORT)
 export DAPR_GRPC_PORT=$MOCKSERVICE_GRPC_PORT
 
-MOCKSERVICE_EXEC_PATH="$ROOT_DIRECTORY/mock_service"
+MOCKSERVICE_EXEC_PATH="$ROOT_DIRECTORY/mock_service/mock"
 if [ ! -f "$MOCKSERVICE_EXEC_PATH/mockservice.py" ]; then
 	echo "Can't find $MOCKSERVICE_EXEC_PATH/mockservice.py"
 	exit 1
 fi
 
 cd "$MOCKSERVICE_EXEC_PATH" || exit 1
-pip3 install -q -r requirements.txt
+pip3 install -q -r ../requirements.txt
+pip3 install -e ../.
 
 echo
 echo "*******************************************"

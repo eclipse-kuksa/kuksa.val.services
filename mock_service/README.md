@@ -74,6 +74,12 @@ If the mocked datapoints are not enough, the `mock.py` in this repository can be
 
 The full Python mocking DSL is available [here](./doc/pydoc/mocking-dsl.md)
 
+Alternative:
+```bash
+cd mock
+python3 mockservice.py
+```
+
 # Generating API documentation
 
 The [API documentation](./doc/pydoc/mocking-dsl.md) is generated from Python docs and embedded into markdown files for easy rendering on Github without external hosting. The workflow `ensure-docs-up2date` makes sure that the API docs are up to date before merging a pull request. To update the docs, run
