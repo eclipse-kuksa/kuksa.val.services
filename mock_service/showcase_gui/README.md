@@ -1,0 +1,1 @@
+If this gets called from the [mock directory](../mock/) it uses the mock.py. There you can specify mocked datapoints. If you run it from anywhere else the GUI provides you with the ability to add mocked datapoints.

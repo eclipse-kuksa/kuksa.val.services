@@ -76,6 +76,7 @@ class MockService(BaseService):
         self._pending_event_list: List[Event] = list()
         self._mocked_datapoints: Dict[str, MockedDataPoint] = dict()
 
+    # this will work if mock.py is provided
     def on_databroker_connected(self):
         """Callback when a connection to the data broker is established."""
         log.info("Databroker connected!")
@@ -117,7 +118,6 @@ class MockService(BaseService):
         try:
             while True:
                 self.check_for_new_mocks()
-
                 current_tick_time = time.perf_counter()
                 delta_time: float = current_tick_time - self._last_tick
                 self._behavior_executor.execute(delta_time)
