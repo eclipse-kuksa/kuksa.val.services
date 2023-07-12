@@ -12,7 +12,6 @@
 # ********************************************************************************/
 
 import threading
-import sys
 
 import tkinter as tk
 from tkinter import ttk
@@ -31,10 +30,20 @@ from lib.dsl import (
     create_set_action,
     get_datapoint_value,
     mock_datapoint,
-    _mocked_datapoints
 )
 from lib.trigger import ClockTrigger, EventTrigger, EventType
 from lib.animator import RepeatMode
+from lib.behavior import Behavior
+
+class GUIElement:
+    def __init__(self, name, vss_path, unit, datatype, read_only):
+        self.name = name
+        self.vss_path = vss_path
+        self.unit = unit
+        self.datatype = datatype
+        self.read_only = read_only
+        self.behaviors = []
+        
 
 class GUIApp:
     def __init__(self, client):
@@ -44,7 +53,7 @@ class GUIApp:
         self.popup = tk.Toplevel(root)
         self.popup.destroy()
 
-    def add_element(self, name, vss_path: str, read_only: bool, mock_datapoint: bool):
+    def add_element(self, name: str, vss_path: str, read_only: bool, mock_datapoint: bool):
         # Get unit using kuksa client's get_metadata function
         try:
             metadata = self.client.get_metadata([vss_path,])
@@ -61,14 +70,16 @@ class GUIApp:
         value_label = None
         label = None
 
+        new_element = GUIElement(name, vss_path, unit, datatype, read_only)
+
         if datatype == DataType.BOOLEAN:
-            element = self.create_toggle_button(name, vss_path, read_only, unit, datatype)
+            element = self.create_toggle_button(new_element)
         elif datatype == DataType.STRING:
             label = ttk.Label(root, text=name+":")
-            element = self.create_entry(name, vss_path, read_only, unit, datatype)
+            element = self.create_entry(new_element)
         else:
             label = ttk.Label(root, text=name+":")
-            element, value_label = self.create_slider(vss_path, read_only, unit, datatype)
+            element, value_label = self.create_slider(new_element)
 
         if label is not None:
             self.elements.append(label)
@@ -80,16 +91,16 @@ class GUIApp:
         if mock_datapoint:
             if metadata[vss_path].entry_type == EntryType.SENSOR:
                 #only repeat mode available
-                self.create_sensor_mock(vss_path, datatype)
+                self.create_sensor_mock(new_element)
             elif metadata[vss_path].entry_type == EntryType.ACTUATOR:
                 #add new behaviour
+                self.create_new_behavior(new_element)
                 pass
             else:
                 messagebox.showerror("Error", f"VSS path is no Sensor or Actuator")
         self.update_layout()
         
-
-    def actual_mock_datapoint(self, _duration, str_values, vss_path, datatype):
+    def actual_mock_sensor_datapoint(self, _duration, str_values, vss_path, datatype):
         str_values = str_values.split(',')
         _values = []
         for value in str_values:
@@ -116,7 +127,15 @@ class GUIApp:
 
         self.popup.destroy()
 
-    
+    def actual_mock_actuator_datapoint(self, element):           
+        mock_datapoint(
+            path=element.vss_path,
+            initial_value=0,
+            behaviors=element.behaviors,
+        )
+
+        self.popup.destroy()
+
     def show_sensor_popup(self, vss_path, datatype):
         
         self.popup = tk.Toplevel(root)
@@ -130,7 +149,7 @@ class GUIApp:
         label2 = ttk.Label(self.popup, text="comma separated list of values that are provided continously:")
         values = tk.Entry(self.popup)
         # Create a button to add the element within the self.popup window
-        button = tk.Button(self.popup, text="Mock", command=lambda: app.actual_mock_datapoint(duration.get(), values.get(), vss_path, datatype))
+        button = tk.Button(self.popup, text="Mock", command=lambda: app.actual_mock_sensor_datapoint(duration.get(), values.get(), vss_path, datatype))
 
         self.elements.append(label1)
         self.elements.append(duration)
@@ -140,27 +159,98 @@ class GUIApp:
         
         self.update_layout()
 
-    def create_sensor_mock(self, vss_path, datatype):
-        self.show_sensor_popup(vss_path, datatype)
+    def create_actuator_behavior(self, element, actionValue=None):
+        if actionValue != "":
+            if not element.datatype == DataType.STRING or not element.datatype == DataType.STRING_ARRAY:
+                if element.datatype == DataType.FLOAT or element.datatype == DataType.DOUBLE or element.datatype == DataType.FLOAT_ARRAY or element.datatype == DataType.DOUBLE_ARRAY:
+                    actionValue = float(actionValue)
+                else:
+                    actionValue = int(actionValue)
+            action = create_set_action(actionValue)
+        else: 
+            action = create_set_action("$event.value")
+        new_behavior = create_behavior(
+            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
+            action=action
+        )
+        element.behaviors.append(new_behavior)
+        messagebox.showinfo(title="Info", message="Behavior created")
 
-    def update_datapoint(self, value, vss_path, read_only, datatype):
-        if not datatype == DataType.STRING or not datatype == DataType.STRING_ARRAY:
+    def checksetToValueButton(self, toggle_var, setValue, label1):
+        messagebox.showinfo(title="Info", message="You are creating a set action. This will lead to setting a fixed value if the target value is set. If you want that the target value is set leave the field empty. Otherwise provide a value")
+        if toggle_var.get():
+            last_entry = len(self.elements)
+            # insert before buttons
+            last_entry -= 2
+            self.elements.insert(last_entry, label1)
+            self.elements.insert(last_entry + 1, setValue)
+            self.update_layout()
+        else:
+            if label1 in self.elements:
+                index = self.elements.index(label1)
+                self.elements[index].grid_forget()
+                self.elements.remove(label1)
+
+            if setValue in self.elements:
+                index = self.elements.index(setValue)
+                self.elements[index].grid_forget()
+                self.elements.remove(setValue)
+            self.update_layout()
+
+    def checkRepeatButton(self, check):
+        if check:
+            return RepeatMode.REPEAT
+
+    def show_actor_popup(self, element):
+        
+        self.popup = tk.Toplevel(root)
+        self.popup.title("Specify Properties")
+        self.popup.protocol("WM_DELETE_WINDOW", self.popup.destroy)
+
+        label1 = ttk.Label(self.popup, text="set Value on event to:")
+        setValue = tk.Entry(self.popup)
+
+        toggle_var = tk.BooleanVar()
+        setToValue = ttk.Checkbutton(
+            self.popup,
+            text="Set Datapoint to value",
+            variable=toggle_var,
+            command=lambda: self.checksetToValueButton(toggle_var, setValue, label1)
+        )
+
+        buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_actuator_behavior(element, setValue.get()))
+        buttonAdd = tk.Button(self.popup, text="Mock", command=lambda: self.actual_mock_actuator_datapoint(element))
+
+        self.elements.append(setToValue)
+        self.elements.append(buttonBehavior)
+        self.elements.append(buttonAdd)
+        
+        self.update_layout()
+
+    def create_new_behavior(self, element):
+        self.show_actor_popup(element)
+
+    def create_sensor_mock(self, element):
+        self.show_sensor_popup(element.vss_path, element.datatype)
+
+    def update_datapoint(self, value, element):
+        if not element.datatype == DataType.STRING or not element.datatype == DataType.STRING_ARRAY:
             value = float(value)
-        if not read_only:
-            self.client.set_current_values({vss_path: Datapoint(value)})
+        if not element.read_only:
+            self.client.set_current_values({element.vss_path: Datapoint(value)})
 
-    def create_toggle_button(self, name, vss_path, read_only, unit, datatype):
+    def create_toggle_button(self, element):
         toggle_var = tk.BooleanVar()
         toggle_button = ttk.Checkbutton(
             root,
-            text=name,
+            text=element.name,
             variable=toggle_var,
-            command=lambda: self.update_datapoint(toggle_var.get(), vss_path, read_only, datatype)
+            command=lambda: self.update_datapoint(toggle_var.get(), element)
         )
-        setattr(toggle_button, 'name', vss_path)
+        setattr(toggle_button, 'name', element.vss_path)
         return toggle_button
 
-    def create_slider(self, vss_path, read_only, unit, datatype):
+    def create_slider(self, element):
         slider_var = tk.DoubleVar()
         slider = ttk.Scale(
             root,
@@ -168,19 +258,19 @@ class GUIApp:
             to=1000,
             orient="horizontal",
             variable=slider_var,
-            command=lambda value: self.update_datapoint(value, vss_path, read_only, datatype)
+            command=lambda value: self.update_datapoint(value, element)
         )
         # Assign a name to the slider using setattr()
-        setattr(slider, 'name', vss_path)
+        setattr(slider, 'name', element.vss_path)
         value_label = ttk.Label(root, textvariable=str(slider_var))
         return slider, value_label
 
-    def create_entry(self, name, vss_path, read_only, unit, datatype):
+    def create_entry(self, element):
         entry_var = tk.StringVar()
-        entry_var.trace("w", lambda *args: self.update_datapoint(entry_var.get(), vss_path, read_only, datatype))
+        entry_var.trace("w", lambda *args: self.update_datapoint(entry_var.get(), element))
         
         entry = ttk.Entry(root, textvariable=entry_var)
-        setattr(entry, 'name', vss_path)
+        setattr(entry, 'name', element.vss_path)
         return entry
 
     def show_popup(self):
@@ -214,13 +304,13 @@ class GUIApp:
         self.update_layout()
 
     def update_layout(self):
-         # Clear existing elements
-        for element in self.elements.copy():  # Create a copy of the list
-            if element.winfo_exists():  # Check if the widget exists
+        # Clear existing elements
+        for element in self.elements.copy(): # Create a copy of the list
+            if element.winfo_exists(): 
+                # Check if the widget exists
                 element.grid_forget()
             else:
                 self.elements.remove(element)  # Remove the destroyed widget from the list
-
 
         # Place elements in the layout
         for i, element in enumerate(self.elements):
