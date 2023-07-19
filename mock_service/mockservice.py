@@ -188,7 +188,6 @@ class MockService(BaseService):
             entry = SubscribeEntry(path=mocked_datapoint.path)
             if mocked_datapoint.data_type is not None:
                 entry.fields.append(Field.FIELD_ACTUATOR_TARGET)
-            else:
                 entry.fields.append(Field.FIELD_VALUE)
             request.entries.append(entry)
 
