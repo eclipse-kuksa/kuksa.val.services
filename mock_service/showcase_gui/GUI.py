@@ -36,14 +36,12 @@ from lib.animator import RepeatMode
 from lib.behavior import Behavior
 
 class GUIElement:
-    def __init__(self, name, vss_path, unit, datatype, read_only):
+    def __init__(self, name, vss_path, metadata, read_only):
         self.name = name
         self.vss_path = vss_path
-        self.unit = unit
-        self.datatype = datatype
         self.read_only = read_only
         self.behaviors = []
-        
+        self.metadata = metadata
 
 class GUIApp:
     def __init__(self, client):
@@ -70,7 +68,7 @@ class GUIApp:
         value_label = None
         label = None
 
-        new_element = GUIElement(name, vss_path, unit, datatype, read_only)
+        new_element = GUIElement(name, vss_path, metadata[vss_path], read_only)
 
         if datatype == DataType.BOOLEAN:
             element = self.create_toggle_button(new_element)
@@ -89,45 +87,11 @@ class GUIApp:
         self.popup.destroy()
 
         if mock_datapoint:
-            if metadata[vss_path].entry_type == EntryType.SENSOR:
-                #only repeat mode available
-                self.create_sensor_mock(new_element)
-            elif metadata[vss_path].entry_type == EntryType.ACTUATOR:
-                #add new behaviour
-                self.create_new_behavior(new_element)
-                pass
-            else:
-                messagebox.showerror("Error", f"VSS path is no Sensor or Actuator")
+            self.create_new_behavior(new_element)
         self.update_layout()
-        
-    def actual_mock_sensor_datapoint(self, _duration, str_values, vss_path, datatype):
-        str_values = str_values.split(',')
-        _values = []
-        for value in str_values:
-            if not datatype == DataType.STRING or not datatype == DataType.STRING_ARRAY:
-                value = float(value.strip())
-            else:
-                value = value.strip()
-            _values.append(value) 
-        
-        mock_datapoint(
-            path=vss_path,
-            initial_value=0,
-            behaviors=[
-                create_behavior(
-                    trigger=ClockTrigger(0),
-                    action=create_animation_action(
-                        duration=float(_duration),
-                        repeat_mode=RepeatMode.REPEAT,
-                        values=_values,
-                    ),
-                )
-            ],
-        )
 
-        self.popup.destroy()
 
-    def actual_mock_actuator_datapoint(self, element):           
+    def actual_mock_datapoint(self, element):           
         mock_datapoint(
             path=element.vss_path,
             initial_value=0,
@@ -136,90 +100,273 @@ class GUIApp:
 
         self.popup.destroy()
 
-    def show_sensor_popup(self, vss_path, datatype):
-        
-        self.popup = tk.Toplevel(root)
-        self.popup.title("Specify Properties")
-        self.popup.protocol("WM_DELETE_WINDOW", self.popup.destroy)
-        
-        # Create labels and entry fields for the properties in the self.popup window
-        label1 = ttk.Label(self.popup, text="duration:")
-        duration = tk.Entry(self.popup)
 
-        label2 = ttk.Label(self.popup, text="comma separated list of values that are provided continously:")
-        values = tk.Entry(self.popup)
-        # Create a button to add the element within the self.popup window
-        button = tk.Button(self.popup, text="Mock", command=lambda: app.actual_mock_sensor_datapoint(duration.get(), values.get(), vss_path, datatype))
+    def create_mock_behavior(self, element, use_animation, use_set, setValue, condition1, condition2, clicked, str_values, duration, repeat, trigger_path, ms=0):
+        if use_set or use_animation:
+            if use_set:
+                if setValue != "":
+                    if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY or (setValue.startswith("$") and clicked != ClockTrigger):
+                        action = create_set_action(setValue)
+                    elif element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
+                        action = create_set_action(float(setValue))
+                    elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
+                        action = create_set_action(bool(setValue))
+                    else:
+                        action = create_set_action(int(setValue))
+                else: 
+                    action = create_set_action("$event.value")
+            elif use_animation:
+                _repeat_mode = None
+                if repeat:
+                    _repeat_mode = RepeatMode.REPEAT
 
-        self.elements.append(label1)
-        self.elements.append(duration)
-        self.elements.append(label2)
-        self.elements.append(values)
-        self.elements.append(button)
-        
-        self.update_layout()
+                if str_values != "":
+                    str_values = str_values.split(',')
+                    _values = []
+                    for value in str_values:
+                        value = value.strip()
+                        _values.append(value) 
+                    if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY or (setValue.startswith("$") and clicked != ClockTrigger):
+                        _Values = _values
+                    elif element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
+                        _Values = [float(val) for val in _values]
+                    elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
+                        _Values = [bool(val) for val in _values]
+                    else:
+                        _Values = [int(val) for val in _values]
+                    action = create_animation_action(_Values, float(duration), _repeat_mode)
+                else: 
+                    _Values = ["$self", "$event.value"]
+                    action = create_animation_action(_Values, float(duration), _repeat_mode)
 
-    def create_actuator_behavior(self, element, actionValue=None):
-        if actionValue != "":
-            if not element.datatype == DataType.STRING or not element.datatype == DataType.STRING_ARRAY:
-                if element.datatype == DataType.FLOAT or element.datatype == DataType.DOUBLE or element.datatype == DataType.FLOAT_ARRAY or element.datatype == DataType.DOUBLE_ARRAY:
-                    actionValue = float(actionValue)
+            if clicked == "ClockTrigger":
+                _trigger = ClockTrigger(float(ms))
+            elif clicked == "TargetTrigger":
+                if trigger_path != "":
+                    _trigger = EventTrigger(EventType.ACTUATOR_TARGET, trigger_path)
                 else:
-                    actionValue = int(actionValue)
-            action = create_set_action(actionValue)
-        else: 
-            action = create_set_action("$event.value")
-        new_behavior = create_behavior(
-            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
-            action=action
-        )
-        element.behaviors.append(new_behavior)
-        messagebox.showinfo(title="Info", message="Behavior created")
+                    _trigger = EventTrigger(EventType.ACTUATOR_TARGET)
+            elif clicked == "ValueTrigger":
+                if trigger_path != "":
+                    _trigger = EventTrigger(EventType.VALUE, trigger_path)
+                else: 
+                    _trigger = EventTrigger(EventType.VALUE)
 
-    def checksetToValueButton(self, toggle_var, setValue, label1):
-        messagebox.showinfo(title="Info", message="You are creating a set action. This will lead to setting a fixed value if the target value is set. If you want that the target value is set leave the field empty. Otherwise provide a value")
-        if toggle_var.get():
-            last_entry = len(self.elements)
-            # insert before buttons
-            last_entry -= 2
-            self.elements.insert(last_entry, label1)
-            self.elements.insert(last_entry + 1, setValue)
-            self.update_layout()
+            if condition1 != "" and condition2 != "":
+                if not element.metadata.data_type == DataType.STRING or not element.metadata.data_type == DataType.STRING_ARRAY:
+                    if element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
+                        conditionValue = float(condition2)
+                    else:
+                        conditionValue = int(condition2)
+
+                _condition = lambda ctx: get_datapoint_value(
+                        ctx, condition1
+                    )== conditionValue
+            else:
+                _condition = lambda _: True
+
+            new_behavior = create_behavior(
+                trigger=_trigger,
+                condition=_condition,
+                action=action
+            )
+            element.behaviors.append(new_behavior)
+            messagebox.showinfo(title="Info", message="Behavior created")
         else:
+            messagebox.showerror(title="Mock generation error", message="You need to choose one of mocking a datapoint through animation or setting to a fixed value")
+
+    def checksetToValueButton(self, set_var, animation_var, setToValue_elements):
+        if not animation_var.get():
+            if set_var.get():
+                messagebox.showinfo(title="Info", message="You are creating a set action. This will lead to setting a fixed value if the target value is set. If you want that the target value is set leave the field empty. Otherwise provide a value. If you do not want a condition leave it empty.")
+                last_entry = len(self.elements)
+                # insert before buttons
+                last_entry -= 2
+                counter = 0
+                for element in setToValue_elements:
+                    if element not in self.elements:
+                        self.elements.insert(last_entry + counter, element)
+                    counter += 1
+                self.update_layout()
+            else:
+                for element in setToValue_elements:
+                    if element in self.elements:
+                        index = self.elements.index(element)
+                        self.elements[index].grid_forget()
+                        self.elements.remove(element)
+
+                self.update_layout()
+        else:
+            set_var.set(0)
+    
+    def checkAnimationButton(self, animation_var, set_var, animationValue_elements):
+        if not set_var.get():
+            if animation_var.get():
+                messagebox.showinfo(title="Info", message="You are creating an animation action. This will lead to setting a value through an animation with duration and some values. If you do not want a condition to be set leave it empty.")
+                last_entry = len(self.elements)
+                # insert before buttons
+                last_entry -= 2
+                counter = 0
+                for element in animationValue_elements:
+                    if element not in self.elements:
+                        self.elements.insert(last_entry + counter, element)
+                    counter += 1
+                self.update_layout()
+            else:
+                for element in animationValue_elements:
+                    if element in self.elements:
+                        index = self.elements.index(element)
+                        self.elements[index].grid_forget()
+                        self.elements.remove(element)
+
+                self.update_layout()
+        else:
+            animation_var.set(0)
+
+    def showClockTriggerEntry(self, clicked, ms, label0, repeat, label1, trigger_path):
+        last_entry = len(self.elements)
+        # insert before buttons
+        last_entry -= 2 
+        if clicked == "ClockTrigger":
+            # add GUI elements for ClockTrigger
+            if repeat not in self.elements:
+                self.elements.insert(last_entry, repeat)
+            if ms not in self.elements:
+                self.elements.insert(last_entry, ms)
+            if label0 not in self.elements:
+                self.elements.insert(last_entry, label0)
+
+            # remove GUI elements for TargetTrigger and ValueTrigger
             if label1 in self.elements:
                 index = self.elements.index(label1)
                 self.elements[index].grid_forget()
                 self.elements.remove(label1)
-
-            if setValue in self.elements:
-                index = self.elements.index(setValue)
+            if trigger_path in self.elements:
+                index = self.elements.index(trigger_path)
                 self.elements[index].grid_forget()
-                self.elements.remove(setValue)
+                self.elements.remove(trigger_path)
+
+            self.update_layout()
+        else:
+            # add GUI elements for TargetTrigger and ValueTrigger
+            if trigger_path not in self.elements:
+                self.elements.insert(last_entry, trigger_path)
+            if label1 not in self.elements:
+                self.elements.insert(last_entry, label1)
+
+            # remove GUI elements for ClockTrigger
+            if label0 in self.elements:
+                index = self.elements.index(label0)
+                self.elements[index].grid_forget()
+                self.elements.remove(label0)
+            if ms in self.elements:
+                index = self.elements.index(ms)
+                self.elements[index].grid_forget()
+                self.elements.remove(ms)
+            if repeat in self.elements:
+                index = self.elements.index(repeat)
+                self.elements[index].grid_forget()
+                self.elements.remove(repeat)
+            
             self.update_layout()
 
-    def checkRepeatButton(self, check):
-        if check:
-            return RepeatMode.REPEAT
 
-    def show_actor_popup(self, element):
+    def show_mock_popup(self, element):
         
         self.popup = tk.Toplevel(root)
         self.popup.title("Specify Properties")
         self.popup.protocol("WM_DELETE_WINDOW", self.popup.destroy)
 
-        label1 = ttk.Label(self.popup, text="set Value on event to:")
+        animation_elements = []
+        setToValue_elements = []
+
+        options=[
+            "ClockTrigger",
+            "ValueTrigger",
+        ]
+        if element.metadata.entry_type == EntryType.ACTUATOR and (element.metadata.data_type != DataType.STRING or element.metadata.data_type != DataType.STRING_ARRAY):
+            options.append("TargetTrigger")
+        # datatype of dropdown text
+        clicked = tk.StringVar()
+        
+        # initial dropdown text
+        clicked.set("ClockTrigger")
+
+
+        label0 = ttk.Label(self.popup, text="clock trigger interval ms:")
+        ms = tk.Entry(self.popup)
+
+        repeat_var = tk.BooleanVar()
+        repeat = ttk.Checkbutton(
+            self.popup,
+            text="Repeat mock continiously",
+            variable=repeat_var,
+        )
+
+        label1 = ttk.Label(self.popup, text="VSS path the trigger acts on. if not specified it uses the the mocked VSS path:")
+        trigger_path = tk.Entry(self.popup)
+        # Create Dropdown
+        drop = tk.OptionMenu(
+            self.popup,
+            clicked , 
+            *options,
+            command=lambda clicked=clicked: self.showClockTriggerEntry(clicked, ms, label0, repeat, label1, trigger_path)
+        )
+
+        label2 = ttk.Label(self.popup, text="set Value on event to:")
         setValue = tk.Entry(self.popup)
 
-        toggle_var = tk.BooleanVar()
+        label3 = ttk.Label(self.popup, text="condition vss path:")
+        condition1 = tk.Entry(self.popup)
+        label4 = ttk.Label(self.popup, text="condition value:")
+        condition2 = tk.Entry(self.popup)
+
+        label5 = ttk.Label(self.popup, text="duration:")
+        duration = tk.Entry(self.popup)
+        label6 = ttk.Label(self.popup, text="comma separated list of values that are provided. Use $self for current value of sensor, $event.value for the value of the event trigger and $[vss path] for a VSS path:")
+        values = tk.Entry(self.popup)
+
+        setToValue_elements.append(label2)
+        setToValue_elements.append(setValue)
+        setToValue_elements.append(label3)
+        setToValue_elements.append(condition1)
+        setToValue_elements.append(label4)
+        setToValue_elements.append(condition2)
+        setToValue_elements.append(drop)
+
+        animation_elements.append(label3)
+        animation_elements.append(condition1)
+        animation_elements.append(label4)
+        animation_elements.append(condition2)
+        animation_elements.append(label5)
+        animation_elements.append(duration)
+        animation_elements.append(label6)
+        animation_elements.append(values)
+        animation_elements.append(drop)
+
+        animation_var = tk.BooleanVar()
+        set_var = tk.BooleanVar()
+
+        if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY:
+            pass
+        else:
+            animationValue = ttk.Checkbutton(
+                self.popup,
+                text="Set Datapoint through animation",
+                variable=animation_var,
+                command=lambda: self.checkAnimationButton(animation_var, set_var, animation_elements)
+            )
+            self.elements.append(animationValue)
+
         setToValue = ttk.Checkbutton(
             self.popup,
             text="Set Datapoint to value",
-            variable=toggle_var,
-            command=lambda: self.checksetToValueButton(toggle_var, setValue, label1)
+            variable=set_var,
+            command=lambda: self.checksetToValueButton(set_var, animation_var, setToValue_elements)
         )
 
-        buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_actuator_behavior(element, setValue.get()))
-        buttonAdd = tk.Button(self.popup, text="Mock", command=lambda: self.actual_mock_actuator_datapoint(element))
+        buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_mock_behavior(element, animation_var.get(), set_var.get(), setValue.get(), condition1.get(), condition2.get(), clicked.get(), values.get(), duration.get(), repeat_var.get(), trigger_path.get(), ms.get()))
+        buttonAdd = tk.Button(self.popup, text="Mock", command=lambda: self.actual_mock_datapoint(element))
 
         self.elements.append(setToValue)
         self.elements.append(buttonBehavior)
@@ -228,13 +375,10 @@ class GUIApp:
         self.update_layout()
 
     def create_new_behavior(self, element):
-        self.show_actor_popup(element)
-
-    def create_sensor_mock(self, element):
-        self.show_sensor_popup(element.vss_path, element.datatype)
+        self.show_mock_popup(element)
 
     def update_datapoint(self, value, element):
-        if not element.datatype == DataType.STRING or not element.datatype == DataType.STRING_ARRAY:
+        if not element.metadata.data_type == DataType.STRING or not element.metadata.data_type == DataType.STRING_ARRAY:
             value = float(value)
         if not element.read_only:
             self.client.set_current_values({element.vss_path: Datapoint(value)})
