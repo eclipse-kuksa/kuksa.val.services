@@ -74,10 +74,29 @@ If the mocked datapoints are not enough, the `mock.py` in this repository can be
 
 The full Python mocking DSL is available [here](./doc/pydoc/mocking-dsl.md)
 
-Alternative:
+# Running showcase GUI
+
+Firstly, you will need to install all necessary Python dependencies by using the following command in your favorite terminal:
+
+```bash
+# install requirements of mock service
+python3 -m pip install -r ./requirements.txt
+# install additional requirements of the GUI
+python3 -m pip install --pre kuksa-client
+# install mock service from mock_service directory to make it available in the GUI
+python3 -m pip install -e .
+```
+
+To run the GUI do the following in your favourtie terminal:
+
+```bash
+python3 showcase_gui/GUI.py
+```
+
+If you run it from mock directory the mock datapoints defined by mock.py get used as well:
 ```bash
 cd mock
-python3 mockservice.py
+python3 ../showcase_gui/GUI.py
 ```
 
 # Generating API documentation
