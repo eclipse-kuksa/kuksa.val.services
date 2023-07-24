@@ -37,30 +37,30 @@ mock_datapoint(
     ],
 )
 
-mock_datapoint(
-    path="Vehicle.Cabin.Seat.Row1.Pos1.Position",
-    initial_value=0,
-    behaviors=[
-        create_behavior(
-            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
-            action=create_animation_action(
-                duration=10.0,
-                values=["$self", "$event.value"],
-            ),
-        )
-    ],
-)
+# mock_datapoint(
+#     path="Vehicle.Cabin.Seat.Row1.Pos1.Position",
+#     initial_value=0,
+#     behaviors=[
+#         create_behavior(
+#             trigger=EventTrigger(EventType.ACTUATOR_TARGET),
+#             action=create_animation_action(
+#                 duration=10.0,
+#                 values=["$self", "$event.value"],
+#             ),
+#         )
+#     ],
+# )
 
-mock_datapoint(
-    path="Vehicle.Body.Windshield.Front.Wiping.System.Mode",
-    initial_value="STOP_HOLD",
-    behaviors=[
-        create_behavior(
-            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
-            action=create_set_action("$event.value"),
-        )
-    ],
-)
+# mock_datapoint(
+#     path="Vehicle.Body.Windshield.Front.Wiping.System.Mode",
+#     initial_value="STOP_HOLD",
+#     behaviors=[
+#         create_behavior(
+#             trigger=EventTrigger(EventType.ACTUATOR_TARGET),
+#             action=create_set_action("$event.value"),
+#         )
+#     ],
+# )
 
 mock_datapoint(
     path="Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition",
@@ -85,43 +85,15 @@ mock_datapoint(
             == "EMERGENCY_STOP",
             action=create_set_action(0),
         ),
-        create_behavior(
-            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
-            condition=lambda ctx: get_datapoint_value(
-                ctx, "Vehicle.Body.Windshield.Front.Wiping.System.Mode"
-            )
-            == "STOP_HOLD",
-            action=create_animation_action(
-                duration=10.0,
-                values=[
-                    "$self",
-                    "$Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition",
-                ],
-            ),
-        ),
-        create_behavior(
-            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
-            condition=lambda ctx: get_datapoint_value(
-                ctx, "Vehicle.Body.Windshield.Front.Wiping.System.Mode"
-            )
-            == "WIPE",
-            action=create_animation_action(
-                duration=10.0,
-                values=[
-                    "$self",
-                    "$Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition",
-                ],
-            ),
-        ),
     ],
 )
 
-mock_datapoint(
-    path="Vehicle.Cabin.HVAC.IsFrontDefrosterActive",
-    initial_value=False,
-    behaviors=[
-        create_behavior(
-            EventTrigger(EventType.ACTUATOR_TARGET), create_set_action("$event.value")
-        )
-    ],
-)
+# mock_datapoint(
+#     path="Vehicle.Cabin.HVAC.IsFrontDefrosterActive",
+#     initial_value=False,
+#     behaviors=[
+#         create_behavior(
+#             EventTrigger(EventType.ACTUATOR_TARGET), create_set_action("$event.value")
+#         )
+#     ],
+# )

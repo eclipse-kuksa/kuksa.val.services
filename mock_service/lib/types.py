@@ -14,6 +14,9 @@
 from typing import Any, Dict, List, NamedTuple
 
 from lib.datapoint import MockedDataPoint
+from lib.baseservice import VDB_ADDRESS
+
+from kuksa_client.grpc import VSSClient
 
 
 class Event(NamedTuple):
@@ -30,4 +33,7 @@ class ExecutionContext(NamedTuple):
     calling_signal_path: str
     pending_event_list: List[Event]
     datapoints_cache: Dict[str, MockedDataPoint]
+    vdb_split = VDB_ADDRESS.split(':')
+    client = VSSClient(vdb_split[0], vdb_split[1])
+    client.connect()
     delta_time: float

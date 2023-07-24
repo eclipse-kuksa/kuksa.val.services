@@ -72,9 +72,10 @@ def get_datapoint_value(context: ExecutionContext, path: str, default: Any = 0) 
     """
     if path not in _mocked_datapoints:
         _required_datapoint_paths.append(path)
-
-    if path in context.datapoints_cache:
-        return context.datapoints_cache[path].value
+    curr_vals = context.client.get_current_values([path, ])
+    if curr_vals != None:
+        return curr_vals[path].value
+    
     return default
 
 
@@ -98,9 +99,11 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
 
     if isinstance(value, str) and value.startswith("$"):
         if value == "$self":
-            return get_datapoint_value(
-                action_context.execution_context, action_context.datapoint.path
-            )
+            curr_vals = action_context.execution_context.client.get_current_values([action_context.datapoint.path,])
+            if curr_vals != None:
+                return curr_vals[action_context.datapoint.path].value
+            else:
+                return 0 
         elif value == "$event.value":
             if isinstance(action_context.trigger, EventTriggerResult):
                 return action_context.trigger.get_event().value
@@ -109,8 +112,11 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
                     f"Unsupported literal: {value!r} in non event-triggered behavior!"
                 )
         elif value.startswith("$"):
-            return get_datapoint_value(action_context.execution_context, value[1:])
-
+            curr_vals = action_context.execution_context.client.get_current_values([value[1:],])
+            if curr_vals != None:
+                return curr_vals[value[1:]].value
+            else:
+                return 0 
     return value
 
 

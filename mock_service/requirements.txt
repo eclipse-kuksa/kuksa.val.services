@@ -2,3 +2,4 @@ grpcio>=1.44.0
 protobuf>=3.19.4
 types-protobuf
 scipy>=1.10.1
+kuksa_client
