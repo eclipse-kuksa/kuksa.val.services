@@ -20,6 +20,8 @@ from lib.datapoint import MockedDataPoint
 from lib.trigger import TriggerResult
 from lib.types import ExecutionContext
 
+from kuksa_client.grpc import Datapoint
+
 log = logging.getLogger("action")
 
 
@@ -124,5 +126,5 @@ class SetAction(Action):
             self._resolved_value = self._target_value_resolver(
                 action_context, self._value
             )
-
-        action_context.datapoint.set_value(self._resolved_value)
+        if self._resolved_value is not None:
+            action_context.datapoint.set_value(self._resolved_value)

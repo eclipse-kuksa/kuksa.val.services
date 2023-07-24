@@ -13,7 +13,7 @@
 
 from typing import Any, Callable, Optional
 
-from sdv.databroker.v1.types_pb2 import DataType
+from kuksa_client.grpc import DataType
 
 
 class MockedDataPoint:
@@ -33,11 +33,14 @@ class MockedDataPoint:
         self.is_mocked = is_mocked
         self.value_listener = value_listener
 
+    # Do we need this -> never used as of now
     def has_discrete_value_type(self):
         """Return if the datapoint has a discrete value type."""
         return (
-            DataType.Name(self.data_type) == "BOOL"
-            or DataType.Name(self.data_type) == "STRING"
+            self.data_type == DataType.BOOLEAN
+            or self.data_type == DataType.BOOLEAN_ARRAY 
+            or self.data_type == DataType.STRING
+            or self.data_type == DataType.STRING_ARRAY
         )
 
     def set_value(self, new_value):

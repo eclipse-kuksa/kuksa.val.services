@@ -21,14 +21,14 @@ from threading import Thread
 from typing import Optional, Tuple
 
 import grpc
-from kuksa.val.v1.val_pb2_grpc import VALStub
-from sdv.databroker.v1.broker_pb2_grpc import BrokerStub
-from sdv.databroker.v1.collector_pb2_grpc import CollectorStub
+from kuksa_client.grpc import VSSClient
 
 log = logging.getLogger("base_service")
 
 # VehicleDataBroker address, overridden if "DAPR_GRPC_PORT" is set in environment
 VDB_ADDRESS = os.getenv("VDB_ADDRESS", "127.0.0.1:55555")
+VDB_IP = VDB_ADDRESS.split(':')[0]
+VDB_PORT = VDB_ADDRESS.split(':')[1]
 
 
 def is_grpc_fatal_error(e: grpc.RpcError) -> bool:
@@ -56,15 +56,11 @@ class BaseService(ABC):
             self._vdb_address = f"127.0.0.1:{grpc_port}"
         else:
             self._vdb_address = VDB_ADDRESS
-        self._metadata: Optional[Tuple[Tuple[str, Optional[str]]]] = None
         self._address = service_address
         self._service_name = service_name
         self._connected = False
         self._shutdown = False
-        self._channel = None
-        self._stub = None
-        self._stub_val = None
-        self._stub_broker: Optional[BrokerStub] = None
+        self._client = VSSClient(VDB_IP, VDB_PORT)
         self._databroker_thread = Thread(
             target=self._connect_to_databroker, daemon=True, name="databroker-connector"
         )
@@ -80,44 +76,11 @@ class BaseService(ABC):
             time.sleep(2)
         else:
             self._metadata = None
-        self._channel: grpc.Channel = grpc.insecure_channel(self._vdb_address)
-        self._stub = CollectorStub(self._channel)
-        self._stub_val = VALStub(self._channel)
-        self._stub_broker = BrokerStub(self._channel)
+        self._client.connect()
+        self._connected = True
+        self.on_databroker_connected()
 
-        log.info("Using gRPC metadata: %s", self._metadata)
-        self._channel.subscribe(
-            self._on_broker_connectivity_change,
-            try_to_connect=False,
-        )
         self._run()
-
-    def _on_broker_connectivity_change(self, connectivity):
-        log.info("[%s] Connectivity changed to: %s", self._vdb_address, connectivity)
-        if (
-            connectivity == grpc.ChannelConnectivity.READY
-            or connectivity == grpc.ChannelConnectivity.IDLE
-        ):
-            # Can change between READY and IDLE. Only act if coming from
-            # unconnected state
-            if not self._connected:
-                log.info("Connected to data broker")
-                try:
-                    self.on_databroker_connected()
-                except grpc.RpcError as err:
-                    log.error("Failed to register datapoints")
-                    is_grpc_fatal_error(err)
-                    # log.error("Failed to register datapoints", exc_info=True)
-                except Exception:
-                    log.error("Failed to register datapoints", exc_info=True)
-                self._connected = True
-        else:
-            if self._connected:
-                log.info("Disconnected from data broker")
-            else:
-                if connectivity == grpc.ChannelConnectivity.CONNECTING:
-                    log.info("Trying to connect to data broker")
-            self._connected = False
 
     def _run(self):
         while self._shutdown is False:

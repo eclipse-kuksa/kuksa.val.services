@@ -26,7 +26,7 @@ from lib.trigger import (
     EventTriggerResult,
 )
 from lib.types import Event, ExecutionContext
-from sdv.databroker.v1.types_pb2 import DataType
+from kuksa_client.grpc import DataType
 
 log = logging.getLogger("loader")
 
@@ -45,24 +45,24 @@ class MockLoader(ABC):
 class PythonDslLoader(MockLoader):
     def _has_supported_type(self, data_type: DataType) -> bool:
         return (
-            DataType.Name(data_type) == "BOOL"
-            or DataType.Name(data_type) == "FLOAT"
-            or DataType.Name(data_type) == "DOUBLE"
-            or DataType.Name(data_type) == "INT8"
-            or DataType.Name(data_type) == "UINT8"
-            or DataType.Name(data_type) == "INT16"
-            or DataType.Name(data_type) == "UINT16"
-            or DataType.Name(data_type) == "INT32"
-            or DataType.Name(data_type) == "UINT32"
-            or DataType.Name(data_type) == "INT64"
-            or DataType.Name(data_type) == "UINT64"
-            or DataType.Name(data_type) == "STRING"
+            data_type ==DataType.BOOLEAN
+            or data_type ==DataType.FLOAT
+            or data_type ==DataType.DOUBLE
+            or data_type ==DataType.INT8
+            or data_type ==DataType.UINT8
+            or data_type ==DataType.INT16
+            or data_type ==DataType.UINT16
+            or data_type ==DataType.INT32
+            or data_type ==DataType.UINT32
+            or data_type ==DataType.INT64
+            or data_type ==DataType.UINT64
+            or data_type ==DataType.STRING
         )
 
-    def _load_mocked_datapoints(self, vdb_metadata) -> Dict[str, MockedDataPoint]:
+    def _load_mocked_datapoints(self, client) -> Dict[str, MockedDataPoint]:
         mocked_datapoints: Dict[str, MockedDataPoint] = dict()
         for datapoint in _mocked_datapoints:
-            metadata = vdb_metadata[datapoint["path"]]
+            metadata = client.get_metadata([datapoint['path'], ])[datapoint['path']]
 
             if not self._has_supported_type(metadata.data_type):
                 log.error(f"Mocked datapoint {datapoint['path']} has unsupported type!")
@@ -73,13 +73,13 @@ class PythonDslLoader(MockLoader):
         return mocked_datapoints
 
     def _load_behaviors(
-        self, vdb_metadata, mocked_datapoints: Dict[str, MockedDataPoint]
+        self, client, mocked_datapoints: Dict[str, MockedDataPoint]
     ) -> Tuple[Dict[str, List[Behavior]], Dict[str, MockedDataPoint]]:
         required_datapoints: Dict[str, MockedDataPoint] = dict()
         behavior_dict: Dict[str, List[Behavior]] = dict()
 
         for datapoint in _mocked_datapoints:
-            metadata = vdb_metadata[datapoint["path"]]
+            metadata = client.get_metadata([datapoint['path'], ])[datapoint['path']]
 
             if self._has_supported_type(metadata.data_type):
                 behavior_dict[datapoint["path"]] = list()
@@ -127,7 +127,7 @@ class PythonDslLoader(MockLoader):
 
         return behavior_dict, required_datapoints
 
-    def load(self, vdb_metadata) -> LoaderResult:
+    def load(self, client) -> LoaderResult:
         """Load mocking configuration from Python script."""
         import importlib.util
         import sys
@@ -137,9 +137,9 @@ class PythonDslLoader(MockLoader):
         sys.modules["mock"] = mod
         spec.loader.exec_module(mod)
 
-        mocked_datapoints = self._load_mocked_datapoints(vdb_metadata)
+        mocked_datapoints = self._load_mocked_datapoints(client)
         behaviors, required_datapoints = self._load_behaviors(
-            vdb_metadata, mocked_datapoints
+            client, mocked_datapoints
         )
 
         # convert required datapoints into "normal" mocked datapoints
