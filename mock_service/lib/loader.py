@@ -121,7 +121,7 @@ class PythonDslLoader(MockLoader):
 
         for required_dp in _required_datapoint_paths:
             if required_dp not in mocked_datapoints:
-                log.error(f"Creating required datapoint for {required_dp}")
+                log.info(f"Creating required datapoint for {required_dp}")
                 mocked_datapoint = MockedDataPoint(required_dp, None, None, False)
                 required_datapoints[required_dp] = mocked_datapoint
 
