@@ -12,12 +12,13 @@
 # ********************************************************************************/
 
 import logging
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from lib.action import Action, ActionContext, AnimationAction, SetAction
 from lib.animator import RepeatMode
 from lib.behavior import Behavior, ExecutionContext
-from lib.trigger import EventTriggerResult, Trigger
+from lib.trigger import EventTriggerResult, Trigger, EventType, EventTrigger
+
 
 _mocked_datapoints: List[Dict] = list()
 _required_datapoint_paths: List[str] = list()
@@ -149,3 +150,17 @@ def create_animation_action(
         AnimationAction: The created AnimationAction.
     """
     return AnimationAction(duration, repeat_mode, values, __resolve_value)
+
+def create_EventTrigger(type: EventType, path: Optional[str] = None) -> EventTrigger:
+    """Create a SetAction with dynamic value resolution. See `__resolve_value`
+    for documentation of value resolution.
+
+    Args:
+        value (Any): The value to set or a dynamic literal.
+
+    Returns:
+        SetAction: The created SetAction.
+    """
+    if path is not None:
+        _required_datapoint_paths.append(path)
+    return EventTrigger(type, path)

@@ -17,6 +17,7 @@ from lib.dsl import (
     create_set_action,
     get_datapoint_value,
     mock_datapoint,
+    create_EventTrigger,
 )
 from lib.trigger import ClockTrigger, EventTrigger, EventType
 
@@ -37,37 +38,37 @@ mock_datapoint(
     ],
 )
 
-# mock_datapoint(
-#     path="Vehicle.Cabin.Seat.Row1.Pos1.Position",
-#     initial_value=0,
-#     behaviors=[
-#         create_behavior(
-#             trigger=EventTrigger(EventType.ACTUATOR_TARGET),
-#             action=create_animation_action(
-#                 duration=10.0,
-#                 values=["$self", "$event.value"],
-#             ),
-#         )
-#     ],
-# )
+mock_datapoint(
+    path="Vehicle.Cabin.Seat.Row1.Pos1.Position",
+    initial_value=0,
+    behaviors=[
+        create_behavior(
+            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
+            action=create_animation_action(
+                duration=10.0,
+                values=["$self", "$event.value"],
+            ),
+        )
+    ],
+)
 
-# mock_datapoint(
-#     path="Vehicle.Body.Windshield.Front.Wiping.System.Mode",
-#     initial_value="STOP_HOLD",
-#     behaviors=[
-#         create_behavior(
-#             trigger=EventTrigger(EventType.ACTUATOR_TARGET),
-#             action=create_set_action("$event.value"),
-#         )
-#     ],
-# )
+mock_datapoint(
+    path="Vehicle.Body.Windshield.Front.Wiping.System.Mode",
+    initial_value="STOP_HOLD",
+    behaviors=[
+        create_behavior(
+            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
+            action=create_set_action("$event.value"),
+        )
+    ],
+)
 
 mock_datapoint(
     path="Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition",
     initial_value=0,
     behaviors=[
         create_behavior(
-            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
+            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
             action=create_set_action("$event.value"),
         )
     ],
@@ -78,7 +79,7 @@ mock_datapoint(
     initial_value=0,
     behaviors=[
         create_behavior(
-            trigger=EventTrigger(EventType.ACTUATOR_TARGET),
+            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
             condition=lambda ctx: get_datapoint_value(
                 ctx, "Vehicle.Body.Windshield.Front.Wiping.System.Mode"
             )
@@ -88,12 +89,27 @@ mock_datapoint(
     ],
 )
 
-# mock_datapoint(
-#     path="Vehicle.Cabin.HVAC.IsFrontDefrosterActive",
-#     initial_value=False,
-#     behaviors=[
-#         create_behavior(
-#             EventTrigger(EventType.ACTUATOR_TARGET), create_set_action("$event.value")
-#         )
-#     ],
-# )
+mock_datapoint(
+    path="Vehicle.Cabin.HVAC.IsFrontDefrosterActive",
+    initial_value=False,
+    behaviors=[
+        create_behavior(
+            create_EventTrigger(EventType.ACTUATOR_TARGET), create_set_action("$event.value")
+        )
+    ],
+)
+
+mock_datapoint(
+    path="Vehicle.Body.Lights.Brake.IsActive",
+    initial_value="INACTIVE",
+    behaviors=[
+        create_behavior(
+            trigger=create_EventTrigger(EventType.VALUE, "Vehicle.Body.Lights.Brake.IsDefect"),
+            action=create_set_action("INACTIVE"),
+        ),
+        create_behavior(
+            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET, "Vehicle.Body.Lights.Brake.IsActive"),
+            action=create_set_action("$event.value"),
+        )
+    ],
+)
