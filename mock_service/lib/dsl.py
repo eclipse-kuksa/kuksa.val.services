@@ -152,14 +152,15 @@ def create_animation_action(
     return AnimationAction(duration, repeat_mode, values, __resolve_value)
 
 def create_EventTrigger(type: EventType, path: Optional[str] = None) -> EventTrigger:
-    """Create a SetAction with dynamic value resolution. See `__resolve_value`
-    for documentation of value resolution.
+    """Create an EventTrigger for own VSS path or different one. It handles that events for the new VSS paths
+    are handled too and the EventTrigger works fine.
 
     Args:
-        value (Any): The value to set or a dynamic literal.
+        type (EvenType): The kind of event the EventTrigger shall be.
+        path (Optional[str]): Default None which represents same VSS path as the datapoint or new VSS path
 
     Returns:
-        SetAction: The created SetAction.
+        EvenTrigger: The created EventTrigger.
     """
     if path is not None:
         _required_datapoint_paths.append(path)
