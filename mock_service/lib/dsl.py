@@ -74,7 +74,7 @@ def get_datapoint_value(context: ExecutionContext, path: str, default: Any = 0) 
     if path not in _mocked_datapoints:
         _required_datapoint_paths.append(path)
     curr_vals = context.client.get_current_values([path, ])
-    if curr_vals != None:
+    if curr_vals[path] != None:
         return curr_vals[path].value
     
     return default
@@ -101,7 +101,7 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
     if isinstance(value, str) and value.startswith("$"):
         if value == "$self":
             curr_vals = action_context.execution_context.client.get_current_values([action_context.datapoint.path,])
-            if curr_vals != None:
+            if curr_vals[action_context.datapoint.path] != None:
                 return curr_vals[action_context.datapoint.path].value
             else:
                 return 0 
@@ -114,7 +114,7 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
                 )
         elif value.startswith("$"):
             curr_vals = action_context.execution_context.client.get_current_values([value[1:],])
-            if curr_vals != None:
+            if curr_vals[value[1:]] != None:
                 return curr_vals[value[1:]].value
             else:
                 return 0 

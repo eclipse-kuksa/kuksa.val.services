@@ -77,7 +77,7 @@ class BehaviorExecutor:
             matched_datapoint = self._mocked_datapoints[path]
             for behavior in behaviors:
                 execution_context = ExecutionContext(
-                    path, self._pending_event_list, self._mocked_datapoints, delta_time
+                    path, self._pending_event_list, delta_time
                 )
                 trigger_result = behavior.check_trigger(execution_context)
                 if trigger_result.is_active() and behavior.is_condition_fulfilled(

@@ -18,6 +18,7 @@ from lib.baseservice import VDB_ADDRESS
 
 from kuksa_client.grpc import VSSClient
 
+vdb_split = VDB_ADDRESS.split(':')
 
 class Event(NamedTuple):
     """Structure for holding event data."""
@@ -32,8 +33,6 @@ class ExecutionContext(NamedTuple):
 
     calling_signal_path: str
     pending_event_list: List[Event]
-    datapoints_cache: Dict[str, MockedDataPoint]
-    vdb_split = VDB_ADDRESS.split(':')
     client = VSSClient(vdb_split[0], vdb_split[1])
     client.connect()
     delta_time: float

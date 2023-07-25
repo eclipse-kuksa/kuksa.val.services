@@ -18,7 +18,6 @@ import time
 from abc import ABC, abstractmethod
 from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
-from typing import Optional, Tuple
 
 import grpc
 from kuksa_client.grpc import VSSClient
@@ -95,17 +94,9 @@ class BaseService(ABC):
     def on_databroker_connected(self):
         pass
 
-    def serve(self):
-        log.info(f"Starting {self._service_name}")
-        server = grpc.server(ThreadPoolExecutor(max_workers=10))
-        server.add_insecure_port(self._address)
-        server.start()
-        server.wait_for_termination()
-
     async def close(self):
         """Closes runtime gRPC channel."""
-        if self._channel:
-            await self._channel.close()
+        self._client.disconnect()
 
     def __enter__(self) -> "BaseService":
         return self

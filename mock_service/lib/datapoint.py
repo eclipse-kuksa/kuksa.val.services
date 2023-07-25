@@ -38,9 +38,7 @@ class MockedDataPoint:
         """Return if the datapoint has a discrete value type."""
         return (
             self.data_type == DataType.BOOLEAN
-            or self.data_type == DataType.BOOLEAN_ARRAY 
             or self.data_type == DataType.STRING
-            or self.data_type == DataType.STRING_ARRAY
         )
 
     def set_value(self, new_value):
