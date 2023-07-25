@@ -15,7 +15,7 @@ class PythonDslLoader(MockLoader)
 #### load
 
 ```python
-def load(vdb_metadata) -> LoaderResult
+def load(client) -> LoaderResult
 ```
 
 Load mocking configuration from Python script.

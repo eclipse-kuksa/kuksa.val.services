@@ -117,3 +117,25 @@ See `__resolve_value` for documentation of value resolution.
 
 - `AnimationAction` - The created AnimationAction.
 
+<a id="lib.dsl.create_EventTrigger"></a>
+
+#### create\_EventTrigger
+
+```python
+def create_EventTrigger(type: EventType,
+                        path: Optional[str] = None) -> EventTrigger
+```
+
+Create an EventTrigger for own VSS path or different one. It handles that events for the new VSS paths
+are handled too and the EventTrigger works fine.
+
+**Arguments**:
+
+- `type` _EvenType_ - The kind of event the EventTrigger shall be.
+- `path` _Optional[str]_ - Default None which represents same VSS path as the datapoint or new VSS path
+  
+
+**Returns**:
+
+- `EvenTrigger` - The created EventTrigger.
+
