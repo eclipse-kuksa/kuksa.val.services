@@ -105,43 +105,32 @@ class MockService(BaseService):
 
     def _on_datapoint_updated(self, datapoint: MockedDataPoint):
         """Callback whenever the value of a mocked datapoint changes."""
-        self._set_datapoint(datapoint.path, datapoint.data_type, datapoint.value)
+        self._set_datapoint(datapoint.path, datapoint.value)
 
     def _feed_initial_values(self):
         """Provide initial values of all mocked datapoints to data broker."""
         for datapoint in self._mocked_datapoints.values():
             if datapoint.data_type is not None:
                 self._set_datapoint(
-                    datapoint.path, datapoint.data_type, datapoint.value
+                    datapoint.path, datapoint.value
                 )
 
     def _mock_update_request_handler(
-        self, response_iterator_current: Iterator, response_iterator_target: Iterator,
+        self, response_iter: Iterator, type,
     ) -> None:
         """Callback when an update event is received from data broker."""
         try:
-            for updates in response_iterator_target:
+            for updates in response_iter:
                 for path, dp in updates.items():
                     if dp is not None:
-                        raw_value = dp.value
-                    else:
-                        raw_value = None
-                    self._pending_event_list.append(
-                        Event(
-                            EVENT_KEY_ACTUATOR_TARGET, path, raw_value
-                        )
-                    )
-            for updates in response_iterator_current:
-                for path, dp in updates.items():
-                    if dp is not None:
-                        raw_value = dp.value
-                    else:
-                        raw_value = None
-                    self._pending_event_list.append(
-                        Event(
-                            EVENT_KEY_VALUE, path, raw_value
-                        )
-                    )
+                        # else it would register a new event at startup because event with value None would occur
+                        if dp.value is not None:
+                            raw_value = dp.value
+                            self._pending_event_list.append(
+                                Event(
+                                    type, path, raw_value
+                                )
+                            )
         except Exception as e:
             log.exception(e)
             raise
@@ -150,19 +139,31 @@ class MockService(BaseService):
         """Subscribe to mocked datapoints."""
         log.info("Subscribing to mocked datapoints...")
 
-        response_iter_current = self._client.subscribe_current_values(self._mocked_datapoints)
         response_iter_target = self._client.subscribe_target_values(self._mocked_datapoints)
+        response_iter_current = self._client.subscribe_current_values(self._mocked_datapoints)
 
         self._executor = ThreadPoolExecutor()
-        self._executor.submit(self._mock_update_request_handler, response_iter_current, response_iter_target)
+        self._executor.submit(self._mock_update_request_handler, response_iter_target, EVENT_KEY_ACTUATOR_TARGET)
+        self._executor.submit(self._mock_update_request_handler, response_iter_current, EVENT_KEY_VALUE)
 
-    def _set_datapoint(self, name: str, data_type: DataType, value: Any):
+    def _set_datapoint(self, path: str, value: Any):
         """Set the value of a datapoint within databroker."""
         try:
-            log.info("Feeding '%s' with value %s", name, value)
-            self._client.set_current_values({name: Datapoint(value)})
+            log.info("Feeding '%s' with value %s", path, value)
+            self._client.set_current_values({path: Datapoint(value)})
+            # remove events set through set_datapoint
+            event_to_remove = None
+            for event in self._pending_event_list:
+                if (
+                    "value" == event.name
+                    and event.path == path
+                ):
+                    event_to_remove = event
+
+            if event_to_remove is not None:
+                self._pending_event_list.remove(event_to_remove)
         except grpc.RpcError as err:
-            log.warning("Feeding %s failed", name, exc_info=True)
+            log.warning("Feeding %s failed", path, exc_info=True)
             self._connected = is_grpc_fatal_error(err)
             raise err
 

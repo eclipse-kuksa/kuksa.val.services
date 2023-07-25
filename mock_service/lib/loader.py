@@ -45,18 +45,18 @@ class MockLoader(ABC):
 class PythonDslLoader(MockLoader):
     def _has_supported_type(self, data_type: DataType) -> bool:
         return (
-            data_type ==DataType.BOOLEAN
-            or data_type ==DataType.FLOAT
-            or data_type ==DataType.DOUBLE
-            or data_type ==DataType.INT8
-            or data_type ==DataType.UINT8
-            or data_type ==DataType.INT16
-            or data_type ==DataType.UINT16
-            or data_type ==DataType.INT32
-            or data_type ==DataType.UINT32
-            or data_type ==DataType.INT64
-            or data_type ==DataType.UINT64
-            or data_type ==DataType.STRING
+            data_type == DataType.BOOLEAN
+            or data_type == DataType.FLOAT
+            or data_type == DataType.DOUBLE
+            or data_type == DataType.INT8
+            or data_type == DataType.UINT8
+            or data_type == DataType.INT16
+            or data_type == DataType.UINT16
+            or data_type == DataType.INT32
+            or data_type == DataType.UINT32
+            or data_type == DataType.INT64
+            or data_type == DataType.UINT64
+            or data_type == DataType.STRING
         )
 
     def _load_mocked_datapoints(self, client) -> Dict[str, MockedDataPoint]:
@@ -90,7 +90,7 @@ class PythonDslLoader(MockLoader):
                     # force execution of condition and action
                     # to identify and register all non-mocked, required datapoints
                     exe_context = ExecutionContext(
-                        datapoint["path"], list(), dict(), 0.0
+                        datapoint["path"], list(), 0.0
                     )
                     behavior.is_condition_fulfilled(exe_context)
 
