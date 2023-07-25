@@ -126,7 +126,7 @@ jobs:
         shell: bash
         working-directory: mock_service
         run: |
-          python3 -m pip install -r ./requirements.txt
+          python3 -m pip install --pre -r ./requirements.txt
           python3 -m pip install -r ./requirements-dev.txt
 
       - name: Run tests
