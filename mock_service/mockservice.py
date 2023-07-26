@@ -29,7 +29,7 @@ from lib.behavior import Behavior, BehaviorExecutor
 from lib.datapoint import MockedDataPoint
 from lib.loader import PythonDslLoader
 from lib.types import Event
-from kuksa_client.grpc import DataType, Metadata, Datapoint
+from kuksa_client.grpc import Metadata, Datapoint
 
 SERVICE_NAME = "mock_service"
 

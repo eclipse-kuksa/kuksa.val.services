@@ -32,7 +32,6 @@ class ExecutionContext(NamedTuple):
     """Context in which behaviors are executed"""
 
     calling_signal_path: str
-    pending_event_list: List[Event]
-    client = VSSClient(vdb_split[0], vdb_split[1])
-    client.connect()
+    pending_event_list: List[Event] 
     delta_time: float
+    client: VSSClient = VSSClient(vdb_split[0], vdb_split[1])

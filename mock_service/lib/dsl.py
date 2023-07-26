@@ -19,6 +19,8 @@ from lib.animator import RepeatMode
 from lib.behavior import Behavior, ExecutionContext
 from lib.trigger import EventTriggerResult, Trigger, EventType, EventTrigger
 
+# Set the log level to suppress log messages because we call connect/disconnect of client quite often
+logging.getLogger("kuksa_client").setLevel(logging.WARNING)
 
 _mocked_datapoints: List[Dict] = list()
 _required_datapoint_paths: List[str] = list()
@@ -73,7 +75,9 @@ def get_datapoint_value(context: ExecutionContext, path: str, default: Any = 0) 
     """
     if path not in _mocked_datapoints:
         _required_datapoint_paths.append(path)
+    context.client.connect()
     curr_vals = context.client.get_current_values([path, ])
+    context.client.disconnect()
     if curr_vals[path] != None:
         return curr_vals[path].value
     
@@ -100,11 +104,14 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
 
     if isinstance(value, str) and value.startswith("$"):
         if value == "$self":
+            action_context.execution_context.client.connect()
             curr_vals = action_context.execution_context.client.get_current_values([action_context.datapoint.path,])
+            action_context.execution_context.client.disconnect()
             if curr_vals[action_context.datapoint.path] != None:
                 return curr_vals[action_context.datapoint.path].value
             else:
                 return 0 
+            
         elif value == "$event.value":
             if isinstance(action_context.trigger, EventTriggerResult):
                 return action_context.trigger.get_event().value
@@ -113,7 +120,9 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
                     f"Unsupported literal: {value!r} in non event-triggered behavior!"
                 )
         elif value.startswith("$"):
+            action_context.execution_context.client.connect()
             curr_vals = action_context.execution_context.client.get_current_values([value[1:],])
+            action_context.execution_context.client.disconnect()
             if curr_vals[value[1:]] != None:
                 return curr_vals[value[1:]].value
             else:
