@@ -11,24 +11,27 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
+import unittest
+from unittest import mock
+
 from lib.action import SetAction
 from lib.behavior import Behavior
 from lib.trigger import ClockTrigger, EventTrigger, EventType
 from lib.types import ExecutionContext
-
+from kuksa_client.grpc import VSSClient
 
 def test_condition_function_true():
     cut = Behavior(ClockTrigger(0), condition=lambda _: True, action=SetAction(0))
-    ctx = ExecutionContext(None, None, None, 0.0)
+    context = ExecutionContext(None, None, 0.0)
 
-    assert cut.is_condition_fulfilled(ctx)
+    assert cut.is_condition_fulfilled(context)
 
 
 def test_condition_function_false():
     cut = Behavior(ClockTrigger(0), condition=lambda _: False, action=SetAction(0))
-    ctx = ExecutionContext(None, None, None, 0.0)
+    context = ExecutionContext(None, None, 0.0)
 
-    assert not cut.is_condition_fulfilled(ctx)
+    assert not cut.is_condition_fulfilled(context)
 
 
 def test_aaa():
