@@ -12,6 +12,7 @@
 # ********************************************************************************/
 
 import threading
+import logging
 
 import tkinter as tk
 from tkinter import ttk
@@ -30,8 +31,9 @@ from lib.dsl import (
     create_set_action,
     get_datapoint_value,
     mock_datapoint,
+    create_EventTrigger
 )
-from lib.trigger import ClockTrigger, EventTrigger, EventType
+from lib.trigger import ClockTrigger, EventType
 from lib.animator import RepeatMode
 from lib.behavior import Behavior
 
@@ -40,7 +42,7 @@ class GUIElement:
         self.name = name
         self.vss_path = vss_path
         self.read_only = read_only
-        self.behaviors = []
+        self.behaviors: list(Behavior) = []
         self.metadata = metadata
 
 class GUIApp:
@@ -101,7 +103,7 @@ class GUIApp:
         self.popup.destroy()
 
 
-    def create_mock_behavior(self, element, use_animation, use_set, setValue, condition1, condition2, clicked, str_values, duration, repeat, trigger_path, ms=0):
+    def create_mock_behavior(self, element, use_animation, use_set, setValue, cond_path, cond_val, clicked, str_values, duration, repeat, trigger_path, ms=0):
         if use_set or use_animation:
             if use_set:
                 if setValue != "":
@@ -112,7 +114,7 @@ class GUIApp:
                     elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
                         action = create_set_action(bool(setValue))
                     else:
-                        action = create_set_action(int(setValue))
+                        action = create_set_action(int(float(setValue)))
                 else: 
                     action = create_set_action("$event.value")
             elif use_animation:
@@ -125,16 +127,28 @@ class GUIApp:
                     _values = []
                     for value in str_values:
                         value = value.strip()
+                        if clicked != ClockTrigger:
+                            if not value.startswith("$"):
+                                if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY:
+                                    pass
+                                elif element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
+                                    value = float(value)
+                                elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
+                                    value = bool(value)
+                                else:
+                                    value = int(float(value)) 
+                        else:
+                            if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY:
+                                pass
+                            elif element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
+                                value = float(value)
+                            elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
+                                value = bool(value)
+                            else:
+                                value = int(float(value)) 
                         _values.append(value) 
-                    if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY or (setValue.startswith("$") and clicked != ClockTrigger):
-                        _Values = _values
-                    elif element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
-                        _Values = [float(val) for val in _values]
-                    elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
-                        _Values = [bool(val) for val in _values]
-                    else:
-                        _Values = [int(val) for val in _values]
-                    action = create_animation_action(_Values, float(duration), _repeat_mode)
+                    
+                    action = create_animation_action(_values, float(duration), _repeat_mode)
                 else: 
                     _Values = ["$self", "$event.value"]
                     action = create_animation_action(_Values, float(duration), _repeat_mode)
@@ -143,33 +157,63 @@ class GUIApp:
                 _trigger = ClockTrigger(float(ms))
             elif clicked == "TargetTrigger":
                 if trigger_path != "":
-                    _trigger = EventTrigger(EventType.ACTUATOR_TARGET, trigger_path)
+                    _trigger = create_EventTrigger(EventType.ACTUATOR_TARGET, trigger_path)
                 else:
-                    _trigger = EventTrigger(EventType.ACTUATOR_TARGET)
+                    _trigger = create_EventTrigger(EventType.ACTUATOR_TARGET)
             elif clicked == "ValueTrigger":
                 if trigger_path != "":
-                    _trigger = EventTrigger(EventType.VALUE, trigger_path)
+                    _trigger = create_EventTrigger(EventType.VALUE, trigger_path)
                 else: 
-                    _trigger = EventTrigger(EventType.VALUE)
+                    _trigger = create_EventTrigger(EventType.VALUE)
 
-            if condition1 != "" and condition2 != "":
-                if not element.metadata.data_type == DataType.STRING or not element.metadata.data_type == DataType.STRING_ARRAY:
-                    if element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
-                        conditionValue = float(condition2)
+            
+            if cond_val != "":
+                if cond_path == "":
+                    cond_path = element.vss_path
+                    if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY or (setValue.startswith("$") and clicked != ClockTrigger):
+                        pass
+                    elif element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
+                        cond_val = float(cond_val)
+                    elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
+                        cond_val = bool(cond_val)
                     else:
-                        conditionValue = int(condition2)
+                        cond_val = int(float(cond_val))
+                    new_behavior = create_behavior(
+                        trigger=_trigger,
+                        condition=lambda ctx: get_datapoint_value(
+                            ctx, cond_path
+                        )== cond_val,
+                        action=action
+                    )
+                else:
+                    try:
+                        metadata = self.client.get_metadata([cond_path,])[cond_path]
+                        if metadata.data_type == DataType.STRING or metadata.data_type == DataType.STRING_ARRAY or (setValue.startswith("$") and clicked != ClockTrigger):
+                            pass
+                        elif metadata.data_type == DataType.FLOAT or metadata.data_type == DataType.DOUBLE or metadata.data_type == DataType.FLOAT_ARRAY or metadata.data_type == DataType.DOUBLE_ARRAY:
+                            cond_val = float(cond_val)
+                        elif metadata.data_type == DataType.BOOLEAN or metadata.data_type == DataType.BOOLEAN_ARRAY:
+                            cond_val = bool(cond_val)
+                        else:
+                            cond_val = int(float(cond_val))
 
-                _condition = lambda ctx: get_datapoint_value(
-                        ctx, condition1
-                    )== conditionValue
+                        new_behavior = create_behavior(
+                            trigger=_trigger,
+                            condition=lambda ctx: get_datapoint_value(
+                                ctx, cond_path
+                            )== cond_val,
+                            action=action
+                        )
+                        
+                    except VSSClientError as e:
+                        messagebox.showinfo(title="Info", message="The provided path does not exist.")
             else:
-                _condition = lambda _: True
-
-            new_behavior = create_behavior(
+               new_behavior = create_behavior(
                 trigger=_trigger,
-                condition=_condition,
                 action=action
             )
+                
+
             element.behaviors.append(new_behavior)
             messagebox.showinfo(title="Info", message="Behavior created")
         else:
@@ -317,9 +361,9 @@ class GUIApp:
         setValue = tk.Entry(self.popup)
 
         label3 = ttk.Label(self.popup, text="condition vss path:")
-        condition1 = tk.Entry(self.popup)
+        cond_path = tk.Entry(self.popup)
         label4 = ttk.Label(self.popup, text="condition value:")
-        condition2 = tk.Entry(self.popup)
+        cond_val = tk.Entry(self.popup)
 
         label5 = ttk.Label(self.popup, text="duration:")
         duration = tk.Entry(self.popup)
@@ -329,15 +373,15 @@ class GUIApp:
         setToValue_elements.append(label2)
         setToValue_elements.append(setValue)
         setToValue_elements.append(label3)
-        setToValue_elements.append(condition1)
+        setToValue_elements.append(cond_path)
         setToValue_elements.append(label4)
-        setToValue_elements.append(condition2)
+        setToValue_elements.append(cond_val)
         setToValue_elements.append(drop)
 
         animation_elements.append(label3)
-        animation_elements.append(condition1)
+        animation_elements.append(cond_path)
         animation_elements.append(label4)
-        animation_elements.append(condition2)
+        animation_elements.append(cond_val)
         animation_elements.append(label5)
         animation_elements.append(duration)
         animation_elements.append(label6)
@@ -365,7 +409,7 @@ class GUIApp:
             command=lambda: self.checksetToValueButton(set_var, animation_var, setToValue_elements)
         )
 
-        buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_mock_behavior(element, animation_var.get(), set_var.get(), setValue.get(), condition1.get(), condition2.get(), clicked.get(), values.get(), duration.get(), repeat_var.get(), trigger_path.get(), ms.get()))
+        buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_mock_behavior(element, animation_var.get(), set_var.get(), setValue.get(), cond_path.get(), cond_val.get(), clicked.get(), values.get(), duration.get(), repeat_var.get(), trigger_path.get(), ms.get()))
         buttonAdd = tk.Button(self.popup, text="Mock", command=lambda: self.actual_mock_datapoint(element))
 
         self.elements.append(setToValue)
@@ -378,10 +422,20 @@ class GUIApp:
         self.show_mock_popup(element)
 
     def update_datapoint(self, value, element):
-        if not element.metadata.data_type == DataType.STRING or not element.metadata.data_type == DataType.STRING_ARRAY:
-            value = float(value)
-        if not element.read_only:
-            self.client.set_current_values({element.vss_path: Datapoint(value)})
+        if value != "":
+            if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY:
+                value = value
+            elif element.metadata.data_type == DataType.FLOAT or element.metadata.data_type == DataType.DOUBLE or element.metadata.data_type == DataType.FLOAT_ARRAY or element.metadata.data_type == DataType.DOUBLE_ARRAY:
+                value = float(value)
+            elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
+                value = bool(value)
+            else:
+                value = int(float(value))
+            if not element.read_only:
+                try: 
+                    self.client.set_current_values({element.vss_path: Datapoint(value)})
+                except VSSClientError as e:
+                    messagebox.showerror(f"{e} set initial value to avoid this.")
 
     def create_toggle_button(self, element):
         toggle_var = tk.BooleanVar()
@@ -424,10 +478,10 @@ class GUIApp:
         
         # Create labels and entry fields for the properties in the self.popup window
         label1 = ttk.Label(self.popup, text="name:")
-        entry1 = tk.Entry(self.popup)
+        name = tk.Entry(self.popup)
 
         label2 = ttk.Label(self.popup, text="VSS path:")
-        entry2 = tk.Entry(self.popup)
+        path = tk.Entry(self.popup)
 
         checkbox_ro_var = tk.BooleanVar()
         checkbox = ttk.Checkbutton(self.popup, text="Read only", variable=checkbox_ro_var)
@@ -436,12 +490,12 @@ class GUIApp:
         checkbox_mock = ttk.Checkbutton(self.popup, text="Mock", variable=checkbox_mock_var)
 
         # Create a button to add the element within the self.popup window
-        button = tk.Button(self.popup, text="Add", command=lambda: app.add_element(entry1.get(), entry2.get(), checkbox_ro_var.get(), checkbox_mock_var.get()))
+        button = tk.Button(self.popup, text="Add", command=lambda: app.add_element(name.get(), path.get(), checkbox_ro_var.get(), checkbox_mock_var.get()))
 
         self.elements.append(label1)
-        self.elements.append(entry1)
+        self.elements.append(name)
         self.elements.append(label2)
-        self.elements.append(entry2)
+        self.elements.append(path)
         self.elements.append(checkbox)
         self.elements.append(checkbox_mock)
         self.elements.append(button)
