@@ -21,6 +21,17 @@ from lib.trigger import Trigger, TriggerResult
 from lib.types import Event, ExecutionContext
 
 log = logging.getLogger("behavior")
+log.setLevel(logging.DEBUG)
+
+# Create a file handler and set the log file name
+file_handler = logging.FileHandler("mock_service.log")
+
+# Create a log formatter and set the format of log records
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the log
+log.addHandler(file_handler)
 
 
 class Behavior:
@@ -79,15 +90,16 @@ class BehaviorExecutor:
                 execution_context = ExecutionContext(
                     path, self._pending_event_list, delta_time
                 )
-                trigger_result = behavior.check_trigger(execution_context)
-                if trigger_result.is_active() and behavior.is_condition_fulfilled(
-                    execution_context
-                ):
-                    log.info(f"Running behavior for {path}")
-                    behavior.execute(
-                        ActionContext(
-                            trigger_result, execution_context, matched_datapoint
-                        ),
-                        animators,
-                    )
-                    break
+                if behavior.is_condition_fulfilled(
+                        execution_context
+                    ):
+                    trigger_result = behavior.check_trigger(execution_context)
+                    if trigger_result.is_active():
+                        log.info(f"Running behavior for {path}")
+                        behavior.execute(
+                            ActionContext(
+                                trigger_result, execution_context, matched_datapoint
+                            ),
+                            animators,
+                        )
+                        break
