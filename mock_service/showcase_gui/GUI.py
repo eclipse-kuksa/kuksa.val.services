@@ -12,7 +12,6 @@
 # ********************************************************************************/
 
 import threading
-import logging
 
 import tkinter as tk
 from tkinter import ttk
