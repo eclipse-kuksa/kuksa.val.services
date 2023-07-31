@@ -11,6 +11,7 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
+import argparse
 import threading
 
 import tkinter as tk
@@ -555,7 +556,18 @@ class GUIApp:
 
 
 if __name__ == "__main__":
-    client = VSSClient("127.0.0.1", 55555)
+    parser = argparse.ArgumentParser(
+        usage="-a [BROKER ADDRESS] -p [BROKER PORT]",
+        description="This UI interacts with a KUKSA.val databroker",
+    )
+    parser.add_argument("-a", "--address", default="127.0.0.1",
+                        help="This indicates the address of the KUKSA.val databroker to connect to."
+                        " The default value is 127.0.0.1")
+    parser.add_argument("-p", "--port", default="55555",
+                        help="This indicates the port of the kuksa.val databroker to connect to."
+                        " The default value is 55555", type=int)
+    args = parser.parse_args()
+    client = VSSClient(args.address, args.port)
     root = tk.Tk()
     app = GUIApp(client)
     app.mainloop()
