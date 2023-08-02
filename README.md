@@ -19,6 +19,7 @@ This repository contains examples of vservices and their implementations to show
 It currently consists of
 * a simple example [HVAC service](./hvac_service) written in Python and
 * a more complex example [seat control service](./seat_service) written in C/C++.
+* a [mock service](./mock_service/) written in Python to define execute mocking behavior defined in a Python-based DSL
   
 More elaborate or completely differing implementations are target of "real world grown" projects.
 
