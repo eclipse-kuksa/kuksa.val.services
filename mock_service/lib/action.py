@@ -20,8 +20,6 @@ from lib.datapoint import MockedDataPoint
 from lib.trigger import TriggerResult
 from lib.types import ExecutionContext
 
-from kuksa_client.grpc import Datapoint
-
 log = logging.getLogger("action")
 
 
@@ -87,20 +85,23 @@ class AnimationAction(Action):
         action_context: ActionContext,
         animators: List[Animator],
     ):
-        if self._target_value_resolver is not None:
-            self._resolve_target_values(action_context)
+        if not action_context.datapoint.has_discrete_value_type():
+            if self._target_value_resolver is not None:
+                self._resolve_target_values(action_context)
 
-        # remove previous reference of this animator instance
-        if self._animator is not None and self._animator in animators:
-            animators.remove(self._animator)
+            # remove previous reference of this animator instance
+            if self._animator is not None and self._animator in animators:
+                animators.remove(self._animator)
 
-        self._animator = ValueAnimator(
-            self._resolved_values,
-            self._duration,
-            self._repeat_mode,
-            lambda x: action_context.datapoint.set_value(x),
-        )
-        animators.append(self._animator)
+            self._animator = ValueAnimator(
+                self._resolved_values,
+                self._duration,
+                self._repeat_mode,
+                lambda x: action_context.datapoint.set_value(x),
+            )
+            animators.append(self._animator)
+        else:
+            log.error("Datapoint for animation has discrete value")
 
 
 class SetAction(Action):

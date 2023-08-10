@@ -21,20 +21,21 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Iterator, List
 
 import grpc
-from kuksa.val.v1.types_pb2 import Field
-from kuksa.val.v1.val_pb2 import SubscribeEntry, SubscribeRequest, SubscribeResponse
+from kuksa_client.grpc import Datapoint, Metadata
 from lib.animator import Animator
 from lib.baseservice import BaseService, is_grpc_fatal_error
 from lib.behavior import Behavior, BehaviorExecutor
 from lib.datapoint import MockedDataPoint
 from lib.loader import PythonDslLoader
 from lib.types import Event
-from kuksa_client.grpc import Metadata, Datapoint
 
 SERVICE_NAME = "mock_service"
 
 log = logging.getLogger(SERVICE_NAME)
 event = threading.Event()
+
+# Set the log level to suppress log messages because we call connect/disconnect of client quite often
+logging.getLogger("kuksa_client").setLevel(logging.WARNING)
 
 # Mock Service bind "host:port"
 MOCK_ADDRESS = os.getenv("MOCK_ADDR", "0.0.0.0:50053")
@@ -111,12 +112,12 @@ class MockService(BaseService):
         """Provide initial values of all mocked datapoints to data broker."""
         for datapoint in self._mocked_datapoints.values():
             if datapoint.data_type is not None:
-                self._set_datapoint(
-                    datapoint.path, datapoint.value
-                )
+                self._set_datapoint(datapoint.path, datapoint.value)
 
     def _mock_update_request_handler(
-        self, response_iter: Iterator, type,
+        self,
+        response_iter: Iterator,
+        type,
     ) -> None:
         """Callback when an update event is received from data broker."""
         try:
@@ -127,9 +128,7 @@ class MockService(BaseService):
                         if dp.value is not None:
                             raw_value = dp.value
                             self._pending_event_list.append(
-                                Event(
-                                    type, path, raw_value
-                                )
+                                Event(type, path, raw_value)
                             )
         except Exception as e:
             log.exception(e)
@@ -139,12 +138,22 @@ class MockService(BaseService):
         """Subscribe to mocked datapoints."""
         log.info("Subscribing to mocked datapoints...")
 
-        response_iter_target = self._client.subscribe_target_values(self._mocked_datapoints)
-        response_iter_current = self._client.subscribe_current_values(self._mocked_datapoints)
+        response_iter_target = self._client.subscribe_target_values(
+            self._mocked_datapoints
+        )
+        response_iter_current = self._client.subscribe_current_values(
+            self._mocked_datapoints
+        )
 
         self._executor = ThreadPoolExecutor()
-        self._executor.submit(self._mock_update_request_handler, response_iter_target, EVENT_KEY_ACTUATOR_TARGET)
-        self._executor.submit(self._mock_update_request_handler, response_iter_current, EVENT_KEY_VALUE)
+        self._executor.submit(
+            self._mock_update_request_handler,
+            response_iter_target,
+            EVENT_KEY_ACTUATOR_TARGET,
+        )
+        self._executor.submit(
+            self._mock_update_request_handler, response_iter_current, EVENT_KEY_VALUE
+        )
 
     def _set_datapoint(self, path: str, value: Any):
         """Set the value of a datapoint within databroker."""
@@ -154,10 +163,7 @@ class MockService(BaseService):
             # remove events set through set_datapoint
             event_to_remove = None
             for event in self._pending_event_list:
-                if (
-                    "value" == event.name
-                    and event.path == path
-                ):
+                if "value" == event.name and event.path == path:
                     event_to_remove = event
 
             if event_to_remove is not None:

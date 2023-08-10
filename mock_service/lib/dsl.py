@@ -17,10 +17,7 @@ from typing import Any, Callable, Dict, List, Optional
 from lib.action import Action, ActionContext, AnimationAction, SetAction
 from lib.animator import RepeatMode
 from lib.behavior import Behavior, ExecutionContext
-from lib.trigger import EventTriggerResult, Trigger, EventType, EventTrigger
-
-# Set the log level to suppress log messages because we call connect/disconnect of client quite often
-logging.getLogger("kuksa_client").setLevel(logging.WARNING)
+from lib.trigger import EventTrigger, EventTriggerResult, EventType, Trigger
 
 _mocked_datapoints: List[Dict] = list()
 _required_datapoint_paths: List[str] = list()
@@ -28,7 +25,7 @@ _required_datapoint_paths: List[str] = list()
 log = logging.getLogger("dsl")
 
 
-def mock_datapoint(path: str, initial_value: Any, behaviors: List[Behavior] = list()):
+def mock_datapoint(path: str, initial_value: Any, behaviors: List[Behavior] = None):
     """Mock a single datapoint.
 
     Args:
@@ -36,6 +33,8 @@ def mock_datapoint(path: str, initial_value: Any, behaviors: List[Behavior] = li
         initial_value (Any): The initial value the datapoint will assume on registration.
         behaviors (List[Behavior]): A list of programmed behaviors to execute for the mocked datapoint.
     """
+    if behaviors is None:
+        behaviors = []
     _mocked_datapoints.append(
         {"path": path, "initial_value": initial_value, "behaviors": behaviors}
     )
@@ -76,11 +75,15 @@ def get_datapoint_value(context: ExecutionContext, path: str, default: Any = 0) 
     if path not in _mocked_datapoints:
         _required_datapoint_paths.append(path)
     context.client.connect()
-    curr_vals = context.client.get_current_values([path, ])
+    curr_vals = context.client.get_current_values(
+        [
+            path,
+        ]
+    )
     context.client.disconnect()
-    if curr_vals[path] != None:
+    if curr_vals[path] is not None:
         return curr_vals[path].value
-    
+
     return default
 
 
@@ -104,14 +107,10 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
 
     if isinstance(value, str) and value.startswith("$"):
         if value == "$self":
-            action_context.execution_context.client.connect()
-            curr_vals = action_context.execution_context.client.get_current_values([action_context.datapoint.path,])
-            action_context.execution_context.client.disconnect()
-            if curr_vals[action_context.datapoint.path] != None:
-                return curr_vals[action_context.datapoint.path].value
-            else:
-                return 0 
-            
+            return get_datapoint_value(
+                action_context.execution_context, action_context.datapoint.path
+            )
+
         elif value == "$event.value":
             if isinstance(action_context.trigger, EventTriggerResult):
                 return action_context.trigger.get_event().value
@@ -120,13 +119,7 @@ def __resolve_value(action_context: ActionContext, value: Any) -> Any:
                     f"Unsupported literal: {value!r} in non event-triggered behavior!"
                 )
         elif value.startswith("$"):
-            action_context.execution_context.client.connect()
-            curr_vals = action_context.execution_context.client.get_current_values([value[1:],])
-            action_context.execution_context.client.disconnect()
-            if curr_vals[value[1:]] != None:
-                return curr_vals[value[1:]].value
-            else:
-                return 0 
+            return get_datapoint_value(action_context.execution_context, value[1:])
     return value
 
 
@@ -160,13 +153,14 @@ def create_animation_action(
     """
     return AnimationAction(duration, repeat_mode, values, __resolve_value)
 
-def create_EventTrigger(type: EventType, path: Optional[str] = None) -> EventTrigger:
-    """Create an EventTrigger for own VSS path or different one. It handles that events for the new VSS paths
-    are handled too and the EventTrigger works fine.
+
+def create_event_trigger(type: EventType, path: Optional[str] = None) -> EventTrigger:
+    """Create an EventTrigger for the mocked datapoint in context of this call OR the explicitly passed one.
 
     Args:
-        type (EvenType): The kind of event the EventTrigger shall be.
-        path (Optional[str]): Default None which represents same VSS path as the datapoint or new VSS path
+        type (EventType): The type of event which will activate the trigger.
+        path (Optional[str]): The data point which shall raise the event.
+            If not set defaults to the mocked data point in context of the call.
 
     Returns:
         EvenTrigger: The created EventTrigger.

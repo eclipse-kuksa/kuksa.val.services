@@ -11,17 +11,16 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
+from lib.animator import RepeatMode
 from lib.dsl import (
     create_animation_action,
     create_behavior,
+    create_event_trigger,
     create_set_action,
     get_datapoint_value,
     mock_datapoint,
-    create_EventTrigger,
 )
-from lib.trigger import ClockTrigger, EventTrigger, EventType
-
-from lib.animator import RepeatMode
+from lib.trigger import ClockTrigger, EventType
 
 mock_datapoint(
     path="Vehicle.Speed",
@@ -43,7 +42,7 @@ mock_datapoint(
     initial_value=0,
     behaviors=[
         create_behavior(
-            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
             action=create_animation_action(
                 duration=10.0,
                 values=["$self", "$event.value"],
@@ -57,7 +56,7 @@ mock_datapoint(
     initial_value="STOP_HOLD",
     behaviors=[
         create_behavior(
-            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
             action=create_set_action("$event.value"),
         )
     ],
@@ -68,7 +67,7 @@ mock_datapoint(
     initial_value=0,
     behaviors=[
         create_behavior(
-            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
             action=create_set_action("$event.value"),
         )
     ],
@@ -79,12 +78,40 @@ mock_datapoint(
     initial_value=0,
     behaviors=[
         create_behavior(
-            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET),
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
             condition=lambda ctx: get_datapoint_value(
                 ctx, "Vehicle.Body.Windshield.Front.Wiping.System.Mode"
             )
             == "EMERGENCY_STOP",
             action=create_set_action(0),
+        ),
+        create_behavior(
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
+            condition=lambda ctx: get_datapoint_value(
+                ctx, "Vehicle.Body.Windshield.Front.Wiping.System.Mode"
+            )
+            == "STOP_HOLD",
+            action=create_animation_action(
+                duration=10.0,
+                values=[
+                    "$self",
+                    "$Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition",
+                ],
+            ),
+        ),
+        create_behavior(
+            trigger=create_event_trigger(EventType.ACTUATOR_TARGET),
+            condition=lambda ctx: get_datapoint_value(
+                ctx, "Vehicle.Body.Windshield.Front.Wiping.System.Mode"
+            )
+            == "WIPE",
+            action=create_animation_action(
+                duration=10.0,
+                values=[
+                    "$self",
+                    "$Vehicle.Body.Windshield.Front.Wiping.System.TargetPosition",
+                ],
+            ),
         ),
     ],
 )
@@ -94,7 +121,8 @@ mock_datapoint(
     initial_value=False,
     behaviors=[
         create_behavior(
-            create_EventTrigger(EventType.ACTUATOR_TARGET), create_set_action("$event.value")
+            create_event_trigger(EventType.ACTUATOR_TARGET),
+            create_set_action("$event.value"),
         )
     ],
 )
@@ -104,12 +132,16 @@ mock_datapoint(
     initial_value="INACTIVE",
     behaviors=[
         create_behavior(
-            trigger=create_EventTrigger(EventType.VALUE, "Vehicle.Body.Lights.Brake.IsDefect"),
+            trigger=create_event_trigger(
+                EventType.VALUE, "Vehicle.Body.Lights.Brake.IsDefect"
+            ),
             action=create_set_action("INACTIVE"),
         ),
         create_behavior(
-            trigger=create_EventTrigger(EventType.ACTUATOR_TARGET, "Vehicle.Body.Lights.Brake.IsActive"),
+            trigger=create_event_trigger(
+                EventType.ACTUATOR_TARGET, "Vehicle.Body.Lights.Brake.IsActive"
+            ),
             action=create_set_action("$event.value"),
-        )
+        ),
     ],
 )

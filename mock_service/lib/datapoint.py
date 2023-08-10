@@ -33,13 +33,9 @@ class MockedDataPoint:
         self.is_mocked = is_mocked
         self.value_listener = value_listener
 
-    # Do we need this -> never used as of now
     def has_discrete_value_type(self):
         """Return if the datapoint has a discrete value type."""
-        return (
-            self.data_type == DataType.BOOLEAN
-            or self.data_type == DataType.STRING
-        )
+        return self.data_type == DataType.BOOLEAN or self.data_type == DataType.STRING
 
     def set_value(self, new_value):
         """Set the value of the datapoint."""

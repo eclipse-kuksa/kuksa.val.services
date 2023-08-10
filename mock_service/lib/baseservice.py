@@ -16,7 +16,6 @@ import logging
 import os
 import time
 from abc import ABC, abstractmethod
-from concurrent.futures import ThreadPoolExecutor
 from threading import Thread
 
 import grpc
@@ -26,8 +25,8 @@ log = logging.getLogger("base_service")
 
 # VehicleDataBroker address, overridden if "DAPR_GRPC_PORT" is set in environment
 VDB_ADDRESS = os.getenv("VDB_ADDRESS", "127.0.0.1:55555")
-VDB_IP = VDB_ADDRESS.split(':')[0]
-VDB_PORT = VDB_ADDRESS.split(':')[1]
+VDB_IP = VDB_ADDRESS.split(":")[0]
+VDB_PORT = VDB_ADDRESS.split(":")[1]
 
 
 def is_grpc_fatal_error(e: grpc.RpcError) -> bool:
@@ -95,7 +94,6 @@ class BaseService(ABC):
         pass
 
     async def close(self):
-        """Closes runtime gRPC channel."""
         self._client.disconnect()
 
     def __enter__(self) -> "BaseService":
