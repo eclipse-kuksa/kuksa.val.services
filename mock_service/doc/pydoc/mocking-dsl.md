@@ -9,7 +9,7 @@
 ```python
 def mock_datapoint(path: str,
                    initial_value: Any,
-                   behaviors: List[Behavior] = list())
+                   behaviors: List[Behavior] = None)
 ```
 
 Mock a single datapoint.
@@ -42,7 +42,7 @@ using Python DSL in order to derive required datapoints.
   and the condition evaluates to true. Defaults to None.
 - `condition` __type_, optional_ - A condition which needs to be fulfilled **AFTER**
   the trigger has activated in order to execute the action. Defaults to lambda_:True.
-  
+
 
 **Returns**:
 
@@ -65,7 +65,7 @@ Get the value of a datapoint or, if its not available yet, a default value is re
 - `context` _ExecutionContext_ - The execution context from which the datapoint can be retrieved.
 - `path` _str_ - The path of the VSS datapoint.
 - `default` _Any, optional_ - Optional default value if there is no value for the datapoint. Defaults to 0.
-  
+
 
 **Returns**:
 
@@ -85,7 +85,7 @@ for documentation of value resolution.
 **Arguments**:
 
 - `value` _Any_ - The value to set or a dynamic literal.
-  
+
 
 **Returns**:
 
@@ -111,31 +111,30 @@ See `__resolve_value` for documentation of value resolution.
 - `values` _List[Any]_ - The list of values to animate over. May contain dynamic values.
 - `duration` _float_ - The total duration of the animation in seconds.
 - `repeat_mode` _RepeatMode, optional_ - The repeat mode of the animation. Defaults to RepeatMode.ONCE.
-  
+
 
 **Returns**:
 
 - `AnimationAction` - The created AnimationAction.
 
-<a id="lib.dsl.create_EventTrigger"></a>
+<a id="lib.dsl.create_event_trigger"></a>
 
-#### create\_EventTrigger
+#### create\_event\_trigger
 
 ```python
-def create_EventTrigger(type: EventType,
-                        path: Optional[str] = None) -> EventTrigger
+def create_event_trigger(type: EventType,
+                         path: Optional[str] = None) -> EventTrigger
 ```
 
-Create an EventTrigger for own VSS path or different one. It handles that events for the new VSS paths
-are handled too and the EventTrigger works fine.
+Create an EventTrigger for the mocked datapoint in context of this call OR the explicitly passed one.
 
 **Arguments**:
 
-- `type` _EvenType_ - The kind of event the EventTrigger shall be.
-- `path` _Optional[str]_ - Default None which represents same VSS path as the datapoint or new VSS path
-  
+- `type` _EventType_ - The type of event which will activate the trigger.
+- `path` _Optional[str]_ - The data point which shall raise the event.
+  If not set defaults to the mocked data point in context of the call.
+
 
 **Returns**:
 
 - `EvenTrigger` - The created EventTrigger.
-
