@@ -70,5 +70,5 @@ API documentation is generated from Python docs and embedded into markdown files
 ```
 
 # What's not supported?
-Any form of array support e.g no VSS datapoint that has DataType.*ARRAY. 
-If you set something not through mock it won't get pulled to the mock service. Instead use another behavior that listens to ACTUATOR_TARGET/VALUE and set it like this.
+Any form of array support e.g no VSS datapoint that has DataType.*ARRAY.
+If values in Kuksa Databroker are modified outside of behaviors, the changes won't be picked up by the mock service. Instead try to model another behavior that listens to ACTUATOR_TARGET/VALUE and set it like this.
