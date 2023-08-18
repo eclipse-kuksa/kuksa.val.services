@@ -17,19 +17,18 @@ from unittest import mock
 from lib.action import SetAction
 from lib.behavior import Behavior
 from lib.trigger import ClockTrigger, EventTrigger, EventType
-from lib.types import ExecutionContext
-from kuksa_client.grpc import VSSClient
+from lib.types import ExecutionContext 
 
 def test_condition_function_true():
     cut = Behavior(ClockTrigger(0), condition=lambda _: True, action=SetAction(0))
-    context = ExecutionContext(None, None, 0.0)
+    context = ExecutionContext(None, None, 0.0, None)
 
     assert cut.is_condition_fulfilled(context)
 
 
 def test_condition_function_false():
     cut = Behavior(ClockTrigger(0), condition=lambda _: False, action=SetAction(0))
-    context = ExecutionContext(None, None, 0.0)
+    context = ExecutionContext(None, None, 0.0, None)
 
     assert not cut.is_condition_fulfilled(context)
 
