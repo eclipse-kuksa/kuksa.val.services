@@ -90,7 +90,7 @@ class PythonDslLoader(MockLoader):
                     # force execution of condition and action
                     # to identify and register all non-mocked, required datapoints
                     exe_context = ExecutionContext(
-                        datapoint["path"], list(), 0.0
+                        datapoint["path"], list(), 0.0, client
                     )
                     behavior.is_condition_fulfilled(exe_context)
 

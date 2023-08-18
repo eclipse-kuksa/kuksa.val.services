@@ -32,6 +32,18 @@ from lib.types import Event
 SERVICE_NAME = "mock_service"
 
 log = logging.getLogger(SERVICE_NAME)
+
+# Create a file handler and set the log file name
+file_handler = logging.FileHandler("mock_service.log")
+
+# Create a log formatter and set the format of log records
+formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+file_handler.setFormatter(formatter)
+
+# Add the file handler to the log
+log.addHandler(file_handler)
+
+
 event = threading.Event()
 
 # Set the log level to suppress log messages because we call connect/disconnect of client quite often
@@ -71,7 +83,7 @@ class MockService(BaseService):
             self._behaviors = loader_result.behavior_dict
 
             self._behavior_executor = BehaviorExecutor(
-                self._mocked_datapoints, self._behaviors, self._pending_event_list
+                self._mocked_datapoints, self._behaviors, self._pending_event_list, self._client
             )
             self._subscribe_to_mocked_datapoints()
             self._feed_initial_values()
