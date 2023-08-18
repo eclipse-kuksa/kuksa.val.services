@@ -14,24 +14,16 @@
 import logging
 from typing import Any, Callable, Dict, List
 
+from kuksa_client.grpc import VSSClient
 from lib.action import Action, ActionContext
 from lib.animator import Animator
 from lib.datapoint import MockedDataPoint
 from lib.trigger import Trigger, TriggerResult
 from lib.types import Event, ExecutionContext
 
-log = logging.getLogger("behavior")
-log.setLevel(logging.DEBUG)
+SERVICE_NAME = "mock_service"
 
-# Create a file handler and set the log file name
-file_handler = logging.FileHandler("mock_service.log")
-
-# Create a log formatter and set the format of log records
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-file_handler.setFormatter(formatter)
-
-# Add the file handler to the log
-log.addHandler(file_handler)
+log = logging.getLogger(SERVICE_NAME)
 
 
 class Behavior:
@@ -76,10 +68,12 @@ class BehaviorExecutor:
         mocked_datapoints: Dict[str, MockedDataPoint],
         behaviors: Dict[str, List[Behavior]],
         pending_event_list: List[Event],
+        client: VSSClient,
     ):
         self._mocked_datapoints = mocked_datapoints
         self._behaviors = behaviors
         self._pending_event_list = pending_event_list
+        self._client = client
 
     def execute(self, delta_time: float, animators):
         """Executes all behaviors in order given that their trigger has activated and their respective conditions are met."""
@@ -88,7 +82,7 @@ class BehaviorExecutor:
             matched_datapoint = self._mocked_datapoints[path]
             for behavior in behaviors:
                 execution_context = ExecutionContext(
-                    path, self._pending_event_list, delta_time
+                    path, self._pending_event_list, delta_time, self._client
                 )
                 if behavior.is_condition_fulfilled(
                         execution_context

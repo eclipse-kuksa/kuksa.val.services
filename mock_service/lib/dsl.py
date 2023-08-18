@@ -74,13 +74,11 @@ def get_datapoint_value(context: ExecutionContext, path: str, default: Any = 0) 
     """
     if path not in _mocked_datapoints:
         _required_datapoint_paths.append(path)
-    context.client.connect()
     curr_vals = context.client.get_current_values(
         [
             path,
         ]
     )
-    context.client.disconnect()
     if curr_vals[path] is not None:
         return curr_vals[path].value
 
