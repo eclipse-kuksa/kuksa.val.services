@@ -166,3 +166,34 @@ def create_event_trigger(type: EventType, path: Optional[str] = None) -> EventTr
     if path is not None:
         _required_datapoint_paths.append(path)
     return EventTrigger(type, path)
+
+
+def delete_behavior_of_mocked_datapoint(behavior: Behavior, path: str):
+    """Delete one behavior for a mocked datapoint
+
+    Args:
+        behavior (Behavior): The behavior which shall be removed.
+        path (str): The data point which behavior shall be removed.
+    """
+    for dict in _mocked_datapoints:
+        if path == dict['path']:
+            for saved in dict['behaviors']:
+                if saved == behavior:
+                    dict['behaviors'].remove(behavior)
+
+
+def delete_mocked_datapoint(path: str):
+    """Delete all behaviors for a mocked datapoint
+
+    Args:
+        path (str): The path for which all behaviors shall be removed.
+    """
+    for dict in _mocked_datapoints:
+        if path == dict['path']:
+            _mocked_datapoints.remove(dict)
+
+
+def delete_all_mocked_datapoints():
+    """Delete all mocked datapoints from the mock
+    """
+    _mocked_datapoints.clear()

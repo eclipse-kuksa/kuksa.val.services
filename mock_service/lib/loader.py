@@ -12,6 +12,7 @@
 # ********************************************************************************/
 
 import logging
+import os
 from abc import ABC, abstractmethod
 from typing import Dict, List, NamedTuple, Tuple
 
@@ -132,10 +133,11 @@ class PythonDslLoader(MockLoader):
         import importlib.util
         import sys
 
-        spec = importlib.util.spec_from_file_location("mock", "./mock.py")
-        mod = importlib.util.module_from_spec(spec)
-        sys.modules["mock"] = mod
-        spec.loader.exec_module(mod)
+        if os.path.exists("mock.py"):
+            spec = importlib.util.spec_from_file_location("mock", "./mock.py")
+            mod = importlib.util.module_from_spec(spec)
+            sys.modules["mock"] = mod
+            spec.loader.exec_module(mod)
 
         mocked_datapoints = self._load_mocked_datapoints(client)
         behaviors, required_datapoints = self._load_behaviors(

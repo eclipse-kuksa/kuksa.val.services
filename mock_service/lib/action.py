@@ -94,6 +94,7 @@ class AnimationAction(Action):
                 animators.remove(self._animator)
 
             self._animator = ValueAnimator(
+                action_context.datapoint.path,
                 self._resolved_values,
                 self._duration,
                 self._repeat_mode,
