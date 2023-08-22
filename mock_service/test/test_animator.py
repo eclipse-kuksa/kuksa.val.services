@@ -15,7 +15,7 @@ from lib.animator import RepeatMode, ValueAnimator
 
 
 def test_value_animator_no_repeat():
-    anim = ValueAnimator([0.0, 10.0], 10.0, RepeatMode.ONCE)
+    anim = ValueAnimator('Vehicle.Speed', [0.0, 10.0], 10.0, RepeatMode.ONCE)
     v0 = anim.value()
     anim.tick(5.0)
     v1 = anim.value()
@@ -32,7 +32,7 @@ def test_value_animator_no_repeat():
 
 
 def test_value_animator_repeat():
-    anim = ValueAnimator([0.0, 100.0], 10.0, RepeatMode.REPEAT)
+    anim = ValueAnimator('Vehicle.Speed', [0.0, 100.0], 10.0, RepeatMode.REPEAT)
     v0 = anim.value()
     anim.tick(5.0)
     v1 = anim.value()

@@ -43,3 +43,14 @@ class MockedDataPoint:
             self.value = new_value
             if self.value_listener is not None:
                 self.value_listener(self)
+    
+    def __eq__(self, other):
+        if isinstance(other, MockedDataPoint):
+            return (
+                self.path == other.path
+                and self.data_type == other.data_type
+            )
+        return False
+    
+    def __ne__(self, other):
+        return not self.__eq__(other)

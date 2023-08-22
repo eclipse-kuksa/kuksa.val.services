@@ -45,6 +45,7 @@ class ValueAnimator(Animator):
 
     def __init__(
         self,
+        path: str,
         values: List,
         duration: float,
         repeat_mode: RepeatMode,
@@ -65,6 +66,7 @@ class ValueAnimator(Animator):
         self._repeat_mode = repeat_mode
         self._value_update_callback = value_update_callback
         self._value = self._values[0]
+        self._path = path
 
     def tick(self, delta_time: float):
         if self._done:
@@ -87,6 +89,8 @@ class ValueAnimator(Animator):
     def value(self):
         if isinstance(self._values[0], int):
             return int(self._value)
+        elif isinstance(self._values[0], float):
+            return float(self._value)
         else:
             return self._value
 

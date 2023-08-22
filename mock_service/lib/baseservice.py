@@ -21,12 +21,10 @@ from threading import Thread
 import grpc
 from kuksa_client.grpc import VSSClient
 
-log = logging.getLogger("base_service")
+log = logging.getLogger("mock_service")
 
 # VehicleDataBroker address, overridden if "DAPR_GRPC_PORT" is set in environment
 VDB_ADDRESS = os.getenv("VDB_ADDRESS", "127.0.0.1:55555")
-VDB_IP = VDB_ADDRESS.split(":")[0]
-VDB_PORT = VDB_ADDRESS.split(":")[1]
 
 
 def is_grpc_fatal_error(e: grpc.RpcError) -> bool:
@@ -46,19 +44,21 @@ def is_grpc_fatal_error(e: grpc.RpcError) -> bool:
 class BaseService(ABC):
     """Base Service implementation which connects to the databroker."""
 
-    def __init__(self, service_address: str, service_name: str):
+    def __init__(self, service_address: str, service_name: str,  databroker_address: str = VDB_ADDRESS):
         super().__init__()
 
         if os.getenv("DAPR_GRPC_PORT") is not None:
             grpc_port = os.getenv("DAPR_GRPC_PORT")
             self._vdb_address = f"127.0.0.1:{grpc_port}"
         else:
-            self._vdb_address = VDB_ADDRESS
+            self._vdb_address = databroker_address
         self._address = service_address
         self._service_name = service_name
         self._connected = False
         self._shutdown = False
-        self._client = VSSClient(VDB_IP, VDB_PORT)
+        ip = self._vdb_address.split(':')[0]
+        port = self._vdb_address.split(':')[1]
+        self._client = VSSClient(ip, port)
         self._databroker_thread = Thread(
             target=self._connect_to_databroker, daemon=True, name="databroker-connector"
         )
@@ -94,6 +94,7 @@ class BaseService(ABC):
         pass
 
     async def close(self):
+        log.info("Disconnected")
         self._client.disconnect()
 
     def __enter__(self) -> "BaseService":

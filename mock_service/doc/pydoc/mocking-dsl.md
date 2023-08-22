@@ -139,3 +139,42 @@ Create an EventTrigger for the mocked datapoint in context of this call OR the e
 
 - `EvenTrigger` - The created EventTrigger.
 
+<a id="lib.dsl.delete_behavior_of_mocked_datapoint"></a>
+
+#### delete\_behavior\_of\_mocked\_datapoint
+
+```python
+def delete_behavior_of_mocked_datapoint(behavior: Behavior, path: str)
+```
+
+Delete one behavior for a mocked datapoint
+
+**Arguments**:
+
+- `behavior` _Behavior_ - The behavior which shall be removed.
+- `path` _str_ - The data point which behavior shall be removed.
+
+<a id="lib.dsl.delete_mocked_datapoint"></a>
+
+#### delete\_mocked\_datapoint
+
+```python
+def delete_mocked_datapoint(path: str)
+```
+
+Delete all behaviors for a mocked datapoint
+
+**Arguments**:
+
+- `path` _str_ - The path for which all behaviors shall be removed.
+
+<a id="lib.dsl.delete_all_mocked_datapoints"></a>
+
+#### delete\_all\_mocked\_datapoints
+
+```python
+def delete_all_mocked_datapoints()
+```
+
+Delete all mocked datapoints from the mock
+

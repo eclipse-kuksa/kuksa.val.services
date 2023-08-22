@@ -58,6 +58,18 @@ class Behavior:
     ):
         """Execute the programmed action."""
         self._action.execute(action_context, animators)
+    
+    def __eq__(self, other):
+        if isinstance(other, Behavior):
+            return (
+                type(self._trigger) == type(other._trigger)
+                and self._condition == other._condition
+                and type(self._action) == type(other._action)
+            )
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 class BehaviorExecutor:
