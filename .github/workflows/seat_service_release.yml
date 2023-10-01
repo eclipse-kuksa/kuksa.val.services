@@ -36,7 +36,7 @@ jobs:
       - name: adding github workspace as safe directory
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         shell: bash
@@ -69,7 +69,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Retrieve build binaries
         uses: actions/download-artifact@v3

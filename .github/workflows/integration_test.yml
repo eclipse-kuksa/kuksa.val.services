@@ -41,7 +41,7 @@ jobs:
           git config --global user.name "Github Automation"
 
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         shell: bash
