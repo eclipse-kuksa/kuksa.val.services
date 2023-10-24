@@ -11,11 +11,10 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-from typing import Any, Dict, List, NamedTuple
-
-from lib.datapoint import MockedDataPoint
+from typing import Any, List, NamedTuple
 
 from kuksa_client.grpc import VSSClient
+
 
 class Event(NamedTuple):
     """Structure for holding event data."""
@@ -29,6 +28,6 @@ class ExecutionContext(NamedTuple):
     """Context in which behaviors are executed"""
 
     calling_signal_path: str
-    pending_event_list: List[Event] 
+    pending_event_list: List[Event]
     delta_time: float
     client: VSSClient

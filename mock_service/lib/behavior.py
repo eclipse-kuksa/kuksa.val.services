@@ -12,14 +12,12 @@
 # ********************************************************************************/
 
 import logging
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable
 
-from kuksa_client.grpc import VSSClient
-from lib.action import Action, ActionContext
-from lib.animator import Animator
-from lib.datapoint import MockedDataPoint
+from lib.action import Action
 from lib.trigger import Trigger, TriggerResult
-from lib.types import Event, ExecutionContext
+from lib.types import ExecutionContext
+from lib.action import ActionContext
 
 SERVICE_NAME = "mock_service"
 
@@ -54,58 +52,18 @@ class Behavior:
     def execute(
         self,
         action_context: ActionContext,
-        animators: List[Animator],
     ):
         """Execute the programmed action."""
-        self._action.execute(action_context, animators)
-    
+        self._action.execute(action_context)
+
     def __eq__(self, other):
         if isinstance(other, Behavior):
             return (
-                type(self._trigger) == type(other._trigger)
+                self._trigger == other._trigger
                 and self._condition == other._condition
-                and type(self._action) == type(other._action)
+                and self._action == other._action
             )
         return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
-
-
-class BehaviorExecutor:
-    """Manager/executor for all behaviors."""
-
-    def __init__(
-        self,
-        mocked_datapoints: Dict[str, MockedDataPoint],
-        behaviors: Dict[str, List[Behavior]],
-        pending_event_list: List[Event],
-        client: VSSClient,
-    ):
-        self._mocked_datapoints = mocked_datapoints
-        self._behaviors = behaviors
-        self._pending_event_list = pending_event_list
-        self._client = client
-
-    def execute(self, delta_time: float, animators):
-        """Executes all behaviors in order given that their trigger has activated and their respective conditions are met."""
-
-        for path, behaviors in self._behaviors.items():
-            matched_datapoint = self._mocked_datapoints[path]
-            for behavior in behaviors:
-                execution_context = ExecutionContext(
-                    path, self._pending_event_list, delta_time, self._client
-                )
-                if behavior.is_condition_fulfilled(
-                        execution_context
-                    ):
-                    trigger_result = behavior.check_trigger(execution_context)
-                    if trigger_result.is_active():
-                        log.info(f"Running behavior for {path}")
-                        behavior.execute(
-                            ActionContext(
-                                trigger_result, execution_context, matched_datapoint
-                            ),
-                            animators,
-                        )
-                        break

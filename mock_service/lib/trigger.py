@@ -64,6 +64,11 @@ class Trigger(ABC):
         """Return if the trigger is recurring. If True it activates more than once."""
         pass
 
+    @abstractmethod
+    def __eq__(self, other) -> bool:
+        """Compare if the triggers are equal."""
+        pass
+
 
 class ClockTrigger(Trigger):
     """A clock-based trigger."""
@@ -100,6 +105,14 @@ class ClockTrigger(Trigger):
         """Reset the clock to make the trigger activate again."""
         self._time_left = self._interval_sec
         self._expired = False
+
+    def __eq__(self, other) -> bool:
+        """Compare if the triggers are equal."""
+        return (
+            isinstance(other, ClockTrigger)
+            and self._is_recurring == other._is_recurring
+            and self._interval_sec == self._interval_sec
+        )
 
 
 class EventType(Enum):
@@ -146,3 +159,11 @@ class EventTrigger(Trigger):
             execution_context.pending_event_list.remove(event_to_remove)
 
         return EventTriggerResult(event_to_remove is not None, event_to_remove)
+
+    def __eq__(self, other) -> bool:
+        """Compare if the triggers are equal."""
+        return (
+            isinstance(other, EventTrigger)
+            and self._datapoint_path == other._datapoint_path
+            and self._event_type == self._event_type
+        )

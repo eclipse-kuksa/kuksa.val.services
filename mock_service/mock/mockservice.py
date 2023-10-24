@@ -21,15 +21,15 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, Iterator, List
 
 import grpc
-from kuksa_client.grpc import Datapoint, Metadata
-from lib.animator import Animator
+from kuksa_client.grpc import Datapoint
 from lib.baseservice import BaseService, is_grpc_fatal_error
-from lib.behavior import Behavior, BehaviorExecutor
-from lib.datapoint import MockedDataPoint
+from lib.behaviorexecutor import BehaviorExecutor
+from lib.mockeddatapoint import MockedDataPoint
+from lib.datapoint import DataPoint
 from lib.loader import PythonDslLoader
 from lib.types import Event
-from lib.dsl import _mocked_datapoints
-from kuksa_client.grpc import Metadata, Datapoint
+from lib.action import AnimationAction
+from lib.dsl import _mocked_datapoints, _required_datapoint_paths
 
 SERVICE_NAME = "mock_service"
 
@@ -59,6 +59,8 @@ VDB_ADDRESS = os.getenv("VDB_ADDRESS", "127.0.0.1:55555")
 EVENT_KEY_ACTUATOR_TARGET = "actuator_target"
 EVENT_KEY_VALUE = "value"
 
+log.info(_mocked_datapoints)
+
 
 class MockService(BaseService):
     """Service implementation which reads custom mocking configuration
@@ -66,18 +68,14 @@ class MockService(BaseService):
     datapoints."""
 
     def __init__(self, service_address: str, databroker_address: str = VDB_ADDRESS):
-        log.info("Initiialization ...")
+        log.info("Initialization ...")
         super().__init__(service_address, SERVICE_NAME, databroker_address)
         self._ids: Dict[str, Any] = dict()
         self._registered = False
         self._last_tick = time.perf_counter()
         self._pending_event_list: List[Event] = list()
-        self._animators: List[Animator] = list()
-        self._vdb_metadata: Dict[str, Metadata] = dict()
         self._mocked_datapoints: Dict[str, MockedDataPoint] = dict()
-        self._behaviors: Dict[str, List[Behavior]] = dict()
 
-    # this will work if mock.py is provided
     def on_databroker_connected(self):
         """Callback when a connection to the data broker is established."""
         log.info("Databroker connected!")
@@ -86,50 +84,26 @@ class MockService(BaseService):
             self._feed_initial_values()
 
     # this will work on the fly
-    def check_for_new_mocks(self, changed = False):
-        loader_result = PythonDslLoader().load(self._client)
-
-        # search for new datapoints/behaviors
-
-        keys_only_in_loader_result_mocked_datapoints = set(loader_result.mocked_datapoints.keys()) - set(self._mocked_datapoints.keys())
-        keys_only_in__mocked_datapoints = set(self._mocked_datapoints.keys()) - set(loader_result.mocked_datapoints.keys())
-
-        if keys_only_in__mocked_datapoints or keys_only_in_loader_result_mocked_datapoints:
+    def check_for_new_mocks(self, changed=False):
+        new_datapoints = set([d["path"] for d in _mocked_datapoints if "path" in d] + _required_datapoint_paths)
+        if set(self._mocked_datapoints.keys()) != new_datapoints:
             changed = True
             log.info("Datapoint added/removed")
-
-        keys_only_in_loader_result_behavior_dict = set(loader_result.behavior_dict.keys()) - set(self._behaviors.keys())
-        keys_only_in__behaviors = set(self._behaviors.keys()) - set(loader_result.behavior_dict.keys())
-
-        if keys_only_in__behaviors or keys_only_in_loader_result_behavior_dict:
-            changed = True
-            log.info("Behavior added/removed")
-
-        # search for changes in existing datapoints/behaviors
-        for key, dp in loader_result.mocked_datapoints.items():
-            if key in self._mocked_datapoints:
-                if dp != self._mocked_datapoints[key]:
-                    log.info("Datapoint changed")
+        else:
+            for dict in _mocked_datapoints:
+                if dict["behaviors"] != self._mocked_datapoints[dict["path"]].behaviors:
                     changed = True
-
-        for key, behavior in loader_result.behavior_dict.items():
-            if key in self._behaviors:
-                if behavior != self._behaviors[key]:
-                    log.info("Behavior changed")
-                    changed = True
+                    log.info("Behavior added")
 
         if changed:
+            loader_result = PythonDslLoader().load(self._client)
             self._mocked_datapoints = loader_result.mocked_datapoints
-            for key in keys_only_in__mocked_datapoints:
-                for animator in self._animators:
-                    if animator._path == key:
-                        self._animators.remove(animator)             
+
             for _, datapoint in self._mocked_datapoints.items():
-                datapoint.value_listener = self._on_datapoint_updated
-            self._behaviors = loader_result.behavior_dict
+                datapoint.datapoint.value_listener = self._on_datapoint_updated
 
             self._behavior_executor = BehaviorExecutor(
-                self._mocked_datapoints, self._behaviors, self._pending_event_list, self._client
+                self._mocked_datapoints, self._pending_event_list, self._client
             )
             self._subscribe_to_mocked_datapoints()
             if self._registered is False:
@@ -143,15 +117,17 @@ class MockService(BaseService):
         try:
             while True:
                 self.check_for_new_mocks()
+
                 current_tick_time = time.perf_counter()
                 delta_time: float = current_tick_time - self._last_tick
-                self._behavior_executor.execute(delta_time, self._animators)
+                self._behavior_executor.execute(delta_time)
 
-                for animator in self._animators:
-                    if not animator.is_done():
-                        animator.tick(delta_time)
-                    else:
-                        self._animators.remove(animator)
+                for _, datapoint in self._mocked_datapoints.items():
+                    for behavior in datapoint.behaviors:
+                        action = behavior._action
+                        if type(action) is AnimationAction:
+                            if not action._animator.is_done():
+                                action._animator.tick(delta_time)
 
                 self._last_tick = time.perf_counter()
 
@@ -159,15 +135,15 @@ class MockService(BaseService):
         except Exception as exception:
             log.exception(exception)
 
-    def _on_datapoint_updated(self, datapoint: MockedDataPoint):
-        """Callback whenever the value of a mocked datapoint changes."""
+    def _on_datapoint_updated(self, datapoint: DataPoint):
+        """Callback whenever the value of a datapoint datapoint changes."""
         self._set_datapoint(datapoint.path, datapoint.value)
 
     def _feed_initial_values(self):
         """Provide initial values of all mocked datapoints to data broker."""
-        for datapoint in self._mocked_datapoints.values():
-            if datapoint.data_type is not None:
-                self._set_datapoint(datapoint.path, datapoint.value)
+        for mocked in self._mocked_datapoints.values():
+            if mocked.datapoint.data_type is not None:
+                self._set_datapoint(mocked.datapoint.path, mocked.datapoint.value)
 
     def _mock_update_request_handler(
         self,

@@ -35,9 +35,14 @@ def mock_datapoint(path: str, initial_value: Any, behaviors: List[Behavior] = No
     """
     if behaviors is None:
         behaviors = []
-    _mocked_datapoints.append(
-        {"path": path, "initial_value": initial_value, "behaviors": behaviors}
-    )
+
+    path_exists = any("path" in d and d["path"] == path for d in _mocked_datapoints)
+    if not path_exists:
+        _mocked_datapoints.append(
+            {"path": path, "initial_value": initial_value, "behaviors": behaviors}
+        )
+    else:
+        log.error("Datapoint already mocked please add behavior instead")
 
 
 def create_behavior(
@@ -61,6 +66,27 @@ def create_behavior(
     return Behavior(trigger, condition, action)
 
 
+def add_behavior(
+    behavior: Behavior,
+    path: str,
+):
+    """Add a given behavior to an already mocked datapoint
+
+    Args:
+        behavior (Behavior): The behavior that shall be added
+        path (str): The already mocked datapoint to whom shall be added
+    """
+    exist = False
+    for dict in _mocked_datapoints:
+        if dict["path"] == path:
+            dict["behaviors"].append(behavior)
+            exist = True
+            break
+
+    if not exist:
+        log.error("Not mocked please add the new datapoint")
+
+
 def get_datapoint_value(context: ExecutionContext, path: str, default: Any = 0) -> Any:
     """Get the value of a datapoint or, if its not available yet, a default value is returned.
 
@@ -72,7 +98,7 @@ def get_datapoint_value(context: ExecutionContext, path: str, default: Any = 0) 
     Returns:
         Any: The value of the datapoint at the specified path or the provided default value.
     """
-    if path not in _mocked_datapoints:
+    if path not in _required_datapoint_paths:
         _required_datapoint_paths.append(path)
     curr_vals = context.client.get_current_values(
         [
@@ -164,7 +190,8 @@ def create_event_trigger(type: EventType, path: Optional[str] = None) -> EventTr
         EvenTrigger: The created EventTrigger.
     """
     if path is not None:
-        _required_datapoint_paths.append(path)
+        if path not in _required_datapoint_paths:
+            _required_datapoint_paths.append(path)
     return EventTrigger(type, path)
 
 

@@ -10,14 +10,11 @@
 # *
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
-
-import unittest
-from unittest import mock
-
 from lib.action import SetAction
 from lib.behavior import Behavior
 from lib.trigger import ClockTrigger, EventTrigger, EventType
-from lib.types import ExecutionContext 
+from lib.types import ExecutionContext
+
 
 def test_condition_function_true():
     cut = Behavior(ClockTrigger(0), condition=lambda _: True, action=SetAction(0))
