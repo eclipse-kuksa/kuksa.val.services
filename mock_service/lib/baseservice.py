@@ -44,7 +44,7 @@ def is_grpc_fatal_error(e: grpc.RpcError) -> bool:
 class BaseService(ABC):
     """Base Service implementation which connects to the databroker."""
 
-    def __init__(self, service_address: str, service_name: str,  databroker_address: str = VDB_ADDRESS):
+    def __init__(self, service_address: str, service_name: str, databroker_address: str = VDB_ADDRESS):
         super().__init__()
 
         if os.getenv("DAPR_GRPC_PORT") is not None:

@@ -18,7 +18,7 @@ from lib.dsl import (
 )
 from lib.trigger import EventType
 
-# this will only work for VSS 3.1.1 
+# this will only work for VSS 3.1.1
 mock_datapoint(
     path="Vehicle.Cabin.Seat.Row1.Pos1.Position",
     initial_value=0,

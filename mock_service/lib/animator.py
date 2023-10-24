@@ -16,7 +16,10 @@ from enum import Enum
 from typing import Any, Callable, List
 
 import numpy
+import logging
 from scipy import interpolate
+
+log = logging.getLogger("animator")
 
 
 class RepeatMode(Enum):
@@ -39,13 +42,17 @@ class Animator(ABC):
         """Return True if the animator is done playing the animation."""
         pass
 
+    @abstractmethod
+    def __eq__(self, other) -> bool:
+        """Return True if the animator is equal."""
+        pass
+
 
 class ValueAnimator(Animator):
     """Animates between equally distanced values over time."""
 
     def __init__(
         self,
-        path: str,
         values: List,
         duration: float,
         repeat_mode: RepeatMode,
@@ -66,7 +73,6 @@ class ValueAnimator(Animator):
         self._repeat_mode = repeat_mode
         self._value_update_callback = value_update_callback
         self._value = self._values[0]
-        self._path = path
 
     def tick(self, delta_time: float):
         if self._done:
@@ -96,3 +102,15 @@ class ValueAnimator(Animator):
 
     def is_done(self) -> bool:
         return self._done
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, ValueAnimator)
+            and self._duration == other._duration
+            and self._anim_time == other._anim_time
+            and self._done == other._done
+            and self._repeat_mode == other._repeat_mode
+            and self._value == other._value
+            and self._value_update_callback == other._value_update_callback
+            and self._interpolation == other._interpolation
+        )

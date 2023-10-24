@@ -14,11 +14,12 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Dict, List, NamedTuple, Tuple
+from typing import Dict, NamedTuple
 
 from lib.action import ActionContext
 from lib.behavior import Behavior
-from lib.datapoint import MockedDataPoint
+from lib.datapoint import DataPoint
+from lib.mockeddatapoint import MockedDataPoint
 from lib.dsl import _mocked_datapoints, _required_datapoint_paths
 from lib.trigger import (
     ClockTrigger,
@@ -34,7 +35,6 @@ log = logging.getLogger("loader")
 
 class LoaderResult(NamedTuple):
     mocked_datapoints: Dict[str, MockedDataPoint]
-    behavior_dict: Dict[str, List[Behavior]]
 
 
 class MockLoader(ABC):
@@ -75,17 +75,16 @@ class PythonDslLoader(MockLoader):
 
     def _load_behaviors(
         self, client, mocked_datapoints: Dict[str, MockedDataPoint]
-    ) -> Tuple[Dict[str, List[Behavior]], Dict[str, MockedDataPoint]]:
+    ) -> Dict[str, MockedDataPoint]:
         required_datapoints: Dict[str, MockedDataPoint] = dict()
-        behavior_dict: Dict[str, List[Behavior]] = dict()
 
         for datapoint in _mocked_datapoints:
             metadata = client.get_metadata([datapoint['path'], ])[datapoint['path']]
 
             if self._has_supported_type(metadata.data_type):
-                behavior_dict[datapoint["path"]] = list()
+                mocked_datapoints[datapoint["path"]].behaviors = list()
                 for behavior in datapoint["behaviors"]:
-                    behavior_dict[datapoint["path"]].append(behavior)
+                    mocked_datapoints[datapoint["path"]].behaviors.append(behavior)
                     behavior: Behavior = behavior
 
                     # force execution of condition and action
@@ -108,14 +107,12 @@ class PythonDslLoader(MockLoader):
                         ActionContext(
                             trigger,
                             exe_context,
-                            MockedDataPoint(
+                            DataPoint(
                                 datapoint["path"],
-                                mocked_datapoints[datapoint["path"]].data_type,
-                                mocked_datapoints[datapoint["path"]].value,
-                                True,
+                                mocked_datapoints[datapoint["path"]].datapoint.data_type,
+                                mocked_datapoints[datapoint["path"]].datapoint.value,
                             ),
                         ),
-                        list(),
                     )
             else:
                 log.error(f"Mocked datapoint {datapoint['path']} has unsupported type!")
@@ -126,7 +123,7 @@ class PythonDslLoader(MockLoader):
                 mocked_datapoint = MockedDataPoint(required_dp, None, None, False)
                 required_datapoints[required_dp] = mocked_datapoint
 
-        return behavior_dict, required_datapoints
+        return required_datapoints
 
     def load(self, client) -> LoaderResult:
         """Load mocking configuration from Python script."""
@@ -140,7 +137,7 @@ class PythonDslLoader(MockLoader):
             spec.loader.exec_module(mod)
 
         mocked_datapoints = self._load_mocked_datapoints(client)
-        behaviors, required_datapoints = self._load_behaviors(
+        required_datapoints = self._load_behaviors(
             client, mocked_datapoints
         )
 
@@ -150,4 +147,4 @@ class PythonDslLoader(MockLoader):
             if key not in mocked_datapoints:
                 mocked_datapoints[key] = value
 
-        return LoaderResult(mocked_datapoints, behaviors)
+        return LoaderResult(mocked_datapoints)

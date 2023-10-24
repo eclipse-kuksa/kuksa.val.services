@@ -13,10 +13,10 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List, NamedTuple, Optional
+from typing import Any, Callable, List, Optional, NamedTuple
 
 from lib.animator import Animator, RepeatMode, ValueAnimator
-from lib.datapoint import MockedDataPoint
+from lib.datapoint import DataPoint
 from lib.trigger import TriggerResult
 from lib.types import ExecutionContext
 
@@ -28,7 +28,7 @@ class ActionContext(NamedTuple):
 
     trigger: TriggerResult
     execution_context: ExecutionContext
-    datapoint: MockedDataPoint
+    datapoint: DataPoint
 
 
 class Action(ABC):
@@ -38,14 +38,17 @@ class Action(ABC):
     def execute(
         self,
         action_context: ActionContext,
-        animators: List[Animator],
     ):
         """Execute the action with the given parameters.
 
         Args:
             action_context (ActionContext): The context in which the action is invoked.
-            animators (List[Animator]): A refernce to the list of all animators in the system. Can be used to add/remove animators.
         """
+        pass
+
+    @abstractmethod
+    def __eq__(self, other) -> bool:
+        """Compare if the actions are equal."""
         pass
 
 
@@ -83,26 +86,28 @@ class AnimationAction(Action):
     def execute(
         self,
         action_context: ActionContext,
-        animators: List[Animator],
     ):
         if not action_context.datapoint.has_discrete_value_type():
             if self._target_value_resolver is not None:
                 self._resolve_target_values(action_context)
 
-            # remove previous reference of this animator instance
-            if self._animator is not None and self._animator in animators:
-                animators.remove(self._animator)
-
             self._animator = ValueAnimator(
-                action_context.datapoint.path,
                 self._resolved_values,
                 self._duration,
                 self._repeat_mode,
                 lambda x: action_context.datapoint.set_value(x),
             )
-            animators.append(self._animator)
         else:
             log.error("Datapoint for animation has discrete value")
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, AnimationAction)
+            and self._duration == other._duration
+            and self._values == other._values
+            and self._repeat_mode == other._repeat_mode
+            and self._target_value_resolver == other._target_value_resolver
+        )
 
 
 class SetAction(Action):
@@ -121,7 +126,6 @@ class SetAction(Action):
     def execute(
         self,
         action_context: ActionContext,
-        _: List[Animator],
     ):
         self._resolved_value = self._value
         if self._target_value_resolver is not None:
@@ -130,3 +134,10 @@ class SetAction(Action):
             )
         if self._resolved_value is not None:
             action_context.datapoint.set_value(self._resolved_value)
+
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, SetAction)
+            and self._value == other._value
+            and self._target_value_resolver == other._target_value_resolver
+        )
