@@ -2,17 +2,15 @@
 
 # lib.datapoint
 
-<a id="lib.datapoint.MockedDataPoint"></a>
+<a id="lib.datapoint.DataPoint"></a>
 
-## MockedDataPoint Objects
+## DataPoint Objects
 
 ```python
-class MockedDataPoint()
+class DataPoint()
 ```
 
-Represents a mocked datapoint that was loaded and programmed with behaviors.
-
-<a id="lib.datapoint.MockedDataPoint.has_discrete_value_type"></a>
+<a id="lib.datapoint.DataPoint.has_discrete_value_type"></a>
 
 #### has\_discrete\_value\_type
 
@@ -22,7 +20,7 @@ def has_discrete_value_type()
 
 Return if the datapoint has a discrete value type.
 
-<a id="lib.datapoint.MockedDataPoint.set_value"></a>
+<a id="lib.datapoint.DataPoint.set_value"></a>
 
 #### set\_value
 

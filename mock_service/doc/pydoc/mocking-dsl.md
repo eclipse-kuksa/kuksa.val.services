@@ -48,6 +48,21 @@ using Python DSL in order to derive required datapoints.
 
 - `Behavior` - A new behavior with the given trigger, condition and action.
 
+<a id="lib.dsl.add_behavior"></a>
+
+#### add\_behavior
+
+```python
+def add_behavior(behavior: Behavior, path: str)
+```
+
+Add a given behavior to an already mocked datapoint
+
+**Arguments**:
+
+- `behavior` _Behavior_ - The behavior that shall be added
+- `path` _str_ - The already mocked datapoint to whom shall be added
+
 <a id="lib.dsl.get_datapoint_value"></a>
 
 #### get\_datapoint\_value

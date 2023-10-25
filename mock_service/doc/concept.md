@@ -171,7 +171,7 @@ classDiagram
     class Behavior {
         A single behavior which consists of a
         single condition and multiple actions
-        + tick()
+        + execute()
     }
 
     class Action {
@@ -185,6 +185,11 @@ classDiagram
         + evaluate(): bool
     }
 
+    class Animator {
+      Base class for animating one action
+      + tick()
+    }
+
     class BehaviorManager {
         Manages all loaded behaviors.
         + tick()
@@ -195,4 +200,5 @@ classDiagram
     BehaviorManager "1" *-- "1..n" Behavior
     Behavior *-- Condition
     Behavior *-- "1..n" Action
+    Action *-- Animator
 ```

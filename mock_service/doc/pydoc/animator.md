@@ -44,6 +44,17 @@ def is_done() -> bool
 
 Return True if the animator is done playing the animation.
 
+<a id="lib.animator.Animator.__eq__"></a>
+
+#### \_\_eq\_\_
+
+```python
+@abstractmethod
+def __eq__(other) -> bool
+```
+
+Return True if the animator is equal.
+
 <a id="lib.animator.ValueAnimator"></a>
 
 ## ValueAnimator Objects

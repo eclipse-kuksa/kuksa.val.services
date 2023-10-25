@@ -74,6 +74,17 @@ def is_recurring() -> bool
 
 Return if the trigger is recurring. If True it activates more than once.
 
+<a id="lib.trigger.Trigger.__eq__"></a>
+
+#### \_\_eq\_\_
+
+```python
+@abstractmethod
+def __eq__(other) -> bool
+```
+
+Compare if the triggers are equal.
+
 <a id="lib.trigger.ClockTrigger"></a>
 
 ## ClockTrigger Objects
@@ -105,6 +116,16 @@ def reset()
 ```
 
 Reset the clock to make the trigger activate again.
+
+<a id="lib.trigger.ClockTrigger.__eq__"></a>
+
+#### \_\_eq\_\_
+
+```python
+def __eq__(other) -> bool
+```
+
+Compare if the triggers are equal.
 
 <a id="lib.trigger.EventType"></a>
 
@@ -142,4 +163,14 @@ Creates a new trigger for the given event type.
 - `datapoint_path` _Optional[str], optional_ - The path of the datapoint which invokes the trigger.
   If not specified, the path of the parent mocked datapoint will be used instead.
   Defaults to None.
+
+<a id="lib.trigger.EventTrigger.__eq__"></a>
+
+#### \_\_eq\_\_
+
+```python
+def __eq__(other) -> bool
+```
+
+Compare if the triggers are equal.
 
