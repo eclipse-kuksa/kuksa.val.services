@@ -47,28 +47,8 @@ Return the type of the trigger.
 #### execute
 
 ```python
-def execute(action_context: ActionContext, animators: List[Animator])
+def execute(action_context: ActionContext)
 ```
 
 Execute the programmed action.
-
-<a id="lib.behavior.BehaviorExecutor"></a>
-
-## BehaviorExecutor Objects
-
-```python
-class BehaviorExecutor()
-```
-
-Manager/executor for all behaviors.
-
-<a id="lib.behavior.BehaviorExecutor.execute"></a>
-
-#### execute
-
-```python
-def execute(delta_time: float, animators)
-```
-
-Executes all behaviors in order given that their trigger has activated and their respective conditions are met.
 
