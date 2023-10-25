@@ -58,7 +58,7 @@ Configuration options have the following priority (highest at top):
 
 ### Mocking Configuration
 
-By default, the vehicle mock service reads the configuration for the datapoints to mock from the [`mock.py`](./mock.py) Python file at runtime. This file is a good starting point edit own mock configurations. 
+By default, the vehicle mock service reads the configuration for the datapoints to mock from the [`mock.py`](mock/mock.py) Python file at runtime. This file is a good starting point edit own mock configurations. 
 
 The default configuration contains behavior for:
 * `Vehicle.Speed`
@@ -81,6 +81,9 @@ The [API documentation](./doc/pydoc/mocking-dsl.md) is generated from Python doc
 ```bash
 ./update-api-docs.sh
 ```
+
+# Using mockservice dynamically
+To use the mockservice dynamically you need to use the same process. For an example see [test_mock.py](mock/test_mock.py).
 
 # What's not supported?
 Any form of array support e.g no VSS datapoint that has DataType.*ARRAY.
