@@ -39,22 +39,22 @@ RUN \
 RUN apt-get upgrade -y
 
 # Install dev utilities
-RUN apt-get -qqy install \
+RUN apt-get -qqy install --no-install-recommends \
   git \
   doxygen \
   can-utils
 
 # Install build tools
-RUN apt-get -qqy install \
+RUN apt-get -qqy install --no-install-recommends \
   cmake make ccache
 
 # compilers
 #   compiler version must be sync with conan build profile
-RUN apt-get -qqy install \
+RUN apt-get -qqy install --no-install-recommends \
   g++ \
   g++-aarch64-linux-gnu
 
-RUN apt-get -qqy install \
+RUN apt-get -qqy install --no-install-recommends \
   lcov \
 	gcovr \
 	clang-format \
@@ -74,18 +74,17 @@ RUN pip3 install --upgrade pip setuptools
 # cantools: code generation from .dbc file
 RUN pip3 install \
 	'conan==1.56.0' \
-	'cantools==37.0.1'
+	'cantools==37.0.1' \
+	'setuptools==68.2.2'
 
 # Install Rust tools and prerequists needed for the databroker
-RUN apt-get -y install \
-  curl jq
+# RUN apt-get -y install --no-install-recommends curl jq
 # RUN curl https://sh.rustup.rs -sSf | sh -s -- --profile default --default-toolchain 1.60 -y
 
 # Install python tools and prerequists needed for all python using subfolders
 COPY hvac_service/requirements-dev.txt hvac_service/requirements-dev.txt
 COPY integration_test/requirements-dev.txt integration_test/requirements-dev.txt
-RUN pip3 install \
-  -r hvac_service/requirements-dev.txt \
-  -r integration_test/requirements-dev.txt
+RUN pip3 install -U -r hvac_service/requirements-dev.txt
+RUN pip3 install -U -r integration_test/requirements-dev.txt
 
 WORKDIR /workspace
