@@ -37,7 +37,7 @@ namespace sdv {
 class SeatAdjuster;
 
 namespace broker_feeder {
-class CollectorClient;
+class KuksaClient;
 }
 
 namespace seat_service {
@@ -45,7 +45,8 @@ namespace seat_service {
 class SeatPositionSubscriber {
    public:
     SeatPositionSubscriber(std::shared_ptr<SeatAdjuster>,
-                           std::shared_ptr<broker_feeder::CollectorClient> collector_client);
+                           std::shared_ptr<broker_feeder::KuksaClient> kuksa_client,
+                           const std::string& seat_pos_name);
     /**
      * Starts the subscriber.
      * Note: This function will block the calling thread until it's terminated by
@@ -58,7 +59,7 @@ class SeatPositionSubscriber {
 
    private:
     std::shared_ptr<SeatAdjuster> seat_adjuster_;
-    std::shared_ptr<broker_feeder::CollectorClient> collector_client_;
+    std::shared_ptr<broker_feeder::KuksaClient> kuksa_client_;
     std::unique_ptr<grpc::ClientContext> subscriber_context_;
     std::string seat_pos_name_;
 

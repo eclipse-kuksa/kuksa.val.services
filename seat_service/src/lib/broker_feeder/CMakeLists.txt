@@ -44,7 +44,7 @@ execute_process (
 add_library(data_broker_feeder
   STATIC
     data_broker_feeder.cc
-    collector_client.cc
+    kuksa_client.cc
 )
 
 target_link_libraries(data_broker_feeder
@@ -69,6 +69,7 @@ protobuf_generate(
     cpp
   PROTOS
     ${PROTO_SOURCE_DIR}/sdv/databroker/v1/collector.proto
+    ${PROTO_SOURCE_DIR}/sdv/databroker/v1/broker.proto
     ${PROTO_SOURCE_DIR}/sdv/databroker/v1/types.proto
     ${PROTO_SOURCE_DIR}/kuksa/val/v1/val.proto
     ${PROTO_SOURCE_DIR}/kuksa/val/v1/types.proto
@@ -87,6 +88,7 @@ protobuf_generate(
     .grpc.pb.cc
   PROTOS
     ${PROTO_SOURCE_DIR}/sdv/databroker/v1/collector.proto
+    ${PROTO_SOURCE_DIR}/sdv/databroker/v1/broker.proto
     ${PROTO_SOURCE_DIR}/kuksa/val/v1/val.proto
   PLUGIN
     "protoc-gen-grpc=${GRPC_CPP_PLUGIN_PROGRAM_ENV}"
