@@ -29,11 +29,16 @@ fi
 
 # https://github.com/eclipse/kuksa.val/releases/download/0.3.0/databroker-cli-amd64.tar.gz
 
+DATABROKER_BINARY_ZIP="databroker-cli-$PROCESSOR_ALT.zip"
+DATABROKER_BINARY_NAME="databroker-cli-$PROCESSOR_ALT.tar.gz"
+
+DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_ZIP"
+#DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME"
+
 DATABROKER_BINARY_NAME="databroker-cli-$PROCESSOR_ALT.tar.gz"
 DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATABROKER_VERSION/$PROCESSOR_ALT"
-DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME"
 DATABROKERCLI_EXECUTABLE="$DATABROKER_BINARY_PATH/databroker-cli/databroker-cli"
 
-download_release "$DATABROKERCLI_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_NAME" || exit 1
+download_zip_release "$DATABROKERCLI_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_ZIP" "$DATABROKER_BINARY_NAME" || exit 1
 
 "$DATABROKERCLI_EXECUTABLE"

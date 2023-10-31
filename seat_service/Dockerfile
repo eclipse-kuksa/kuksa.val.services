@@ -11,7 +11,7 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-
+# DO NOT UPDATE ubuntu version, it must match the image used for building seat_service/bin_vservice-seat_*_release.*
 FROM --platform=$BUILDPLATFORM ubuntu:20.04 as builder
 
 ARG TARGETPLATFORM

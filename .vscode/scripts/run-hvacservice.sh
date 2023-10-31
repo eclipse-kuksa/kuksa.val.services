@@ -54,7 +54,7 @@ echo
 
 ## uncomment for dapr debug logs
 # DAPR_OPT="--enable-api-logging --log-level debug"1
-
+DAPR_OPT="--log-level warn"
 dapr run \
 	--app-id $HVACSERVICE_DAPR_APP_ID \
 	--app-protocol grpc \

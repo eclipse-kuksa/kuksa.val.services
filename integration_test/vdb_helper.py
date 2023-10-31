@@ -390,7 +390,7 @@ async def main() -> None:
     logging.basicConfig(format="<%(levelname)s>\t%(message)s", level=LOG_LEVEL)
 
     vdb_addr = os.environ.get("VDB_ADDR", "localhost:55555")
-    query = os.environ.get("QUERY", "SELECT Vehicle.Cabin.Seat.Row1.Pos1.Position")
+    query = os.environ.get("QUERY", "SELECT Vehicle.Cabin.Seat.Row1.DriverSide.Position")
     helper = VDBHelper(vdb_addr)
 
     await helper.subscribe_datapoints(

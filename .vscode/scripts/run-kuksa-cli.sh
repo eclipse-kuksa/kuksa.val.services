@@ -21,10 +21,16 @@ ROOT_DIRECTORY=$(git rev-parse --show-toplevel)
 # shellcheck source=/dev/null
 source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 
+KUKSACLIENT_VERSION=$(jq -r '.kuksa_client.version // empty' "$CONFIG_JSON")
+if [ -z "$KUKSACLIENT_VERSION" ]; then
+	echo "Coudln't find kuksa-client version from $CONFIG_JSON"
+	exit 1
+fi
+
 echo
-echo "Seat Service examples:"
-echo "  getMetaData Vehicle.Cabin.Seat.Row1.Pos1.Position"
-echo "  setTargetValue Vehicle.Cabin.Seat.Row1.Pos1.Position 200"
+echo "Seat Service examples [VSS4]:"
+echo "  getMetaData Vehicle.Cabin.Seat.Row1.DriverSide.Position"
+echo "  setTargetValue Vehicle.Cabin.Seat.Row1.DriverSide.Position 200"
 echo
 
 # set to 1 to use pypy kuksa-val package
@@ -36,5 +42,5 @@ if [ "$STANDALONE" = "1" ]; then
 	# prevent warning dumps
 	GRPC_ENABLE_FORK_SUPPORT=true kuksa-client --ip 127.0.0.1 --port "$DATABROKER_PORT" --protocol grpc --insecure
 else
-	docker run -it --rm -e GRPC_ENABLE_FORK_SUPPORT=true --net=host ghcr.io/eclipse/kuksa.val/kuksa-client:0.3.0 --ip 127.0.0.1 --port "$DATABROKER_PORT" --protocol grpc --insecure
+	docker run -it --rm -e GRPC_ENABLE_FORK_SUPPORT=true --net=host "ghcr.io/eclipse/kuksa.val/kuksa-client:$KUKSACLIENT_VERSION" --ip 127.0.0.1 --port "$DATABROKER_PORT" --protocol grpc --insecure
 fi

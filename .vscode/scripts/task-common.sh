@@ -102,6 +102,31 @@ download_release() {
 	return 0
 }
 
+download_zip_release() {
+	local executable="$1"
+	local download_url="$2"
+	local binary_path="$3"
+	local archive_name="$4"
+	local binary_name="$5"
+
+	if [ -f "$executable" ]; then
+		echo "  found: $executable"
+		return 0
+	fi
+	echo "- Downloading from: $download_url"
+	curl -s -o "$binary_path/$archive_name" --create-dirs -L -H "Accept: application/octet-stream" "$download_url"
+	echo "- Downloaded file : $(file $binary_path/$archive_name)"
+	echo "- Unzipping : $binary_path/$binary_name"
+	( cd "$binary_path" && unzip -o -q "$archive_name" )
+	echo "- Extracting : $binary_path/$binary_name"
+	tar xzf "$binary_path/$binary_name" -C "$binary_path"
+	if [ ! -x "$executable" ]; then
+		echo "$executable not found in $binary_path/$binary_name"
+		return 1
+	fi
+	return 0
+}
+
 # helper for checking out git branch
 git_checkout() {
 	local repo="$1"

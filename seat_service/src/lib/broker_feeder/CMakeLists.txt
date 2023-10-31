@@ -12,7 +12,7 @@
 #*******************************************************************************/
 
 # Data Broker Proto file
-set(PROTO_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../proto/)
+set(PROTO_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../proto)
 
 find_package(Protobuf REQUIRED)
 find_package(gRPC REQUIRED)
