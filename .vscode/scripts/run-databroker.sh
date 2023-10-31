@@ -41,12 +41,17 @@ if [ -z "$DATABROKER_VERSION" ]; then
 fi
 
 # https://github.com/eclipse/kuksa.val/releases/download/0.3.0/databroker-amd64.tar.gz
+
+### change introduced since databroker 0.3.0 release, zip file containing tar.gz
+# https://github.com/eclipse/kuksa.val/releases/download/0.4.0/databroker-amd64.zip
+
+DATABROKER_BINARY_ZIP="databroker-$PROCESSOR_ALT.zip"
 DATABROKER_BINARY_NAME="databroker-$PROCESSOR_ALT.tar.gz"
 DATABROKER_BINARY_PATH="$ROOT_DIRECTORY/.vscode/scripts/assets/databroker/$DATABROKER_VERSION/$PROCESSOR_ALT"
 DATABROKER_EXECUTABLE="$DATABROKER_BINARY_PATH/databroker/databroker"
-DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_NAME"
+DOWNLOAD_URL="https://github.com/eclipse/kuksa.val/releases/download/$DATABROKER_VERSION/$DATABROKER_BINARY_ZIP"
 
-download_release "$DATABROKER_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_NAME" || exit 1
+download_zip_release "$DATABROKER_EXECUTABLE" "$DOWNLOAD_URL" "$DATABROKER_BINARY_PATH" "$DATABROKER_BINARY_ZIP" "$DATABROKER_BINARY_NAME" || exit 1
 
 ### Data Broker environment setup ###
 
@@ -55,13 +60,17 @@ export RUST_LOG="debug,databroker=debug,vehicle_data_broker=debug,h2=info"
 ##export GRPC_TRACE=all,-timer,-timer_check
 ##export GRPC_VERBOSITY=DEBUG
 
-## Uncomment to preregister vehicle model metadata in vss.json
-DATABROKER_METADATA="--metadata $DATABROKER_BINARY_PATH/vss.json"
+### pre-load vss json versions
+if [ ! -f $DATABROKER_BINARY_PATH/vss3.json ] || [ ! -f $DATABROKER_BINARY_PATH/vss4.json ]; then
+	echo "# Downloading $DATABROKER_BINARY_PATH/vss*.json ..."
+	wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_3.0.json" -O "$DATABROKER_BINARY_PATH/vss3.json"
+	wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_4.0.json" -O "$DATABROKER_BINARY_PATH/vss4.json"
+fi
 
-### handle vss json
-if [ -n "$DATABROKER_METADATA" ] && [ ! -f $DATABROKER_BINARY_PATH/vss.json ]; then
-	echo "# Downloading $DATABROKER_BINARY_PATH/vss.json ..."
-	wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_3.0.json" -O "$DATABROKER_BINARY_PATH/vss.json"
+if [ "$USE_VSS3" = "1" ]; then
+	DATABROKER_METADATA="--metadata $DATABROKER_BINARY_PATH/vss3.json"
+else
+	DATABROKER_METADATA="--metadata $DATABROKER_BINARY_PATH/vss4.json"
 fi
 
 echo
@@ -78,13 +87,14 @@ echo
 ## Uncomment for dapr debug logs
 # DAPR_OPT="--enable-api-logging --log-level debug"
 
+DAPR_OPT="--log-level warn"
 dapr run \
-	--app-id $VEHICLEDATABROKER_DAPR_APP_ID \
+	--app-id "$VEHICLEDATABROKER_DAPR_APP_ID" \
 	--app-protocol grpc \
 	--app-port $DATABROKER_PORT \
 	--dapr-grpc-port $DATABROKER_GRPC_PORT \
 	$DAPR_OPT \
-	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml \
+	--components-path "$ROOT_DIRECTORY/.dapr/components" \
+	--config "$ROOT_DIRECTORY/.dapr/config.yaml" \
 	& # -- \
 $DATABROKER_EXECUTABLE --address 0.0.0.0 $DATABROKER_METADATA

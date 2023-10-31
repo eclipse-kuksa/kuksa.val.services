@@ -20,16 +20,29 @@ GEN_DIR="./gen_proto"
 
 [ -d "$GEN_DIR" ] || mkdir -p "$GEN_DIR"
 
-DATABROKER_PROTO="../kuksa_data_broker/proto"
+DATABROKER_PROTO="$SCRIPT_DIR/../proto"
 
 if [ ! -d "$DATABROKER_PROTO" ]; then
 	echo "Warning! Can't find DataBroker proto dir in: $DATABROKER_PROTO"
 	exit 1
 fi
 
+if [ "$1" = "--force" ]; then
+	echo "# get proto files from master:"
+	set -x
+	curl -o $DATABROKER_PROTO/kuksa/val/v1/types.proto --create-dirs https://raw.githubusercontent.com/eclipse/kuksa.val/master/proto/kuksa/val/v1/types.proto
+	curl -o $DATABROKER_PROTO/kuksa/val/v1/val.proto --create-dirs https://raw.githubusercontent.com/eclipse/kuksa.val/master/proto/kuksa/val/v1/val.proto
+	curl -o $DATABROKER_PROTO/kuksa/val/v1/README.md --create-dirs https://raw.githubusercontent.com/eclipse/kuksa.val/master/proto/kuksa/val/v1/README.md
+
+	curl -o $DATABROKER_PROTO/sdv/databroker/v1/broker.proto --create-dirs  https://raw.githubusercontent.com/eclipse/kuksa.val/master/kuksa_databroker/proto/sdv/databroker/v1/broker.proto
+	curl -o $DATABROKER_PROTO/sdv/databroker/v1/collector.proto --create-dirs  https://raw.githubusercontent.com/eclipse/kuksa.val/master/kuksa_databroker/proto/sdv/databroker/v1/collector.proto
+	curl -o $DATABROKER_PROTO/sdv/databroker/v1/types.proto --create-dirs  https://raw.githubusercontent.com/eclipse/kuksa.val/master/kuksa_databroker/proto/sdv/databroker/v1/types.proto
+	curl -o $DATABROKER_PROTO/sdv/databroker/v1/README.md --create-dirs  https://raw.githubusercontent.com/eclipse/kuksa.val/master/kuksa_databroker/proto/sdv/databroker/v1/README.md
+fi
+
 # make sure deps are installed
 echo "# Installing requirements-dev.txt ..."
-pip3 install -q -r requirements-dev.txt
+pip3 install -q -U -r requirements-dev.txt
 #pip3 install -q -r requirements.txt
 
 set -xe

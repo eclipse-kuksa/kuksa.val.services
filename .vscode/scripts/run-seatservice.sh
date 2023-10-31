@@ -89,14 +89,14 @@ echo
 
 ## Uncomment for dapr debug logs
 # DAPR_OPT="--enable-api-logging --log-level debug"
-
+DAPR_OPT="--log-level warn"
 dapr run \
 	--app-id "$SEATSERVICE_DAPR_APP_ID" \
 	--app-protocol grpc \
 	--app-port $SEATSERVICE_PORT \
 	--dapr-grpc-port $SEATSERVICE_GRPC_PORT \
 	$DAPR_OPT \
-	--components-path $ROOT_DIRECTORY/.dapr/components \
-	--config $ROOT_DIRECTORY/.dapr/config.yaml \
-	-- \
-	$SEATSERVICE_EXEC_PATH/val_start.sh
+	--components-path "$ROOT_DIRECTORY/.dapr/components" \
+	--config "$ROOT_DIRECTORY/.dapr/config.yaml" \
+	& # -- \
+"$SEATSERVICE_EXEC_PATH/val_start.sh"

@@ -44,7 +44,7 @@ Make sure `test_feeder.py` datapoints are available (and changing each second) i
 
   Environment:
     'BROKER_ADDR' Default: localhost:55555
-    'QUERY'       SQL datapoint query. ('*' = subscribe for all meta). Default: SELECT Vehicle.Cabin.Seat.Row1.Pos1.Position
+    'QUERY'       SQL datapoint query. ('*' = subscribe for all meta). Default: SELECT Vehicle.Cabin.Seat.Row1.DriverSide.Position
     'COUNT'       Receive specified count of events and exit (0=inf)
     'TIMEOUT'     Abort receiving if no data comes for specified timeout in seconds (0=inf)
     'META'        Comma separated list of datapoint names to query. ('*' = all meta)
