@@ -5,6 +5,8 @@
   - [Contribution](#contribution)
   - [Build Seat Service Containers](#build-seat-service-containers)
   - [Running Seat Service / Data Broker Containers](#running-seat-service--data-broker-containers)
+  - [KUKSA.val and VSS version dependency](#kuksaval-and-vss-version-dependency)
+    - [Known locations where an explicit VSS or KUKSA.val version is mentioned](#known-locations-where-an-explicit-vss-or-kuksaval-version-is-mentioned)
 
 ## Overview
 
@@ -133,23 +135,40 @@ Some code in the repository (like [Proto](https://github.com/eclipse/kuksa.val.s
 have been copied from [KUKSA.val](https://github.com/eclipse/kuksa.val).
 
 This means that regressions may occur when KUKSA.val or KUKSA.val Feeders are updated. The intention for other KUKSA.val
-repositories is to use the latest official VSS release as default.
+repositories is to use the latest official VSS release as default. There is a script for manual updating of KUKSA.val proto files:
+[update-protobuf.sh](./integration_test/update-protobuf.sh).
 
-As of today the services are based on using VSS 3.X. As part of VSS 4.0 the instance scheme for seat positions was
-changed to be based on DriverSide/Middle/PassengerSide rather than Pos1, Pos2, Pos3.
-This means a refactoring would be required to update to VSS 4.0.
+```bash
+cd integration_test/
+./update-protobuf.sh --force
+```
+
+Seat Service currently supports 2 modes: (VSS 3.X and 4.0).
+As part of VSS 4.0 the instance scheme for seat positions was changed to be based on
+`DriverSide/Middle/PassengerSide` rather than `Pos1, Pos2, Pos3`.
+
+By default Seat Service uses VSS 4.0 seat position, but for older dependencies it can be changed to
+VSS 3.X compatible by setting Environment variable `VSS=3` for seat service container / cmdline.
 
 ### Known locations where an explicit VSS or KUKSA.val version is mentioned
 
-In [integration_test.yml](https://github.com/eclipse/kuksa.val.services/blob/main/.github/workflows/integration_test.yml)
-it is hardcoded which VSS version to use when starting Databroker.
+- In [integration_test.yml](./.github/workflows/integration_test.yml)
+Uncomment the following line to force VSS 3.X version support in databroker.
+`# KDB_OPT: "--vss vss_release_3.1.1.json"`
 
-`KDB_OPT: "--vss vss_release_3.1.1.json"`
+- In [run-databroker.sh](./.vscode/scripts/run-databroker.sh)
+The script gets both VSS3 and 4 json files from KUKSA.val master and starts databroker with the correct version, based on environment variable `USE_VSS3=1`:
 
-In [run-databroker.sh](https://github.com/eclipse/kuksa.val.services/blob/main/.vscode/scripts/run-databroker.sh)
-it is hardcoded to use VSS 3.0.
+    ```bash
+    wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_3.0.json" -O "$DATABROKER_BINARY_PATH/vss3.json"
+    wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_4.0.json" -O "$DATABROKER_BINARY_PATH/vss4.json"
+    ```
 
-`wget -q "https://raw.githubusercontent.com/eclipse/kuksa.val/master/data/vss-core/vss_release_3.0.json" -O "$DATABROKER_BINARY_PATH/vss.json"`
-
-In [prerequisite_settings.json](https://github.com/eclipse/kuksa.val.services/blob/main/prerequisite_settings.json)
+- In [prerequisite_settings.json](./prerequisite_settings.json)
 hardcoded versions are mentioned for KUKSA.val Databroker, KUKSA.val DBC Feeder and KUKSA.val Client.
+
+- In [test_val_seat.py](./integration_test/test_val_seat.py). Tests for proper seat position datapoint, according to environment variable `USE_VSS3`.
+
+- In Seat Service [main.cc](./seat_service/src/bin/seat_service/main.cc): 2 different Datapoint sets are registered, based on environment variable `VSS` (`3` or `4`).
+
+**NOTE:** Above mentioned locations should be checked for breaking VSS changes on master.
