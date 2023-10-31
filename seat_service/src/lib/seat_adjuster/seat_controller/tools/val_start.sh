@@ -83,13 +83,15 @@ fi
 
 ### DataFeeder configuration ###
 
-# DataFeeder debug (=2 for verbose)
+# DataFeeder debug (=2 for verbose, 5=GRPC raw dumps)
 [ -z "$DBF_DEBUG" ] && DBF_DEBUG=0
 # If needed to set 'dapr-app-id'
 #VEHICLEDATABROKER_DAPR_APP_ID=
 
-### Seat Service properties ###
-[ -z "$SEAT_DEBUG" ] && SEAT_DEBUG=1
+### Seat Service properties
+[ -z "$SEAT_DEBUG" ] && SEAT_DEBUG=1 # =2 for verbose, 5=GRPC raw dumps)
+# Seat service VSS version support [3, 4], default: 4
+[ -z "$VSS" ] && VSS=4
 
 # uncomment for grpc troubleshooting
 #export GRPC_VERBOSITY="INFO"

@@ -24,20 +24,25 @@
 
 #include <memory>
 
+#include "data_broker_feeder.h"
+
 namespace sdv {
 
 // fwd decl
 class SeatAdjuster;
 namespace broker_feeder {
     class DataBrokerFeeder;
-    class CollectorClient;
+    class KuksaClient;
 }
 
 namespace seat_service {
 
 class SeatDataFeeder {
 public:
-    SeatDataFeeder(std::shared_ptr<SeatAdjuster>, std::shared_ptr<broker_feeder::CollectorClient> collector_client);
+    SeatDataFeeder(std::shared_ptr<SeatAdjuster>,
+                   std::shared_ptr<sdv::broker_feeder::KuksaClient> collector_client,
+                   std::string& seat_pos_name,
+                   sdv::broker_feeder::DatapointConfiguration&& dpConfig);
     /**
      * Starts the feeder trying to connect to the data broker, registering data points
      * and sending data point updates to the broker.
@@ -49,8 +54,9 @@ public:
     /** Terminates the running feeder */
     void Shutdown();
 private:
+    bool vss_4_;
     std::shared_ptr<SeatAdjuster> seat_adjuster_;
-    std::shared_ptr<broker_feeder::DataBrokerFeeder> broker_feeder_;
+    std::shared_ptr<sdv::broker_feeder::DataBrokerFeeder> broker_feeder_;
 };
 
 }  // namespace seat_service
