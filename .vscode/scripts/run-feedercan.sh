@@ -86,7 +86,7 @@ echo
 
 ## Uncomment for dapr debug logs
 # DAPR_OPT="--enable-api-logging --log-level debug"
-
+DAPR_OPT="--log-level warn"
 dapr run \
 	--app-id "$FEEDERCAN_DAPR_APP_ID" \
 	--app-protocol grpc \

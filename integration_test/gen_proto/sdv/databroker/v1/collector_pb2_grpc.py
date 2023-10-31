@@ -35,8 +35,8 @@ class CollectorServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def RegisterDatapoints(self, request, context):
-        """A feeder (provider) shall call this as a first step to announce its "owned" data points
-        to the Data Broker.
+        """Register new datapoint (metadata)
+
         If the registration of at least one of the passed data point fails, the overall registration
         is rejected and the gRPC status code ABORTED is returned (to indicate the "aborted" registration).
         The details, which data point(s) caused the failure and the reason, is passed in back in human-
@@ -53,17 +53,7 @@ class CollectorServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def UpdateDatapoints(self, request, context):
-        """TODO: Convert RegisterDatapointsReply into a stream in order to be able to communicate
-        subscription state (i.e. if there are subscribing clients)
-        or
-        Use a separate function (typically immediately) called after successful
-        registration of datapoints, e.g.:
-
-        rpc GetSubscriptionStates(<list of ids>) returns (stream SubscriptionStatesReply);
-        or
-        rpc ProvideDatapoints(ProvideDatapointsRequest) returns (stream ProvideDatapointsReply);
-
-        Provide a set of updated datapoint values to the broker.
+        """Provide a set of updated datapoint values to the broker.
         This is the unary equivalent of `StreamDatapoints` below and is better suited for cases
         where the frequency of updates is rather low.
 

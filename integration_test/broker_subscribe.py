@@ -26,7 +26,7 @@ from gen_proto.sdv.databroker.v1 import broker_pb2
 from gen_proto.sdv.databroker.v1.broker_pb2_grpc import BrokerStub
 from gen_proto.sdv.databroker.v1.types_pb2 import DataType
 
-SEAT_POS = "Vehicle.Cabin.Seat.Row1.Pos1.Position"
+SEAT_POS = "Vehicle.Cabin.Seat.Row1.DriverSide.Position"
 
 # allow log level change via 'LOG_LEVEL' env. var
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")

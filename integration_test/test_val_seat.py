@@ -27,6 +27,12 @@ logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
 
 # Env USE_DAPR forces usage of vscode tasks and scripts using 'dapr run' with predefined ports
 USE_DAPR = os.getenv("USE_DAPR", "1") != "0"
+USE_VSS3 = os.getenv("USE_VSS3", "0") != "0"
+
+if USE_VSS3:
+    DEFAULT_VSS_PATH = "Vehicle.Cabin.Seat.Row1.Pos1.Position"
+else:
+    DEFAULT_VSS_PATH = "Vehicle.Cabin.Seat.Row1.DriverSide.Position"
 
 if USE_DAPR:
     DEFAULT_VDB_ADDRESS = "localhost:55555"
@@ -64,7 +70,7 @@ async def setup_helper() -> VDBHelper:
 @pytest.mark.asyncio
 async def test_vdb_metadata_get(setup_helper: VDBHelper) -> None:
     helper = setup_helper
-    name = os.getenv("TEST_NAME", "Vehicle.Cabin.Seat.Row1.Pos1.Position")
+    name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
 
     meta = await helper.get_vdb_metadata()
     logger.debug("# get_vdb_metadata() -> \n{}".format(str(meta).replace("\n", " ")))
@@ -90,7 +96,7 @@ async def test_vdb_metadata_get(setup_helper: VDBHelper) -> None:
 @pytest.mark.asyncio
 async def test_subscribe_seat_pos_0(setup_helper: VDBHelper) -> None:
     helper: VDBHelper = setup_helper
-    name = os.getenv("TEST_NAME", "Vehicle.Cabin.Seat.Row1.Pos1.Position")
+    name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
     query = "SELECT {}".format(name)
 
     start_value = int(os.getenv("TEST_START_VALUE", "500"))
@@ -150,7 +156,7 @@ async def test_subscribe_seat_pos_0(setup_helper: VDBHelper) -> None:
 async def test_subscribe_seat_pos_where_eq(setup_helper: VDBHelper) -> None:
     helper = setup_helper
 
-    name = os.getenv("TEST_NAME", "Vehicle.Cabin.Seat.Row1.Pos1.Position")
+    name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
     expected_value = int(os.getenv("TEST_VALUE", "1000"))
     timeout = int(os.getenv("TEST_TIMEOUT", "10"))
 
@@ -207,7 +213,7 @@ async def test_subscribe_seat_pos_where_eq(setup_helper: VDBHelper) -> None:
 async def test_subscribe_seat_pos_where_error(setup_helper: VDBHelper) -> None:
     helper = setup_helper
 
-    name = os.getenv("TEST_NAME", "Vehicle.Cabin.Seat.Row1.Pos1.Position")
+    name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
     expected_value = int(os.getenv("TEST_VALUE", "-42"))
     timeout = int(os.getenv("TEST_TIMEOUT", "10"))
     query = "SELECT {} where <invalid>".format(name)
