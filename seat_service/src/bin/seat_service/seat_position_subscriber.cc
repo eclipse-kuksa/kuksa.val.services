@@ -20,36 +20,44 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <thread>
 
-#include "collector_client.h"
+#include "kuksa_client.h"
 #include "seat_adjuster.h"
+
+extern int debug;
 
 namespace sdv {
 namespace seat_service {
 
 SeatPositionSubscriber::SeatPositionSubscriber(std::shared_ptr<SeatAdjuster> seat_adjuster,
-                                               std::shared_ptr<broker_feeder::CollectorClient> collector_client)
+                                               std::shared_ptr<broker_feeder::KuksaClient> kuksa_client,
+                                               const std::string& seat_pos_name)
     : seat_adjuster_(seat_adjuster)
-    , collector_client_(collector_client)
-    , running_(false) {
-    /* Define datapoints (metadata) of seat service
-     */
-    seat_pos_name_ = "Vehicle.Cabin.Seat.Row1.Pos1.Position";
+    , kuksa_client_(kuksa_client)
+    , seat_pos_name_(seat_pos_name)
+    , running_(false)
+{
+    /* Define datapoints (metadata) of seat service */
+    std::cout << "SeatPositionSubscriber(" << seat_pos_name_ << ") initialized" << std::endl;
 }
 
 void SeatPositionSubscriber::Run() {
     std::cout << "SeatPositionSubscriber::Run()" << std::endl;
 
     running_ = true;
+    int failures = 0; // subscribe errors, if too many subscriber is disabled!
     while (running_) {
-        auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(2);
-        if (!collector_client_->WaitForConnected(deadline)) {
-            std::cout << "SeatPositionSubscriber: not connected" << std::endl;
+        auto deadline = std::chrono::system_clock::now() + std::chrono::seconds(3);
+        if (!kuksa_client_->WaitForConnected(deadline)) {
+            if (debug > 1) {
+                std::cout << "SeatPositionSubscriber: not connected." << std::endl;
+            }
             continue;
         }
 
-        std::cout << "SeatPositionSubscriber: connected" << std::endl;
+        std::cout << "SeatPositionSubscriber: connected." << std::endl;
 
         kuksa::val::v1::SubscribeRequest request;
         {
@@ -59,10 +67,23 @@ void SeatPositionSubscriber::Run() {
         }
 
         kuksa::val::v1::SubscribeResponse response;
-        subscriber_context_ = collector_client_->createClientContext();
+        subscriber_context_ = kuksa_client_->createClientContext();
+        if (debug > 1) {
+            std::cout << "SeatPositionSubscriber: Subscribe(" << seat_pos_name_ << ")" << std::endl;
+        }
         std::unique_ptr<::grpc::ClientReader<kuksa::val::v1::SubscribeResponse>> reader(
-            collector_client_->Subscribe(subscriber_context_.get(), request));
+            kuksa_client_->Subscribe(subscriber_context_.get(), request));
+        if (debug > 4) {
+            std::ostringstream os;
+            os << "[GRPC]  VAL.Subscribe(" << request.ShortDebugString() << ")";
+            std::cout << os.str() << std::endl;
+        }
         while (reader->Read(&response)) {
+            if (debug > 4) {
+                std::ostringstream os;
+                os << "[GRPC]  VAL.ClientReader() -> \n  " << response.ShortDebugString();
+                std::cout << os.str() << std::endl;
+            }
             for (auto& update : response.updates()) {
                 if (update.entry().path() == seat_pos_name_) {
                     auto actuator_target = update.entry().actuator_target();
@@ -83,17 +104,40 @@ void SeatPositionSubscriber::Run() {
                 }
             }
         }
+        if (debug > 3) {
+            std::cout << "SeatPositionSubscriber: Reader->Read() -> false" << std::endl;
+        }
         grpc::Status status = reader->Finish();
         if (status.ok()) {
             std::cout << "SeatPositionSubscriber: disconnected." << std::endl;
+            failures = 0; // reset subscribe failures affter successful finish
         } else {
-            std::cerr << "SeatPositionSubscriber: disconnected with status: " << subscriber_context_->debug_error_string() << std::endl;
+            std::ostringstream os;
+            os << "SeatPositionSubscriber(" << seat_pos_name_ << "): Disconnected with "
+               << sdv::utils::toString(status);
+            std::cerr << os.str() << std::endl;
+
+            if (status.error_code() == grpc::StatusCode::NOT_FOUND) {
+                failures++;
+                std::cerr << "SeatPositionSubscriber: Path not found: " << seat_pos_name_ << ". Attempt: " << failures << std::endl;
+                if (failures > 3) {
+                    std::cerr << "\nWARNING!" << std::endl;
+                    std::cerr << "SeatPositionSubscriber() Aborted. Actuator " << seat_pos_name_ << " is permanently unavailable!\n\n" << std::endl;
+                    running_ = false;
+                    break;
+                }
+            }
             // prevent busy polling if subscribe failed with error
             std::this_thread::sleep_for(std::chrono::seconds(5));
         }
+        if (debug > 2) {
+            std::cout << "SeatPositionSubscriber: subscriber_context_ = null" << std::endl;
+        }
         subscriber_context_ = nullptr;
     }
-    std::cout << "SeatPositionSubscriber: exiting" << std::endl;
+    if (debug > 0) {
+        std::cout << "SeatPositionSubscriber: exiting" << std::endl;
+    }
 }
 
 void SeatPositionSubscriber::Shutdown() {

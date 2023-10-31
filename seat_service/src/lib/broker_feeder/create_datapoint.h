@@ -22,63 +22,89 @@
 namespace sdv {
 namespace broker_feeder {
 
-sdv::databroker::v1::Datapoint createInvalidValue() {
-    sdv::databroker::v1::Datapoint datapoint;
-    datapoint.set_failure_value(sdv::databroker::v1::Datapoint_Failure_INVALID_VALUE);
+using sdv::databroker::v1::Datapoint;
+using sdv::databroker::v1::Datapoint_Failure_INVALID_VALUE;
+using sdv::databroker::v1::Datapoint_Failure_NOT_AVAILABLE;
+using sdv::databroker::v1::Int32Array;
+using sdv::databroker::v1::Uint32Array;
+
+Datapoint createInvalidValue() {
+    Datapoint datapoint;
+    datapoint.set_failure_value(Datapoint_Failure_INVALID_VALUE);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createNotAvailableValue() {
-    sdv::databroker::v1::Datapoint datapoint;
-    datapoint.set_failure_value(sdv::databroker::v1::Datapoint_Failure_NOT_AVAILABLE);
+Datapoint createNotAvailableValue() {
+    Datapoint datapoint;
+    datapoint.set_failure_value(Datapoint_Failure_NOT_AVAILABLE);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(bool value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(bool value) {
+    Datapoint datapoint;
     datapoint.set_bool_value(value);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(int32_t value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(int32_t value) {
+    Datapoint datapoint;
     datapoint.set_int32_value(value);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(uint32_t value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(uint32_t value) {
+    Datapoint datapoint;
     datapoint.set_uint32_value(value);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(int64_t value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(int64_t value) {
+    Datapoint datapoint;
     datapoint.set_int64_value(value);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(uint64_t value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(uint64_t value) {
+    Datapoint datapoint;
     datapoint.set_uint64_value(value);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(float value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(float value) {
+    Datapoint datapoint;
     datapoint.set_float_value(value);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(double value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(double value) {
+    Datapoint datapoint;
     datapoint.set_double_value(value);
     return datapoint;
 }
 
-sdv::databroker::v1::Datapoint createDatapoint(const std::string& value) {
-    sdv::databroker::v1::Datapoint datapoint;
+Datapoint createDatapoint(const std::string& value) {
+    Datapoint datapoint;
     datapoint.set_string_value(value);
+    return datapoint;
+}
+
+Datapoint createDatapoint(std::vector<int32_t> values_array) {
+    Datapoint datapoint;
+    Int32Array *marray = datapoint.mutable_int32_array();
+    auto mvalues = marray->mutable_values();
+    for (auto const v: values_array) {
+        mvalues->Add(v);
+    }
+    return datapoint;
+}
+
+Datapoint createDatapoint(std::vector<uint32_t> values_array) {
+    Datapoint datapoint;
+    Uint32Array *marray = datapoint.mutable_uint32_array();
+    auto mvalues = marray->mutable_values();
+    for (auto const v: values_array) {
+        mvalues->Add(v);
+    }
     return datapoint;
 }
 

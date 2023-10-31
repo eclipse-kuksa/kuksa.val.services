@@ -21,7 +21,6 @@
 
 #include "seat_data_feeder.h"
 
-#include "create_datapoint.h"
 #include "data_broker_feeder.h"
 #include "seat_adjuster.h"
 
@@ -32,37 +31,67 @@ namespace seat_service {
 
 using sdv::databroker::v1::Datapoint;
 using sdv::databroker::v1::DataType;
+using sdv::databroker::v1::EntryType;
 using sdv::databroker::v1::ChangeType;
 using sdv::databroker::v1::Datapoint_Failure;
 
+using sdv::broker_feeder::DatapointConfiguration;
 
-SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std::shared_ptr<broker_feeder::CollectorClient> collector_client)
+/*
+const sdv::broker_feeder::DatapointConfiguration metadata_4 {
+    { "Vehicle.Cabin.Seat.Row1.DriverSide.Position",
+        DataType::UINT16,
+        // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
+        ChangeType::ON_CHANGE,
+        broker_feeder::createNotAvailableValue(),
+        "Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported."
+    },
+    { "Vehicle.Cabin.SeatRowCount",
+        DataType::UINT8,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        broker_feeder::createDatapoint(2U),
+        "Number of seat rows in vehicle."},
+    { "Vehicle.Cabin.SeatPosCount",
+        DataType::UINT8_ARRAY,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        broker_feeder::createDatapoint(std::vector<uint32_t> {2U, 3U}),
+        "Number of seats across each row from the front to the rear."
+    },
+};
+
+const sdv::broker_feeder::DatapointConfiguration metadata_3 {
+    { "Vehicle.Cabin.Seat.Row1.Pos1.Position",
+        DataType::UINT16, // Changed from UINT32 to match VSS 3.0
+        ChangeType::ON_CHANGE,
+        broker_feeder::createNotAvailableValue(),
+        "Longitudinal position of overall seat"
+    },
+    { "Vehicle.Cabin.SeatRowCount",
+        DataType::UINT8,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        broker_feeder::createDatapoint(2U),
+        "Number of rows of seats"
+    },
+    { "Vehicle.Cabin.SeatPosCount",
+        DataType::UINT8_ARRAY,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        broker_feeder::createDatapoint(std::vector<uint32_t> {2U, 3U}),
+        "Number of seats across each row from the front to the rear."
+    }
+};
+*/
+
+SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std::shared_ptr<broker_feeder::KuksaClient> collector_client,
+                               std::string& seat_pos_name, DatapointConfiguration&& dpConfig)
     : seat_adjuster_(seat_adjuster)
 {
-    /* Define datapoints (metadata) of seat service
-     */
-    std::string seat_pos_name = "Vehicle.Cabin.Seat.Row1.Pos1.Position";
-    sdv::broker_feeder::DatapointConfiguration metadata = {
-        {"Vehicle.Cabin.SeatRowCount",
-            DataType::UINT16, // Changed from UINT32 to match VSS 3.0
-            ChangeType::STATIC,
-            broker_feeder::createDatapoint(1U),
-            "Number of rows of seats"},
-        {"Vehicle.Cabin.Seat.Row1.PosCount",
-            DataType::UINT8, // Changed from UINT32 to match VSS 3.0
-            ChangeType::STATIC,
-            broker_feeder::createDatapoint(1U),
-            "Number of seats in row 1"},
-        {seat_pos_name,
-            DataType::UINT16, // Changed from UINT32 to match VSS 3.0
-            ChangeType::ON_CHANGE,
-            broker_feeder::createNotAvailableValue(),
-            "Longitudinal position of overall seat"}
-    };
-
     /* Init feeder
      */
-    broker_feeder_ = sdv::broker_feeder::DataBrokerFeeder::createInstance(collector_client, std::move(metadata));
+    broker_feeder_ = sdv::broker_feeder::DataBrokerFeeder::createInstance(collector_client, std::move(dpConfig));
 
     /* Internally subscribe to signals to be fed to broker
      */

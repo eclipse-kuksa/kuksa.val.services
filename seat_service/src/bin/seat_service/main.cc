@@ -23,17 +23,78 @@
 #include "seat_data_feeder.h"
 #include "seat_position_subscriber.h"
 #include "seats_grpc_service.h"
-
-#include "collector_client.h"
+#include "data_broker_feeder.h"
+#include "create_datapoint.h"
+#include "kuksa_client.h"
 
 #define SELF "[SeatSvc] "
 
-static std::string getEnvVar(const std::string& name, const std::string& defaultValue = {}) {
-    const char* value = std::getenv(name.c_str());
-    return value != nullptr ? std::string(value) : std::string(defaultValue);
-}
+int debug = std::stoi(sdv::utils::getEnvVar("SEAT_DEBUG", "1"));
 
-int debug = std::stoi(getEnvVar("SEAT_DEBUG", "1"));
+using sdv::databroker::v1::Datapoint;
+using sdv::databroker::v1::DataType;
+using sdv::databroker::v1::EntryType;
+using sdv::databroker::v1::ChangeType;
+
+/**
+ * NOTE: VSS 4.0 and 3.0 differ only on driver's seat position, but all dataponits are registered
+ * for compatiblity purposes and future-proofing (e.g. some data type, description changes)
+ *
+ * Although datapoints are registered, there is no possibility to set EntryType (actuator) in current API, so
+ * it is suggested to use seat service with vss3/4 configured databroker.
+ *
+ * In case databroker runs without proper actuator datapoint, it won't be possible to subscribe on actuator changes.
+ */
+
+const std::string SEAT_POS_VSS_3 = "Vehicle.Cabin.Seat.Row1.Pos1.Position";
+const std::string SEAT_POS_VSS_4 = "Vehicle.Cabin.Seat.Row1.DriverSide.Position";
+
+const sdv::broker_feeder::DatapointConfiguration metadata_4 {
+    { SEAT_POS_VSS_4,
+        DataType::UINT16,
+        // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
+        ChangeType::ON_CHANGE,
+        sdv::broker_feeder::createNotAvailableValue(),
+        "Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported."
+    },
+    { "Vehicle.Cabin.SeatRowCount",
+        DataType::UINT8,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        sdv::broker_feeder::createDatapoint(2U),
+        "Number of seat rows in vehicle."},
+    { "Vehicle.Cabin.SeatPosCount",
+        DataType::UINT8_ARRAY,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        sdv::broker_feeder::createDatapoint(std::vector<uint32_t> {2U, 3U}),
+        "Number of seats across each row from the front to the rear."
+    },
+};
+
+const sdv::broker_feeder::DatapointConfiguration metadata_3 {
+    { SEAT_POS_VSS_3,
+        DataType::UINT16, // Changed from UINT32 to match VSS 3.0
+        ChangeType::ON_CHANGE,
+        sdv::broker_feeder::createNotAvailableValue(),
+        "Longitudinal position of overall seat"
+    },
+    { "Vehicle.Cabin.SeatRowCount",
+        DataType::UINT8,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        sdv::broker_feeder::createDatapoint(2U),
+        "Number of rows of seats"
+    },
+    { "Vehicle.Cabin.SeatPosCount",
+        DataType::UINT8_ARRAY,
+        // EntryType::ENTRY_TYPE_ATTRIBUTE,
+        ChangeType::STATIC,
+        sdv::broker_feeder::createDatapoint(std::vector<uint32_t> {2U, 3U}),
+        "Number of seats across each row from the front to the rear."
+    }
+};
+
 
 // Self pipe (for signal handling)
 int pipefd[2];
@@ -87,18 +148,31 @@ void wait_for_signal(int fd) {
     }
 }
 
-void Run(std::string can_if_name, std::string listen_address, std::string port, std::string broker_addr) {
+
+void Run(std::string can_if_name, std::string listen_address, std::string port, std::string broker_addr, bool vss_4) {
+
+    sdv::broker_feeder::DatapointConfiguration metadata = vss_4 ? metadata_4 : metadata_3;
+
+    std::string seat_pos_name = vss_4 ? SEAT_POS_VSS_4 : SEAT_POS_VSS_3;
+
+    // runtime check for valid 1st entry name
+    if (metadata.size() < 1 || seat_pos_name != metadata[0].name) {
+        std::cerr << SELF "Invalid metadata configuration!" << std::endl;
+        exit(1);
+    }
+
     auto seat_adjuster = sdv::SeatAdjuster::createInstance(can_if_name);
-    auto client = sdv::broker_feeder::CollectorClient::createInstance(broker_addr);
+    auto client = sdv::broker_feeder::KuksaClient::createInstance(broker_addr);
 
     // Setup feeder
     //
-    sdv::seat_service::SeatDataFeeder seat_data_feeder(seat_adjuster, client);
+    sdv::seat_service::SeatDataFeeder seat_data_feeder(seat_adjuster, client, seat_pos_name, std::move(metadata));
     std::cout << SELF "SeatDataFeeder connecting to " << broker_addr << std::endl;
     std::thread feeder_thread(&sdv::seat_service::SeatDataFeeder::Run, &seat_data_feeder);
 
+
     // Setup target actuator subscriber
-    sdv::seat_service::SeatPositionSubscriber seat_position_subscriber(seat_adjuster, client);
+    sdv::seat_service::SeatPositionSubscriber seat_position_subscriber(seat_adjuster, client, seat_pos_name);
     std::cout << SELF "Start seat position subscription " << broker_addr << std::endl;
 
     std::thread subscriber_thread(&sdv::seat_service::SeatPositionSubscriber::Run, &seat_position_subscriber);
@@ -145,6 +219,7 @@ int main(int argc, char** argv) {
     std::string can_if_name;
     std::string listen_address = "localhost";  // Default listen address
     std::string port = "50051";                // Default listen port
+    bool vss_4 = true; // vss 3.0 or 4.0 seat service paths
 
     switch (argc) {
         case 4:
@@ -162,9 +237,25 @@ int main(int argc, char** argv) {
     }
 
     // Allow easy overriding of DataFeeder host:port via env (in containers)
-    auto broker_addr = getEnvVar("BROKER_ADDR", "localhost:55555");  // Replace hardcoded broker address and port
+    auto broker_addr = sdv::utils::getEnvVar("BROKER_ADDR", "localhost:55555");  // Replace hardcoded broker address and port
+    auto vss_val = sdv::utils::getEnvVar("VSS", "4");
+    if (vss_val == "3") {
+        vss_4 = false;
+    } else if (vss_val == "4") {
+        vss_4 = true;
+    } else {
+        std::cerr << "Invalid 'VSS' env: " << vss_val << ". Use: [3, 4]" << std::endl;
+        exit(1);
+    }
 
-    Run(can_if_name, listen_address, port, broker_addr);
+    if (vss_4) {
+        std::cout << "### Using VSS 4.0 mode" << std::endl;
+    }
+    if (debug > 1) {
+        std::cout << "### Using GRPC version:" << ::grpc::Version() << std::endl;
+    }
+
+    Run(can_if_name, listen_address, port, broker_addr, vss_4);
 
     return 0;
 }
