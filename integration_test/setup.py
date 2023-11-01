@@ -13,7 +13,7 @@
 
 from setuptools import find_packages, setup
 
-PKG_VERSION = "v0.1.0"
+PKG_VERSION="v0.2.1"
 
 setup(
     name="kuksa.val_integration",
