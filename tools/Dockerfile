@@ -66,6 +66,9 @@ RUN apt-get -qqy install \
 RUN apt-get -qqy install --fix-missing \
   python3-pip
 
+# Default pip and setuptools are too old...
+RUN pip3 install --upgrade pip setuptools
+
 # conan: dependency management
 # conan needed > 1.43 for gtest and < 2.0
 # cantools: code generation from .dbc file

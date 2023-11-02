@@ -15,25 +15,26 @@ name: dev-container-build
 
 on:
   push:
-    paths:
-      - "tools/Dockerfile"
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "tag of the docker container, eg:latest, v0.2.1"
-        required: false
-        default: "latest"
+  pull_request:
+    paths:
+      - "tools/Dockerfile"
+      - ".github/workflows/dev_container_build.yml"
+      - "hvac_service/requirements-dev.txt"
+      - "integration_test/requirements-dev.txt"
   workflow_call:
-    inputs:
-      tag:
-        description: "tag of the docker container, eg:latest, v0.2.1"
-        type: string
-        required: false
-        default: "latest"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: true
 
 jobs:
+
+  check_ghcr_push:
+    uses: eclipse-kuksa/kuksa-actions/.github/workflows/check_ghcr_push.yml@2
+    secrets: inherit
 
   get_tag:
     runs-on: ubuntu-latest
@@ -56,21 +57,32 @@ jobs:
 
   build-devcontainer:
     runs-on: ubuntu-latest
-    needs: get_tag
+    needs: check_ghcr_push
     steps:
       - name: adding github workspace as safe directory
         run: git config --global --add safe.directory $GITHUB_WORKSPACE
 
       - uses: actions/checkout@v4
 
-      - id: repository-name-adjusted
-        name: Prepare repository name in lower case for docker upload. This supports repository names in mixed case
-        uses: ASzc/change-string-case-action@v5
-        with:
-          string: ${{ github.repository }}
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          # list of Docker images to use as base name for tags
+          images: |
+            ghcr.io/eclipse/kuksa.val.services/oci_kuksa-val-services-ci
+          # generate Docker tags based on the following events/attributes
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Log in to the Container registry
+        if: needs.check_ghcr_push.outputs.push == 'true'
+        uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
@@ -82,17 +94,37 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Build and push docker image
+      - name: Build container and push to ghcr.io (and ttl.sh)
+        id: ghcr-build
+        if: needs.check_ghcr_push.outputs.push == 'true'
         uses: docker/build-push-action@v5
         with:
-          pull: true
-          push: true
+          platforms: |
+            linux/amd64
+            linux/arm64
           file: ./tools/Dockerfile
           context: .
-          build-args: version=latest, USER_ID=0, GROUP_ID=0
-          platforms: linux/amd64, linux/arm64
-          secrets: |
-            "github_token=user:${{ secrets.GITHUB_TOKEN }}"
-          tags: ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}/oci_kuksa-val-services-ci:${{ needs.get_tag.outputs.tag }}
-          labels: |
-            org.opencontainers.image.source=ghcr.io/${{ steps.repository-name-adjusted.outputs.lowercase }}
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.tags }}
+            ttl.sh/kuksa.val.services/oci_kuksa-val-services-ci-${{github.sha}}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Build container and push to ttl.sh
+        if: needs.check_ghcr_push.outputs.push == 'false'
+        id: tmp-build
+        uses: docker/build-push-action@v5
+        with:
+          platforms: |
+            linux/amd64
+            linux/arm64
+          file: ./tools/Dockerfile
+          context: .
+          push: true
+          tags: "ttl.sh/kuksa.val.services/oci_kuksa-val-services-ci-${{github.sha}}"
+          labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: Posting message
+        uses: ./.github/actions/post-container-location
+        with:
+          image: ttl.sh/kuksa.val.services/oci_kuksa-val-services-ci-${{github.sha}}
