@@ -83,7 +83,7 @@ The [API documentation](./doc/pydoc/mocking-dsl.md) is generated from Python doc
 ```
 
 # Using mockservice dynamically
-To use the mockservice dynamically you need to use the same process. For an example see [test_mock.py](mock/test_mock.py).
+To use the mockservice dynamically you need to use the same process. For an example see [threaded_mock.py](examples/threaded_mock.py).
 
 # What's not supported?
 Any form of array support e.g no VSS datapoint that has DataType.*ARRAY.
