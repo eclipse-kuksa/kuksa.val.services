@@ -3,7 +3,7 @@ import os
 import time
 import logging
 
-from mockservice import MockService
+from mock.mockservice import MockService
 from lib.animator import RepeatMode
 from lib.dsl import (
     create_animation_action,
