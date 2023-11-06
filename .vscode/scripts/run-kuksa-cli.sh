@@ -42,5 +42,5 @@ if [ "$STANDALONE" = "1" ]; then
 	# prevent warning dumps
 	GRPC_ENABLE_FORK_SUPPORT=true kuksa-client --ip 127.0.0.1 --port "$DATABROKER_PORT" --protocol grpc --insecure
 else
-	docker run -it --rm -e GRPC_ENABLE_FORK_SUPPORT=true --net=host "ghcr.io/eclipse/kuksa.val/kuksa-client:$KUKSACLIENT_VERSION" --ip 127.0.0.1 --port "$DATABROKER_PORT" --protocol grpc --insecure
+	docker run -it --rm -e GRPC_ENABLE_FORK_SUPPORT=true --net=host "ghcr.io/eclipse/kuksa.val/kuksa-client:$KUKSACLIENT_VERSION" # get--ip 127.0.0.1 --port "$DATABROKER_PORT" --protocol grpc #--insecure
 fi

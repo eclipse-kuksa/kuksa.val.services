@@ -1,5 +1,5 @@
 grpcio>=1.44.0
-grpcio-tools
+grpcio-tools>=1.54.2
 protobuf>=3.19.4
 pydocstyle
 mypy

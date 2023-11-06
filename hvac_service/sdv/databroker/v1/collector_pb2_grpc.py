@@ -29,11 +29,6 @@ class CollectorStub(object):
                 request_serializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.StreamDatapointsRequest.SerializeToString,
                 response_deserializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.StreamDatapointsReply.FromString,
                 )
-        self.SubscribeActuatorTargets = channel.unary_stream(
-                '/sdv.databroker.v1.Collector/SubscribeActuatorTargets',
-                request_serializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.SubscribeActuatorTargetRequest.SerializeToString,
-                response_deserializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.SubscribeActuatorTargetReply.FromString,
-                )
 
 
 class CollectorServicer(object):
@@ -91,12 +86,6 @@ class CollectorServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SubscribeActuatorTargets(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_CollectorServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -114,11 +103,6 @@ def add_CollectorServicer_to_server(servicer, server):
                     servicer.StreamDatapoints,
                     request_deserializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.StreamDatapointsRequest.FromString,
                     response_serializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.StreamDatapointsReply.SerializeToString,
-            ),
-            'SubscribeActuatorTargets': grpc.unary_stream_rpc_method_handler(
-                    servicer.SubscribeActuatorTargets,
-                    request_deserializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.SubscribeActuatorTargetRequest.FromString,
-                    response_serializer=sdv_dot_databroker_dot_v1_dot_collector__pb2.SubscribeActuatorTargetReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -178,22 +162,5 @@ class Collector(object):
         return grpc.experimental.stream_stream(request_iterator, target, '/sdv.databroker.v1.Collector/StreamDatapoints',
             sdv_dot_databroker_dot_v1_dot_collector__pb2.StreamDatapointsRequest.SerializeToString,
             sdv_dot_databroker_dot_v1_dot_collector__pb2.StreamDatapointsReply.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def SubscribeActuatorTargets(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_stream(request, target, '/sdv.databroker.v1.Collector/SubscribeActuatorTargets',
-            sdv_dot_databroker_dot_v1_dot_collector__pb2.SubscribeActuatorTargetRequest.SerializeToString,
-            sdv_dot_databroker_dot_v1_dot_collector__pb2.SubscribeActuatorTargetReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

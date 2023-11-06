@@ -2,7 +2,7 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from gen_proto.sdv.databroker.v1 import collector_pb2 as sdv_dot_databroker_dot_v1_dot_collector__pb2
+from sdv.databroker.v1 import collector_pb2 as sdv_dot_databroker_dot_v1_dot_collector__pb2
 
 
 class CollectorStub(object):

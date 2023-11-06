@@ -54,7 +54,20 @@ if [ ! -f "$FEEDERCAN_EXEC_PATH/dbcfeeder.py" ]; then
 fi
 
 cd "$FEEDERCAN_EXEC_PATH" || exit 1
-pip3 install -q -r requirements.txt
+
+if [ -z "$(which python3.9)" ]; then
+	echo "### WARNING! dbc2val requires python3.9" 1>&2
+	echo "You may install 3.9 in pyenv. Check: https://github.com/pyenv/pyenv#installation"
+	echo "$ curl https://pyenv.run | bash"
+	echo "$ pyenv install 3.9.18"
+	echo "$ pyenv versions"
+	echo "$ pyenv global 3.9.18"
+	echo "$ python3.9 --version"
+fi
+
+# PIP_OPT="--upgrade --retries 1 --timeout 3"
+### IMPORTANT: dbc2val now requires python 9, does not work on python8
+pip3.9 install $PIP_OPT -q -r requirements.txt -r requirements-dev.txt
 
 ####################################
 ### feedercan environment setup ####
@@ -65,14 +78,18 @@ CONFIG_DIR="$ROOT_DIRECTORY/integration_test/volumes/dbc2val"
 
 ### Override default files for feedercan to be consistent with tests
 export DBC_FILE="$CONFIG_DIR/it-can.dbc"
-export MAPPING_FILE="$CONFIG_DIR/it-mapping.yml"
+export MAPPING_FILE="$CONFIG_DIR/it-vss_4.0.json"
+# uncomment if you need to test with DogMode datapoints (requires custom vss config for databroker)
+#export MAPPING_FILE="$CONFIG_DIR/it-vss_4.0-dogmode.json"
 export CANDUMP_FILE="$CONFIG_DIR/it-candump0.log"
-export USECASE="databroker"
 
+# export USECASE="databroker"
+export USE_DBC2VAL=1
+export NO_USE_VAL2DBC=1
+
+export LOG_LEVEL="info,dbcfeeder=debug"
 ## Uncomment to enable most of the debug modules
-# export LOG_LEVEL="info,databroker=debug,dbcfeeder.broker_client=debug,dbcfeeder=debug,dbcreader=debug"
-## Uncomment for verbose dbcreader decoded can dumps, needs dbcreader=debug
-# export CAN_VERBOSE=1
+#export LOG_LEVEL="debug,dbcfeeder=debug,kuksa_client.grpc=debug,dbcfeederlib.canplayer=debug,dbcfeederlib.canreader=debug,dbcfeederlib.dbc2vssmapper=debug"
 
 echo
 echo "*******************************************"
@@ -95,4 +112,4 @@ dapr run \
 	--components-path "$ROOT_DIRECTORY/.dapr/components" \
 	--config "$ROOT_DIRECTORY/.dapr/config.yaml" &
 #--
-python3 -u ./dbcfeeder.py
+python3.9 -u ./dbcfeeder.py

@@ -1,0 +1,480 @@
+# This is a VSS example overlay that is to be used when generating vss_dbc.json in this repository
+# The content shall just be seen as examples that can be used for prototyping.
+# It does not in any way represent an official mapping.
+#
+# How to regenerate vss_dbc.json:
+#
+# 1. Decide which VSS version to use
+#
+# Two good places to check:
+# * See what versions KUKSA.val supports: https://github.com/eclipse/kuksa.val/tree/master/data/vss-core
+# * See what VSS releases that exists: https://github.com/COVESA/vehicle_signal_specification/releases
+#
+# (You can also also clone the VSS-repo and use whatever version you like)
+#
+# 2. Download Yaml file for selected verison.
+#
+# As of today part of a *.tar.gz file in https://github.com/COVESA/vehicle_signal_specification/releases
+#
+# 3. Regenerate the json file
+#
+#   # pip3 install -U vss-tools
+#   # vspec2json.py -e dbc -o it_mapping.vspec --json-pretty --no-uuid ./vss_rel_4.0.yaml it_vss.json
+#
+
+#
+# Type and datatype required, others will be inherited
+
+Vehicle.Chassis.SteeringWheel.Angle:
+  datatype: int16
+  type: sensor
+  dbc2vss:
+    signal: SteeringAngle129
+    interval_ms: 100
+    transform:
+      math: "floor(x+0.5)"
+
+Vehicle.Speed:
+  type: sensor
+  datatype: float
+  dbc2vss:
+    signal: DI_uiSpeed
+    interval_ms: 100
+
+Vehicle.OBD.Speed:
+  type: sensor
+  datatype: float
+  dbc2vss:
+    signal: DI_uiSpeed
+    interval_ms: 100
+
+Vehicle.Powertrain.Transmission.CurrentGear:
+  type: sensor
+  datatype: int8
+  dbc2vss:
+    interval_ms: 100
+    signal: DI_gear
+    transform:
+       mapping:
+        - from: DI_GEAR_D
+          to: 1
+        - from: DI_GEAR_P
+          to: 0
+        - from: DI_GEAR_INVALID
+          to: 0
+        - from: DI_GEAR_R
+          to: -1
+
+Vehicle.Powertrain.Transmission.IsParkLockEngaged:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 100
+    signal: DI_gear
+    transform:
+       mapping:
+        - from: DI_GEAR_D
+          to: false
+        - from: DI_GEAR_P
+          to: true
+        - from: DI_GEAR_INVALID
+          to: false
+        - from: DI_GEAR_R
+          to: false
+
+Vehicle.Powertrain.ElectricMotor.Torque:
+  type: sensor
+  datatype: int16
+  dbc2vss:
+    interval_ms: 100
+    signal: DIR_torqueActual
+
+Vehicle.OBD.ControlModuleVoltage:
+  type: sensor
+  datatype: float
+  dbc2vss:
+    interval_ms: 1000
+    signal: PCS_dcdcLvBusVolt
+
+Vehicle.Powertrain.TractionBattery.Charging.IsCharging:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: CP_hvChargeStatus
+    transform:
+       mapping:
+        - from: CP_CHARGE_CONNECTED
+          to: false
+        - from: CP_CHARGE_ENABLED
+          to: true
+        - from: CP_CHARGE_FAULTED
+          to: false
+        - from: CP_CHARGE_INACTIVE
+          to: false
+        - from: CP_CHARGE_STANDBY
+          to: false
+        - from: CP_EVSE_TEST_PASSED
+          to: true
+        - from: CP_EXT_EVSE_TEST_ACTIVE
+          to: true
+
+Vehicle.Chassis.Axle.Row1.Wheel.Left.Brake.IsFluidLevelLow:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCFRONT_brakeFluidLevel
+    transform:
+       mapping:
+        - from: LOW
+          to: true
+        - from: NORMAL
+          to: false
+
+Vehicle.Chassis.Axle.Row1.Wheel.Right.Brake.IsFluidLevelLow:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCFRONT_brakeFluidLevel
+    transform:
+       mapping:
+        - from: LOW
+          to: true
+        - from: NORMAL
+          to: false
+
+Vehicle.Chassis.Axle.Row2.Wheel.Left.Brake.IsFluidLevelLow:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCFRONT_brakeFluidLevel
+    transform:
+       mapping:
+        - from: LOW
+          to: true
+        - from: NORMAL
+          to: false
+
+Vehicle.Chassis.Axle.Row2.Wheel.Right.Brake.IsFluidLevelLow:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCFRONT_brakeFluidLevel
+    transform:
+       mapping:
+        - from: LOW
+          to: true
+        - from: NORMAL
+          to: false
+
+Vehicle.OBD.AmbientAirTemperature:
+  type: sensor
+  datatype: float
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCFRONT_tempAmbientFiltered
+
+Vehicle.Body.Windshield.Front.WasherFluid.IsLevelLow:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCFRONT_washerFluidLevel
+    transform:
+       mapping:
+        - from: LOW
+          to: true
+        - from: NORMAL
+          to: false
+
+# VSS 4.0 changes to DriverSide/PassengerSide
+# We here assume that we have a LHD vehicle as
+# DBCFeeder cannot handle conditions
+# to use either driver or passenger side based on configuration
+Vehicle.Body.Mirrors.DriverSide.IsHeatingOn:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCLEFT_mirrorHeatState
+    transform:
+       mapping:
+        - from: HEATER_STATE_ON
+          to: true
+        - from: HEATER_STATE_OFF
+          to: false
+
+Vehicle.Body.Mirrors.PassengerSide.IsHeatingOn:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCLEFT_mirrorHeatState
+    transform:
+       mapping:
+        - from: HEATER_STATE_ON
+          to: true
+        - from: HEATER_STATE_OFF
+          to: false
+
+Vehicle.Body.Mirrors.DriverSide.Tilt:
+  datatype: int8
+  type: actuator
+  dbc2vss:
+    signal: VCLEFT_mirrorTiltYPosition
+    interval_ms: 100
+    transform:
+      math: "floor((x*40)-100)"
+  vss2dbc:
+    signal: VCLEFT_mirrorTiltYPosition
+    transform:
+      math: "(x+100)/40"
+
+Vehicle.Body.Mirrors.DriverSide.Pan:
+  datatype: int8
+  type: actuator
+  dbc2vss:
+    signal: VCLEFT_mirrorTiltXPosition
+    interval_ms: 100
+    transform:
+      math: "floor((x*40)-100)"
+  vss2dbc:
+    signal: VCLEFT_mirrorTiltXPosition
+    transform:
+      math: "(x+100)/40"
+
+Vehicle.Body.Mirrors.PassengerSide.Tilt:
+  datatype: int8
+  type: actuator
+  dbc2vss:
+    signal: VCRIGHT_mirrorTiltYPosition
+    interval_ms: 100
+    transform:
+      math: "floor((x*40)-100)"
+
+Vehicle.Body.Mirrors.PassengerSide.Pan:
+  datatype: int8
+  type: actuator
+  dbc2vss:
+    signal: VCRIGHT_mirrorTiltXPosition
+    interval_ms: 100
+    transform:
+      math: "floor((x*40)-100)"
+
+Vehicle.Body.Trunk.Rear.IsOpen:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCRIGHT_trunkLatchStatus
+    transform:
+       mapping:
+        - from: LATCH_AJAR
+          to: true
+        - from: LATCH_CLOSED
+          to: false
+        - from: LATCH_CLOSING
+          to: true
+        - from: LATCH_FAULT
+          to: true
+        - from: LATCH_OPENED
+          to: true
+        - from: LATCH_OPENING
+          to: true
+  vss2dbc:
+    signal: VCRIGHT_trunkLatchStatus
+    transform:
+       mapping:
+        - from: true
+          to: LATCH_OPENED
+        - from: false
+          to: LATCH_CLOSED
+
+Vehicle.Powertrain.ElectricMotor.Temperature:
+  datatype: int16
+  type: sensor
+  dbc2vss:
+    signal: PTC_rightTempIGBT
+    interval_ms: 1000
+  vss2dbc:
+    signal: PTC_rightTempIGBT
+
+Vehicle.Cabin.Door.Row1.DriverSide.IsOpen:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 500
+    signal: VCLEFT_frontDoorState
+    transform:
+       mapping:
+        - from: DOOR_STATE_CLOSED
+          to: false
+        - from: DOOR_STATE_OPEN_OR_AJAR
+          to: true
+        - from: DOOR_STATE_RELEASING_LATCH
+          to: true
+
+Vehicle.Cabin.Door.Row2.DriverSide.IsOpen:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 500
+    signal: VCLEFT_rearDoorState
+    transform:
+       mapping:
+        - from: DOOR_STATE_CLOSED
+          to: false
+        - from: DOOR_STATE_OPEN_OR_AJAR
+          to: true
+        - from: DOOR_STATE_RELEASING_LATCH
+          to: true
+
+Vehicle.Cabin.Seat.Row1.DriverSide.IsBelted:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 1000
+    signal: VCFRONT_driverBuckleStatus
+    transform:
+       mapping:
+        - from: BUCKLED
+          to: true
+        - from: UNBUCKLED
+          to: false
+
+Vehicle.Body.Lights.Brake.IsActive:
+  type: actuator
+  datatype: string
+  dbc2vss:
+    interval_ms: 100
+    signal: VCRIGHT_brakeLightStatus
+    transform:
+       mapping:
+        - from: LIGHT_OFF
+          to: 'INACTIVE'
+        - from: LIGHT_ON
+          to: 'ACTIVE'
+        - from: LIGHT_FAULT
+          to: 'INACTIVE'
+        - from: LIGHT_SNA
+          to: 'INACTIVE'
+
+Vehicle.Body.Lights.Fog.Rear.IsOn:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 100
+    signal: VCRIGHT_brakeLightStatus
+    transform:
+       mapping:
+        - from: LIGHT_OFF
+          to: false
+        - from: LIGHT_ON
+          to: true
+        - from: LIGHT_FAULT
+          to: false
+        - from: LIGHT_SNA
+          to: false
+
+Vehicle.Body.Lights.Backup.IsOn:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 100
+    signal: VCRIGHT_reverseLightStatus
+    transform:
+       mapping:
+        - from: LIGHT_OFF
+          to: false
+        - from: LIGHT_ON
+          to: true
+        - from: LIGHT_FAULT
+          to: false
+        - from: LIGHT_SNA
+          to: false
+
+Vehicle.Body.Lights.DirectionIndicator.Right.IsSignaling:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 100
+    signal: VCRIGHT_turnSignalStatus
+    transform:
+       mapping:
+        - from: LIGHT_OFF
+          to: false
+        - from: LIGHT_ON
+          to: true
+        - from: LIGHT_FAULT
+          to: false
+        - from: LIGHT_SNA
+          to: false
+
+Vehicle.Body.Lights.DirectionIndicator.Left.IsSignaling:
+  type: actuator
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 100
+    signal: VCLEFT_turnSignalStatus
+    transform:
+       mapping:
+        - from: LIGHT_OFF
+          to: false
+        - from: LIGHT_ON
+          to: true
+        - from: LIGHT_FAULT
+          to: false
+        - from: LIGHT_SNA
+          to: false
+
+Vehicle.Trailer.IsConnected:
+  type: sensor
+  datatype: boolean
+  dbc2vss:
+    interval_ms: 3000
+    signal: VCLEFT_trailerDetected
+    transform:
+       mapping:
+        - from: TRAILER_LIGHT_DETECTION_SNA
+          to: false
+        - from: TRAILER_LIGHT_DETECTION_DETECTED
+          to: true
+        - from: TRAILER_LIGHT_DETECTION_FAULT
+          to: false
+        - from: TRAILER_LIGHT_DETECTION_NOT_DETECTED
+          to: false
+
+Vehicle.OBD.EngineLoad:
+  type: sensor
+  datatype: float
+  dbc2vss:
+    signal: RearPower266
+    interval_ms: 100
+    transform:
+      math: "floor(abs(x/5))"
+
+#### DogMmode hackathon example (disabled by default as we also need custom vss.json for databroker)
+
+# Vehicle.Cabin.DogMode:
+#   datatype: boolean
+#   type: attribute
+#   description: Enable Dog Mode.
+#   dbc2vss:
+#     signal: DogModeOn
+#     interval_ms: 500
+#     on_change: true
+# 
+# Vehicle.Cabin.DogModeTemperature:
+#   datatype: float
+#   type: attribute
+#   unit: celsius
+#   description: Set desired temperature for Dog Mode.
+#   dbc2vss:
+#     signal: DogModeTempSet
+#     interval_ms: 500
+#     on_change: true
+
