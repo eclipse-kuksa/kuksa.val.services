@@ -22,9 +22,9 @@ import sys
 import time
 
 import grpc
-from gen_proto.sdv.databroker.v1 import broker_pb2
-from gen_proto.sdv.databroker.v1.broker_pb2_grpc import BrokerStub
-from gen_proto.sdv.databroker.v1.types_pb2 import DataType
+from sdv.databroker.v1 import broker_pb2
+from sdv.databroker.v1.broker_pb2_grpc import BrokerStub
+from sdv.databroker.v1.types_pb2 import DataType
 
 SEAT_POS = "Vehicle.Cabin.Seat.Row1.DriverSide.Position"
 
@@ -178,7 +178,8 @@ class BrokerSubscribe(object):
             ts = (
                 dp.timestamp.seconds + int(dp.timestamp.nanos / 10**6) / 1000
             )  # round to msec
-
+        else:
+            ts = None
         logger.debug("  dp.timestamp: {}".format(ts))
 
         value = None
@@ -324,7 +325,7 @@ class BrokerSubscribe(object):
         self.print_meta_data(meta)
         return meta
 
-    async def subscribe_datapoints(self, query, sub_callback=None):
+    async def subscribe_datapoints(self, query: str, sub_callback=None):
         try:
             request = broker_pb2.SubscribeRequest()
             request.query = query

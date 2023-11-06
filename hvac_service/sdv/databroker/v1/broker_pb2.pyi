@@ -19,7 +19,7 @@ import collections.abc
 import google.protobuf.descriptor
 import google.protobuf.internal.containers
 import google.protobuf.message
-import gen_proto.sdv.databroker.v1.types_pb2
+import sdv.databroker.v1.types_pb2
 import sys
 
 if sys.version_info >= (3, 8):

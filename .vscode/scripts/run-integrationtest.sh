@@ -34,8 +34,8 @@ else
 	echo
 fi
 
-pip3 install -q -U -r "${ROOT_DIRECTORY}/integration_test/requirements-dev.txt"
-pip3 install -q -U -r "${ROOT_DIRECTORY}/integration_test/requirements.txt"
+pip3 install -q -r "${ROOT_DIRECTORY}/integration_test/requirements-dev.txt"
+pip3 install -q -r "${ROOT_DIRECTORY}/integration_test/requirements.txt"
 pip3 install -q -e "${ROOT_DIRECTORY}/integration_test/"
 pip3 install -q -e "${ROOT_DIRECTORY}/hvac_service/"
 

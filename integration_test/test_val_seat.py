@@ -19,8 +19,13 @@ import subprocess  # nosec
 
 import grpc
 import pytest
-from gen_proto.sdv.databroker.v1.types_pb2 import Datapoint, DataType
+
+from sdv.databroker.v1.types_pb2 import Datapoint, DataType
 from vdb_helper import VDBHelper
+
+# kuksa API imported as package as some types are with same name
+import kuksa.val.v1.types_pb2 as kuksa_types
+import kuksa.val.v1.val_pb2 as kuksa_val
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("LOG_LEVEL", "INFO"))
@@ -243,6 +248,119 @@ async def test_subscribe_seat_pos_where_error(setup_helper: VDBHelper) -> None:
     await helper.close()
 
 
+@pytest.mark.asyncio
+async def test_kuksa_actuator_meta(setup_helper: VDBHelper) -> None:
+    helper = setup_helper
+    name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
+
+    get_response: kuksa_val.GetResponse = await helper.kuksa_get([name])
+    logger.debug("# kuksa_get({}) -> \n{}".format(name, str(get_response).replace("\n", " ")))
+
+    assert not get_response.HasField("error"), "kuksa_get() Error: {}".format(str(get_response.error))
+    assert len(get_response.errors) == 0, "kuksa_get() Errors: {}".format(str(get_response.errors))
+    assert len(get_response.entries) == 1, "Unexpected entries count {}".format(str(get_response.entries
+
+
+                                                                                    ))
+    entry: kuksa_types.DataEntry = get_response.entries[0]
+    assert entry.path == DEFAULT_VSS_PATH
+    assert entry.HasField("metadata")
+    # assert entry.HasField("actuator_target")
+    assert (
+        entry.metadata.data_type == kuksa_types.DATA_TYPE_UINT16
+    ), "Seat position data_type != UINT16: {}".format(entry.metadata.data_type)
+    assert (
+        entry.metadata.entry_type == kuksa_types.ENTRY_TYPE_ACTUATOR
+    ), "Seat position entry_type != ACTUATOR: {}".format(entry.metadata.entry_type)
+
+    """
+    VAL.GetResponse(['Vehicle.Cabin.Seat.Row1.DriverSide.Position']) ->
+    entries {
+      path: "Vehicle.Cabin.Seat.Row1.DriverSide.Position"
+      value {
+        timestamp {
+          seconds: 1698920296
+          nanos: 600480617
+        }
+        uint32: 900
+      }
+      actuator_target {
+        timestamp {
+          seconds: 1698920295
+          nanos: 12134158
+        }
+        uint32: 900
+      }
+      metadata {
+        data_type: DATA_TYPE_UINT16
+        entry_type: ENTRY_TYPE_ACTUATOR
+        description: "Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported."
+      }
+    }
+    """
+
+
+    await helper.close()
+
+
+
+@pytest.mark.asyncio
+async def test_subscribe_actuator_pos(setup_helper: VDBHelper) -> None:
+    helper: VDBHelper = setup_helper
+    name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
+    query = "SELECT {}".format(name)
+
+    start_value = int(os.getenv("TEST_START_VALUE", "500"))
+    expected_value = int(os.getenv("TEST_VALUE", "0"))
+    timeout = int(os.getenv("TEST_TIMEOUT", "10"))
+
+    # initiate seat move to 42
+    logger.info(" -- moving seat to initial pos: {} (sync)".format(start_value))
+    # sync move to predefined pos
+    execute_script([SCRIPT_SEAT_MOVE, str(start_value), "-w"])
+
+    events = []
+    # inner function for collecting subscription events
+
+    def inner_callback(name: str, dp: Datapoint):
+        dd = helper.datapoint_to_dict(name, dp)
+        events.append(dd)
+
+    logger.info(" -- setting seat position {} (async) via actuator target...".format(expected_value))
+    await helper.set_actuator_uint32_value(name, expected_value);
+
+    logger.debug(
+        "\n# subscribing('{}', timeout={}), expecting:{}".format(
+            query, timeout, expected_value
+        )
+    )
+    await helper.subscribe_datapoints(
+        query, timeout=timeout, sub_callback=inner_callback
+    )
+
+    assert (  # nosec B101
+        len(events) > 0
+    ), "Not received events for '{}' in {} sec.".format(name, timeout)
+    # list of received names
+    event_names = set([e["name"] for e in events])
+    # list of received values
+    event_values_name = [e["value"] for e in events if e["name"] == name]
+
+    logger.debug("  --> names  : {}".format(event_names))
+    # event_values = [e['value'] for e in events]
+    # logger.debug("  --> values : {}".format(event_values))
+    logger.debug("  --> <{}> : {}".format(name, event_values_name))
+
+    assert name in event_names, "{} event not received! {}".format(  # nosec B101
+        name, event_names
+    )
+
+    assert (  # nosec B101
+        expected_value in event_values_name
+    ), "{} value {} missing! {}".format(name, expected_value, event_values_name)
+
+    await helper.close()
+
 async def main() -> None:
     log_level = os.environ.get("LOG_LEVEL", "INFO")
     logging.basicConfig(format="<%(levelname)s>\t%(message)s", level=log_level)
@@ -250,4 +368,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     # execute_script([SCRIPT_SEAT_MOVE, "500", "-w"])
-    pytest.main(["-vvs", "--log-cli-level=INFO", os.path.abspath(__file__)])
+    pytest.main(["-vvs", "--log-cli-level=DEBUG", os.path.abspath(__file__)])

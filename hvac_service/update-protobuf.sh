@@ -29,7 +29,7 @@ done
 echo "# Installing requirements.txt ..."
 pip3 install -q -r requirements-dev.txt
 
-set -xe
+set -e
 PROTO_FILES=$(find "${PROTO_DIRS[@]}" -name '*.proto')
 
 printf -v PROTO_PATH "%s:" "${PROTO_DIRS[@]}"
@@ -39,6 +39,7 @@ echo "# Generating grpc stubs from: ${PROTO_PATH} ..."
 python3 -m grpc_tools.protoc \
 	--python_out=. \
 	--grpc_python_out=. \
+	--mypy_out=. \
 	--proto_path="${PROTO_PATH}" \
 	$PROTO_FILES
 set +xe

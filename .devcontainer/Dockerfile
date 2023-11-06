@@ -12,7 +12,8 @@
 # ********************************************************************************/
 
 # Download base image of Ubuntu
-FROM kuksa.val.services/ci:latest
+# NOTE: it may be required to build the image locally (check root README.md)
+FROM ghcr.io/eclipse/kuksa.val.services/oci_kuksa-val-services-ci:main
 
 # If you get proxy errors, make sure Docker is configured correctly.
 # Hint: https://dev.to/zyfa/setup-the-proxy-for-dockerfile-building--4jc8

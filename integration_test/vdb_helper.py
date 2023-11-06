@@ -20,23 +20,35 @@ import os
 import signal
 import threading
 from threading import Thread
-from typing import Any, Callable, Dict, List, Mapping, Optional
+from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional
 
 import grpc
+
 import pytest
-from gen_proto.sdv.databroker.v1.broker_pb2 import (
+
+from sdv.databroker.v1.broker_pb2 import (
     GetDatapointsRequest,
     GetMetadataRequest,
     SubscribeRequest,
 )
-from gen_proto.sdv.databroker.v1.broker_pb2_grpc import BrokerStub
-from gen_proto.sdv.databroker.v1.collector_pb2 import (
+from sdv.databroker.v1.broker_pb2_grpc import BrokerStub
+from sdv.databroker.v1.collector_pb2 import (
     RegisterDatapointsRequest,
     RegistrationMetadata,
     UpdateDatapointsRequest,
 )
-from gen_proto.sdv.databroker.v1.collector_pb2_grpc import CollectorStub
-from gen_proto.sdv.databroker.v1.types_pb2 import ChangeType, Datapoint, DataType
+from sdv.databroker.v1.collector_pb2_grpc import CollectorStub
+from sdv.databroker.v1.types_pb2 import (
+    ChangeType,
+    Datapoint,
+    DataType,
+)
+
+
+import kuksa.val.v1.types_pb2 as kuksa_types
+import kuksa.val.v1.val_pb2 as kuksa_val
+from kuksa.val.v1.val_pb2_grpc import VALStub
+
 
 logger = logging.getLogger(__name__)
 
@@ -59,6 +71,7 @@ class VDBHelper:
 
         self._collector_stub = CollectorStub(self._channel)
         self._broker_stub = BrokerStub(self._channel)
+        self._val_stub = VALStub(self._channel)
         self._grpc_metadata = self.default_metadata()
         logger.debug("VDBHelper using metadata {}".format(self._grpc_metadata))
         self._ids: Dict[str, int] = None  # type: ignore
@@ -92,11 +105,51 @@ class VDBHelper:
         )
         return response
 
-    async def __get_datapoints(self, datapoints: list):
+    async def __get_datapoints(self, datapoints : Iterable[str]):
         response = await self._broker_stub.GetDatapoints(
             GetDatapointsRequest(datapoints=datapoints), metadata=self._grpc_metadata
         )
         return response
+
+    async def __set_datapoint(self, updates: list) -> kuksa_val.SetResponse:
+        response = await self._val_stub.Set(
+            kuksa_val.SetRequest(updates=updates), metadata=self._grpc_metadata
+        )
+        return response
+
+
+    async def kuksa_get(self, names: List[str]) -> kuksa_val.GetResponse:
+        entries = []
+        for path in names:
+            # get all fields
+            e = kuksa_val.EntryRequest(
+                path=path,
+                fields=[kuksa_types.Field.FIELD_UNSPECIFIED],
+                view=kuksa_types.View.VIEW_ALL
+            )
+            entries.append(e)
+        response: kuksa_val.GetResponse = await self._val_stub.Get(
+            kuksa_val.GetRequest(entries=entries)
+        )
+        logger.debug("# VAL.GetResponse({}) ->\n{}###\n".format(names, response))
+        return response
+
+
+    async def set_actuator_uint32_value(self, actuator_name: str, value: int) -> None:
+
+        de = kuksa_types.DataEntry(
+            path=actuator_name,
+            actuator_target=kuksa_types.Datapoint(uint32=value)
+        )
+        entry = kuksa_val.EntryUpdate(entry=de, fields=[kuksa_types.Field.FIELD_ACTUATOR_TARGET])
+        set_response: kuksa_val.SetResponse = await self._val_stub.Set(kuksa_val.SetRequest(updates=[entry]))
+        logger.debug("# SetResponse[{}] -> \n{}-------\n".format(actuator_name, set_response))
+
+        if set_response.HasField("error"):
+            logger.error("set_actuator_uint32_value[{}] -> error:{}".format(actuator_name, set_response.error))
+        if len(set_response.errors) > 0:
+            logger.error("set_actuator_uint32_value[{}] -> errors:{}".format(actuator_name, set_response.errors))
+
 
     async def get_vdb_metadata(self, names=[]):
         """Requests Metadata from VDB, allows for optional list of names
@@ -145,6 +198,8 @@ class VDBHelper:
         if value_type:
             # try to get directly dp.${which_one} attribute
             value = getattr(dp, value_type)
+        else:
+            value = None
         ts = (
             dp.timestamp.seconds + int(dp.timestamp.nanos / 10**6) / 1000
         )  # round to msec
@@ -189,7 +244,7 @@ class VDBHelper:
 
         registration_metadata = RegistrationMetadata()
         registration_metadata.name = name
-        registration_metadata.data_type = data_type
+        registration_metadata.data_type = data_type # type: ignore
         registration_metadata.description = ""
         registration_metadata.change_type = ChangeType.CONTINUOUS
 
@@ -211,6 +266,14 @@ class VDBHelper:
         datapoint.uint32_value = value
         datapoint_id = await self.__get_or_create_datapoint_id_by_name(
             name, DataType.UINT32  # type: ignore
+        )
+        return await self.__update_datapoints({datapoint_id: datapoint})
+
+    async def set_bool_datapoint(self, name: str, value: bool):
+        datapoint = Datapoint()
+        datapoint.bool_value = value
+        datapoint_id = await self.__get_or_create_datapoint_id_by_name(
+            name, DataType.BOOL  # type: ignore
         )
         return await self.__update_datapoints({datapoint_id: datapoint})
 
@@ -286,6 +349,8 @@ def __on_subscribe_event(name: str, dp: Datapoint) -> None:
     if value_type:
         # try to get directly dp.${which_one} attribute
         value = getattr(dp, value_type)
+    else:
+        value = None
     ts = (
         dp.timestamp.seconds + int(dp.timestamp.nanos / 10**6) / 1000
     )  # round to msec
@@ -330,7 +395,7 @@ class SubscribeRunner:
     def get_dp_values(self, dp_name: str) -> List[Datapoint]:
         return [dp["value"] for dp in self.events[dp_name]]
 
-    def find_dp_value(self, dp_name: str, dp_value: Any) -> Datapoint:
+    def find_dp_value(self, dp_name: str, dp_value: Any) -> Optional[Datapoint]:
         if dp_name not in self.events:
             return None
         for dp in self.events[dp_name]:
@@ -386,12 +451,17 @@ class SubscribeRunner:
 
 
 async def main() -> None:
-    LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
+    LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG")
     logging.basicConfig(format="<%(levelname)s>\t%(message)s", level=LOG_LEVEL)
 
+    name = "Vehicle.Cabin.Seat.Row1.DriverSide.Position"
+
     vdb_addr = os.environ.get("VDB_ADDR", "localhost:55555")
-    query = os.environ.get("QUERY", "SELECT Vehicle.Cabin.Seat.Row1.DriverSide.Position")
+    query = os.environ.get("QUERY", "SELECT {}".format(name))
     helper = VDBHelper(vdb_addr)
+
+    actuator_entry = await helper.kuksa_get([name])
+    await helper.set_actuator_uint32_value(name, 100*10)
 
     await helper.subscribe_datapoints(
         query, sub_callback=__on_subscribe_event, timeout=1
