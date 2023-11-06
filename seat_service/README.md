@@ -33,7 +33,9 @@ This represents the example seat control service. More elaborate or completely d
 
    ``` bash
    cd ..
-   docker build -t oci_kuksa-val-services-ci:latest  -f tools/Dockerfile  .
+   docker build -t oci_kuksa-val-services-ci:latest -f tools/Dockerfile .
+   # NOTE: If you need to cross compile for different arch:
+   DOCKER_BUILDKIT=1 docker buildx build --platform linux/arm64 -t oci_kuksa-val-services-ci:arm64 -f tools/Dockerfile --load  .
    ```
 
 ### Usage on CLI

@@ -15,9 +15,10 @@
 import json
 import logging
 import os
+from pickle import FALSE
 
 import pytest
-from gen_proto.sdv.databroker.v1.types_pb2 import Datapoint
+from sdv.databroker.v1.types_pb2 import Datapoint
 from vdb_helper import VDBHelper
 
 logger = logging.getLogger(__name__)
@@ -53,11 +54,19 @@ async def test_feeder_vdb_connection() -> None:
 @pytest.mark.asyncio
 async def test_feeder_metadata_registered(setup_helper: VDBHelper) -> None:
     helper = setup_helper
+
+    # register optional DogMode datapoints (disabled by default)
+    # logger.debug("# Registering optional DogMode datapoints...")
+    # await helper.set_bool_datapoint("Vehicle.Cabin.DogMode", False)
+    # await helper.set_float_datapoint("Vehicle.Cabin.DogModeTemperature", 25.0)
+
     feeder_names = [
         "Vehicle.OBD.Speed",
-        "Vehicle.Powertrain.Transmission.Gear",
-        "Vehicle.Chassis.ParkingBrake.IsEngaged",
         "Vehicle.OBD.EngineLoad",
+        "Vehicle.Powertrain.Transmission.CurrentGear",       # [feedercan:v0.1.10]: "Vehicle.Powertrain.Transmission.Gear",
+        "Vehicle.Powertrain.Transmission.IsParkLockEngaged"  # [feedercan:v0.1.10]: "Vehicle.Chassis.ParkingBrake.IsEngaged",
+        # "Vehicle.Cabin.DogMode",
+        # "Vehicle.Cabin.DogModeTemperature",
     ]
 
     meta = await helper.get_vdb_metadata(feeder_names)
@@ -145,4 +154,4 @@ async def test_feeder_events(setup_helper: VDBHelper) -> None:
 
 
 if __name__ == "__main__":
-    pytest.main(["-vvs", "--log-cli-level=INFO", os.path.abspath(__file__)])
+    pytest.main(["-vvs", "--log-cli-level=DEBUG", os.path.abspath(__file__)])

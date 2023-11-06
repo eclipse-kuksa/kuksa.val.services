@@ -24,7 +24,7 @@ COL_YELLOW='\e[33m'
 
 # ignore some known dirs/files
 FILES=$(find "$DIR" -type f | grep -v \
-	'.md$\|.tar$\|.tar.gz$\|.my$\|.git\|.lock$\|.dockerignore$\|.svg$\|.drawio$\|/build\|target/\|doxygen/\|.tox\|.mypy\|__pycache__/\|.pytest_cache\|.json$\|.pyi$\|__init__.py\|gen_proto/\|.egg-info')
+	'.md$\|.tar$\|.tar.gz$\|.my$\|.git\|.lock$\|.log$\|.dockerignore$\|LICENSE$\|.svg$\|.drawio$\|.yaml$\|.yml$\|.ini$\|.cfg$\|/build\|target/\|doxygen/\|.tox\|.mypy$\|__pycache__/\|.pytest_cache\|.json$\|.pyi$\|__init__.py\|gen_proto/\|.egg-info\|.vscode/scripts/assets\|.png\|.txt\|./seat_service/toolchains/\|_pb2.py\|_pb2_grpc.py\|./integration_test/volumes/\|./results/')
 
 MISSING=""
 for f in $FILES; do

@@ -4,21 +4,23 @@
     "dockerfile": "Dockerfile"
   },
   "runArgs": ["--init", "--privileged"],
-  "settings": {
-    "terminal.integrated.defaultProfile.linux": "bash",
-    "http.proxyStrictSSL": false
-  },
-  "features": {
-    "docker-in-docker": {
-      "version": "latest",
-      "moby": true
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "http.proxyStrictSSL": false
+      },
+      "extensions": [
+        "yzhang.markdown-all-in-one",
+        "arturock.gitstash",
+        "eamodio.gitlens",
+        "streetsidesoftware.code-spell-checker",
+        "twxs.cmake"
+      ]
     }
   },
-  "extensions": [
-    "yzhang.markdown-all-in-one",
-    "arturock.gitstash",
-    "eamodio.gitlens",
-    "streetsidesoftware.code-spell-checker",
-    "twxs.cmake"
-  ]
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+    }
+  }
 }

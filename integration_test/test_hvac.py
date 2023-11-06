@@ -20,7 +20,7 @@ import time
 from threading import Thread
 
 import pytest
-from gen_proto.sdv.databroker.v1.types_pb2 import Datapoint
+from sdv.databroker.v1.types_pb2 import Datapoint
 from vdb_helper import SubscribeRunner, VDBHelper
 
 # prevents dumping "E0617: Fork support is only compatible with the epoll1 and poll polling strategies"

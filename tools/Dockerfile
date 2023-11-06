@@ -31,27 +31,31 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install apt & root utils needed inside devcontainer
 RUN \
   sed -i 's/# \(.*multiverse$\)/\1/g' /etc/apt/sources.list && \
-  apt-get update && \
-  apt-get -qqy install --no-install-recommends \
-    apt-utils software-properties-common sudo curl
+  apt-get update && apt-get upgrade -y
 
-# Upgrade as needed
-RUN apt-get upgrade -y
+
+RUN apt-get -qqy install --no-install-recommends \
+    apt-utils software-properties-common binutils-common sudo curl
 
 # Install dev utilities
 RUN apt-get -qqy install --no-install-recommends \
   git \
-  doxygen \
   can-utils
+
+# NOTE: spit to reduce layer size (ttl.sh upload)
+RUN apt-get -qqy install --no-install-recommends \
+  doxygen
 
 # Install build tools
 RUN apt-get -qqy install --no-install-recommends \
   cmake make ccache
 
-# compilers
+## compilers
 #   compiler version must be sync with conan build profile
 RUN apt-get -qqy install --no-install-recommends \
-  g++ \
+  g++
+# NOTE: g++aarch64 is spit to reduce layer size (ttl.sh upload)
+RUN apt-get -qqy install --no-install-recommends \
   g++-aarch64-linux-gnu
 
 RUN apt-get -qqy install --no-install-recommends \
@@ -74,8 +78,7 @@ RUN pip3 install --upgrade pip setuptools
 # cantools: code generation from .dbc file
 RUN pip3 install \
 	'conan==1.56.0' \
-	'cantools==37.0.1' \
-	'setuptools==68.2.2'
+	'cantools==37.0.1'
 
 # Install Rust tools and prerequists needed for the databroker
 # RUN apt-get -y install --no-install-recommends curl jq
@@ -86,5 +89,9 @@ COPY hvac_service/requirements-dev.txt hvac_service/requirements-dev.txt
 COPY integration_test/requirements-dev.txt integration_test/requirements-dev.txt
 RUN pip3 install -U -r hvac_service/requirements-dev.txt
 RUN pip3 install -U -r integration_test/requirements-dev.txt
+
+# cleanup cahces to minimize image size
+RUN pip3 cache purge
+RUN apt-get clean
 
 WORKDIR /workspace

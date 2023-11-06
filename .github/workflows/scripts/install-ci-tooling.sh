@@ -43,6 +43,9 @@ sudo apt-get -qqy install --no-install-recommends \
 # Install PIP
 [ -z "$(which pip3)" ] && sudo apt-get -qqy install --no-install-recommends --fix-missing python3-pip
 
+# Default pip and setuptools are too old...
+pip3 install --upgrade pip setuptools
+
 # conan: dependency management
 # - conan needed > 1.43 for gtest
 # - conan >= 2.0 breaks commandline interface
