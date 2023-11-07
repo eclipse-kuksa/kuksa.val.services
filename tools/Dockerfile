@@ -74,8 +74,7 @@ RUN pip3 install --upgrade pip setuptools
 # cantools: code generation from .dbc file
 RUN pip3 install \
 	'conan==1.56.0' \
-	'cantools==37.0.1' \
-	'setuptools==68.2.2'
+	'cantools==37.0.1'
 
 # Install Rust tools and prerequists needed for the databroker
 # RUN apt-get -y install --no-install-recommends curl jq
