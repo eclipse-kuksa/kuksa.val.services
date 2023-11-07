@@ -45,7 +45,9 @@ RUN apt-get -qqy install --no-install-recommends \
   can-utils
 
 # Install build tools
-RUN apt-get -qqy install --no-install-recommends \
+# Install also recommended tools to make sure layer below does not get too big
+# Alternatively, try to add a new layer to install binutils-common manually
+RUN apt-get -qqy install  \
   cmake make ccache
 
 # compilers
