@@ -110,7 +110,7 @@ jobs:
             ttl.sh/kuksa.val.services/oci_kuksa-val-services-ci-${{github.sha}}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Build container and push to ttl.sh
+      - name: Build container and push to ttl.sh - Dummy change
         if: needs.check_ghcr_push.outputs.push == 'false'
         id: tmp-build
         uses: docker/build-push-action@v5
