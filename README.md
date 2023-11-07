@@ -141,8 +141,6 @@ This means a refactoring would be required to update to VSS 4.0.
 
 ### Known locations where an explicit VSS or KUKSA.val version is mentioned
 
-
-
 In [integration_test.yml](https://github.com/eclipse/kuksa.val.services/blob/main/.github/workflows/integration_test.yml)
 it is hardcoded which VSS version to use when starting Databroker.
 
