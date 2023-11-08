@@ -23,15 +23,15 @@ USER root
 # To prevent interactive shells
 ENV DEBIAN_FRONTEND=noninteractive
 
+### TODO: Move all installs from here to base image to speedup codespaces starutp
+
 # Install basic utils needed inside devcontainer
 RUN apt-get update && \
-  apt-get install -qqy curl wget zip  \
-  git \
+  apt-get install -qqy wget zip  \
   bash \
   xz-utils \
-  curl \
   apt-transport-https \
-  jq
+  file
 
 # python3.9 is required for feedercan vscode task
 RUN apt-get install -qqy python3.9
@@ -47,7 +47,7 @@ ENV LANGUAGE en_US.UTF-8
 # Set timezone inside Docker container
 ENV TZ=UTC
 RUN echo $TZ > /etc/timezone && \
-  apt-get update && apt-get install -qqy tzdata && \
+  apt-get install -qqy tzdata && \
   rm /etc/localtime && \
   dpkg-reconfigure -f noninteractive tzdata
 
