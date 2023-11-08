@@ -55,19 +55,26 @@ fi
 
 cd "$FEEDERCAN_EXEC_PATH" || exit 1
 
+PYTHON_BIN="python3.9"
+PIP3_BIN="pip3.9"
+
 if [ -z "$(which python3.9)" ]; then
 	echo "### WARNING! dbc2val requires python3.9" 1>&2
 	echo "You may install 3.9 in pyenv. Check: https://github.com/pyenv/pyenv#installation"
-	echo "$ curl https://pyenv.run | bash"
-	echo "$ pyenv install 3.9.18"
-	echo "$ pyenv versions"
-	echo "$ pyenv global 3.9.18"
-	echo "$ python3.9 --version"
+	echo "Or using apt:"
+	echo "  sudo apt-get install -y python3.9"
+	echo "  curl https://bootstrap.pypa.io/get-pip.py | python3.9"
+	echo "  python3.9 --version"
+	echo "  pip3.9 --version"
+	echo
+	# fallback to default python (e.g. it may be 9.10)
+	PYTHON_BIN="python3"
+	PIP3_BIN="pip3"
 fi
 
 # PIP_OPT="--upgrade --retries 1 --timeout 3"
-### IMPORTANT: dbc2val now requires python 9, does not work on python8
-pip3.9 install $PIP_OPT -q -r requirements.txt -r requirements-dev.txt
+### IMPORTANT: dbc2val now requires python 3.9, does not work on python 3.8
+"$PIP3_BIN" install $PIP_OPT -q -r requirements.txt -r requirements-dev.txt
 
 ####################################
 ### feedercan environment setup ####
@@ -112,4 +119,4 @@ dapr run \
 	--components-path "$ROOT_DIRECTORY/.dapr/components" \
 	--config "$ROOT_DIRECTORY/.dapr/config.yaml" &
 #--
-python3.9 -u ./dbcfeeder.py
+"$PYTHON_BIN" -u ./dbcfeeder.py

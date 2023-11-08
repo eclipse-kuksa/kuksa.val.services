@@ -29,8 +29,14 @@ RUN apt-get update && \
   git \
   bash \
   xz-utils \
+  curl \
   apt-transport-https \
   jq
+
+# python3.9 is required for feedercan vscode task
+RUN apt-get install python3.9
+# hack to install proper version of pip3.9
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3.9
   
 # Set the locale
 RUN apt-get install -qqy locales locales-all

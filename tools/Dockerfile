@@ -68,6 +68,7 @@ RUN apt-get -qqy install --no-install-recommends \
 
 # Install PIP
 RUN apt-get -qqy install --fix-missing \
+  python3 \
   python3-pip
 
 # Default pip and setuptools are too old...
