@@ -50,6 +50,8 @@ jobs:
 
       - name: cobertura-report
         if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        # NOTE: cobertura-action have a fix for node 12 deprecation warning, but it's not released yet.
+        # Using a pinned commit instead of master for security purposes, to be updated if they release new version
         uses: 5monkeys/cobertura-action@18d911b62098eafd8b9db93d6c74194556cc3515
         with:
           path: ${{github.workspace}}/seat_service/build_seat_controller/x86_64/report_codecov_vservice-seat-ctrl.xml
