@@ -34,7 +34,7 @@ RUN apt-get update && \
   jq
 
 # python3.9 is required for feedercan vscode task
-RUN apt-get install python3.9
+RUN apt-get install -qqy python3.9
 # hack to install proper version of pip3.9
 RUN curl https://bootstrap.pypa.io/get-pip.py | python3.9
   
