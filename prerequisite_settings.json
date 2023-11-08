@@ -4,7 +4,8 @@
     "imageVersion": "master"
   },
   "feedercan": {
-    "version": "0.4.1"
+    "version": "main",
+    "imageVersion": "0.4.1"
   },
   "kuksa_client": {
     "version": "0.4.1"

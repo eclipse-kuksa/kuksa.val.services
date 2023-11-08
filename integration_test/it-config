@@ -17,7 +17,7 @@ export SCRIPT_DIR
 CONFIG_JSON="$SCRIPT_DIR/../prerequisite_settings.json"
 
 # get databroker, feeder tags from prerequisite_settings.json
-FEEDER_TAG=$(jq -r '.feedercan.version // empty' "$CONFIG_JSON")
+FEEDER_TAG=$(jq -r '.feedercan.imageVersion // empty' "$CONFIG_JSON")
 KDB_TAG=$(jq -r '.databroker.imageVersion // empty' "$CONFIG_JSON")
 # default values
 [ -z "$KDB_TAG" ] && export KDB_TAG="v0.17.0"
@@ -56,7 +56,7 @@ FEEDER_MOUNT_DIR="/conf"
 FEEDER_MOUNT_OPT="-v $FEEDER_HOST_DIR:${FEEDER_MOUNT_DIR}"
 # NOTE: for [dbc2val:v0.1.0] FEEDER_ENV="-e DBC_FILE=$FEEDER_MOUNT_DIR/it-can.dbc -e MAPPING_FILE=$FEEDER_MOUNT_DIR/it-mapping.yml -e CANDUMP_FILE=$FEEDER_MOUNT_DIR/it-candump0.log -e USECASE=databroker"
 FEEDER_ENV="-e DBC_FILE=$FEEDER_MOUNT_DIR/it-can.dbc -e MAPPING_FILE=$FEEDER_MOUNT_DIR/it-vss_4.0.json -e CANDUMP_FILE=$FEEDER_MOUNT_DIR/it-candump0.log -e USE_DBC2VAL=1"
-FEEDER_LOG="info,dbcfeeder=debug" # ,dbcfeeder=debug,kuksa_client.grpc=debug,dbcfeederlib.canplayer=debug,dbcfeederlib.canreader=debug,dbcfeederlib.dbc2vssmapper=debug"
+FEEDER_LOG="info" #,dbcfeeder=debug,kuksa_client.grpc=debug,dbcfeederlib.canplayer=debug,dbcfeederlib.canreader=debug,dbcfeederlib.dbc2vssmapper=debug"
 
 export KDB_DOCKER_OPT="-p   ${KDB_HOST_PORT}:55555/tcp --expose ${KDB_HOST_PORT}  -e RUST_LOG=info,databroker=debug,vehicle_data_broker=debug -e VEHICLEDATABROKER_DAPR_APP_ID=kdb --name ${KDB_CONTAINER}"
 export SEAT_DOCKER_OPT="-p ${SEAT_HOST_PORT}:50051/tcp --expose ${SEAT_HOST_PORT} -e BROKER_ADDR=${DOCKER_KDB_ADDRESS} -e SIM=cansim -e SC_RPM=100 -e VEHICLEDATABROKER_DAPR_APP_ID=kdb --name ${SEAT_CONTAINER}"

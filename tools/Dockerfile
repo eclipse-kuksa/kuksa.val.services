@@ -35,7 +35,15 @@ RUN \
 
 
 RUN apt-get -qqy install --no-install-recommends \
-    apt-utils software-properties-common binutils-common sudo curl
+    apt-utils software-properties-common binutils-common sudo
+
+# devcontainer installs moved here
+RUN apt-get -qqy install --no-install-recommends \
+  curl wget zip \
+  xz-utils \
+  apt-transport-https \
+  file \
+  locales locales-all
 
 # Install dev utilities
 RUN apt-get -qqy install --no-install-recommends \
@@ -73,6 +81,12 @@ RUN apt-get -qqy install --fix-missing \
 
 # Default pip and setuptools are too old...
 RUN pip3 install --upgrade pip setuptools
+
+# python3.9 is required for feedercan vscode task
+RUN apt-get install -qqy python3.9
+# hack to install proper version of pip3.9
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3.9
+RUN pip3.9 install --upgrade pip setuptools
 
 # conan: dependency management
 # conan needed > 1.43 for gtest and < 2.0

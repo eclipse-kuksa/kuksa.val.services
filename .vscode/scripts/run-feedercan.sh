@@ -33,6 +33,7 @@ source "$ROOT_DIRECTORY/.vscode/scripts/task-common.sh" "$@"
 # NOTE: use dapr sidecar's grpc port, don't connect directly to sidecar of kdb (DATABROKER_GRPC_PORT)
 export DAPR_GRPC_PORT="$FEEDERCAN_GRPC_PORT"
 
+# NOTE: [config] feedercan.version is git tag for standalone tests, feedercan.imageVersion is for container tests
 FEEDERCAN_VERSION=$(jq -r '.feedercan.version // empty' "$CONFIG_JSON")
 
 ### Default feedercan settings (repo, tag are optional in json)
@@ -46,6 +47,8 @@ fi
 FEEDERCAN_DIR="$ROOT_DIRECTORY/.vscode/scripts/assets/feedercan/${FEEDERCAN_VERSION//[^a-zA-Z0-9._-]/#}"
 # path to dbcfeeder within the project
 FEEDERCAN_EXEC_PATH="$FEEDERCAN_DIR/dbc2val"
+
+echo "### Starting from: $FEEDERCAN_EXEC_PATH"
 
 if [ ! -f "$FEEDERCAN_EXEC_PATH/dbcfeeder.py" ]; then
 	[ -d "$FEEDERCAN_DIR" ] || mkdir -p "$FEEDERCAN_DIR"
@@ -116,7 +119,7 @@ dapr run \
 	--app-protocol grpc \
 	--dapr-grpc-port $FEEDERCAN_GRPC_PORT \
 	$DAPR_OPT \
-	--components-path "$ROOT_DIRECTORY/.dapr/components" \
+	--resources-path "$ROOT_DIRECTORY/.dapr/components" \
 	--config "$ROOT_DIRECTORY/.dapr/config.yaml" &
 #--
 "$PYTHON_BIN" -u ./dbcfeeder.py

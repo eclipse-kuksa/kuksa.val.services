@@ -17,7 +17,7 @@ export ENV DEBIAN_FRONTEND=noninteractive
 
 # Install apt & root utils needed inside devcontainer
 sudo apt-get -qqy update &&
-	sudo apt-get -qqy install --no-install-recommends apt-utils software-properties-common sudo curl
+	sudo apt-get -qqy install --no-install-recommends apt-utils software-properties-common sudo curl file
 
 # Install dev utilities
 sudo apt-get -qqy install --no-install-recommends git doxygen can-utils python3
