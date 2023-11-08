@@ -82,12 +82,6 @@ RUN apt-get -qqy install --fix-missing \
 # Default pip and setuptools are too old...
 RUN pip3 install --upgrade pip setuptools
 
-# python3.9 is required for feedercan vscode task
-RUN apt-get install -qqy python3.9
-# hack to install proper version of pip3.9
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3.9
-RUN pip3.9 install --upgrade pip setuptools
-
 # conan: dependency management
 # conan needed > 1.43 for gtest and < 2.0
 # cantools: code generation from .dbc file
@@ -104,6 +98,12 @@ COPY hvac_service/requirements-dev.txt hvac_service/requirements-dev.txt
 COPY integration_test/requirements-dev.txt integration_test/requirements-dev.txt
 RUN pip3 install -U -r hvac_service/requirements-dev.txt
 RUN pip3 install -U -r integration_test/requirements-dev.txt
+
+# python3.9 is required for feedercan vscode task
+RUN apt-get install -qqy python3.9
+# hack to install proper version of pip3.9
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3.9
+RUN pip3.9 install --upgrade pip setuptools
 
 # cleanup cahces to minimize image size
 RUN pip3 cache purge
