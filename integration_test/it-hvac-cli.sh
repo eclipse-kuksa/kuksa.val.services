@@ -63,5 +63,5 @@ cd "${SCRIPT_DIR}/../hvac_service" || exit 1
 # sleep 1
 
 echo "### Setting HVAC temp:${TEMP}, status:${STATUS}, port: ${HVAC_HOST_PORT}"
-python -u testclient.py --temp "${TEMP}" --status "${STATUS}" --addr "localhost:${HVAC_HOST_PORT}"
+python3 -u testclient.py --temp "${TEMP}" --status "${STATUS}" --addr "localhost:${HVAC_HOST_PORT}"
 exit $?
