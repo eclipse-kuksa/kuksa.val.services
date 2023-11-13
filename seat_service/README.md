@@ -113,11 +113,14 @@ Building the seat service via dev container must be triggered from the project r
 # Linux
 
 # Cleanup any build artifacts
-rm -rf seat_service/bin_vservice-seat_*.tar.gz  seat_service/target/
+rm -rf seat_service/bin_vservice-seat_*.tar.gz seat_service/target/
 
 # Generate seat_service/bin_vservice-seat_*.tar.gz files for packing seat service container
 docker run --rm -it -v $(pwd):/workspace oci_kuksa-val-services-ci:latest /bin/bash -c \
-  "cd seat_service/; ./build-release.sh"
+  "cd seat_service/; ./build-release.sh --pack"
+
+# Check if release package is build
+ls -la seat_service/bin_vservice-seat_*.tar.gz
 ```
 
 ##### Build Seat Service container

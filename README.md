@@ -38,35 +38,33 @@ If you want to define and implement your own vehicle services, there are two gui
 
 :construction_worker_woman: :construction: **This section may be a bit outdated. So, please take care!** :construction: :construction_worker_man:
 
-From the terminal, make the seat_service as your working directory:
+**NOTE:** Following steps are tested on Ubuntu 20.04 and `x86_64`. Building on `aarch64` host is not supported.
+For other options check Seat Service [README.md](./seat_service/README.md)
 
-``` bash
-cd seat_service
-```
+- From the terminal, make the seat_service as your working directory:
 
-When you are inside the seat_service directory, create binaries:
+    ``` bash
+    cd seat_service
+    ```
 
-``` bash
-./build-release.sh x86_64
+- When you are inside the `seat_service` directory, create binaries and pack them to tar.gz:
 
-#Use following commands for aarch64
-./build-release.sh aarch64
-```
-Build a tar file of all binaries.
-``` bash
-#Replace x86_64 with aarch64 for arm64 architecture
-tar -czvf bin_vservice-seat_x86_64_release.tar.gz \
-    target/x86_64/release/install/ \
-    target/x86_64/release/licenses/ \
-    proto/
-```
-To build the image execute following commands from root directory as context.
-``` bash
-docker build -f seat_service/Dockerfile -t seat_service:<tag> .
+    ``` bash
+    ./build-release.sh x86_64 --pack
 
-#Use following command if buildplatform is required
-DOCKER_BUILDKIT=1 docker build -f seat_service/Dockerfile -t seat_service:<tag> .
-```
+    #Use following commands for aarch64
+    ./build-release.sh aarch64 --pack
+    ```
+
+- To build the image execute following commands from root directory as context.
+
+    ``` bash
+    docker build -f seat_service/Dockerfile -t seat_service:<tag> .
+
+    #Use following command if buildplatform is required
+    DOCKER_BUILDKIT=1 docker build -f seat_service/Dockerfile -t seat_service:<tag> .
+    ```
+
 The image creation may take around 2 minutes.
 
 ## Running Seat Service / Data Broker Containers

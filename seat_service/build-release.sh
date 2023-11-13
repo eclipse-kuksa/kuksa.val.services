@@ -21,10 +21,45 @@
 # shellcheck disable=SC2046
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-TARGET_ARCH="$1"
-[ -z "$TARGET_ARCH" ] && TARGET_ARCH="x86_64"
+print_usage() {
+	echo "USAGE: $0 [OPTIONS] {TARGET}"
+	echo
+	echo "Compile Seat Service release binaries for target"
+	echo
+	echo "OPTIONS:"
+	echo "  -p, --pack        Packages the binaries for building docker image in build dir"
+	echo "  -d, --dir <path>  Override default release dir with specified path"
+	echo "      --help        Show help"
+	echo
+	echo "TARGET:"
+	echo "  x86_64, aarch64   Target arch to build for, default: 'x86_64'"
+	echo
+}
 
-BUILD_DIR="$2"
+PACK=0
+
+while [ $# -gt 0 ]; do
+	if [ "$1" = "--help" ]; then
+		print_usage
+		exit 0
+	elif [ "$1" = "-p" ] || [ "$1" = "--pack" ]; then
+		PACK=1
+	elif [ "$1" = "-d" ] || [ "$1" = "--dir" ]; then
+		shift # advance to next arg
+		BUILD_DIR="$1"
+	else
+		if [ "$1" != "x86_64" ] && [ "$1" != "aarch64" ]; then
+			echo "Invalid Target: $1"
+			print_usage
+			exit 1
+		fi
+		TARGET_ARCH="$1"
+	fi
+	shift
+done
+
+# set defaults
+[ -z "$TARGET_ARCH" ] && TARGET_ARCH="x86_64"
 [ -z "$BUILD_DIR" ] && BUILD_DIR="$SCRIPT_DIR/target/$TARGET_ARCH/release"
 
 # set -e
@@ -41,7 +76,7 @@ echo "########## Conan Info #########"
 conan info .
 echo "###############################"
 
-conan install -if="$BUILD_DIR" --build=missing --profile:build=default --profile:host="${SCRIPT_DIR}/toolchains/target_${TARGET_ARCH}_Release" "$SCRIPT_DIR"
+conan install -if="$BUILD_DIR" --build=missing --profile:build=default --profile:host="$SCRIPT_DIR/toolchains/target_${TARGET_ARCH}_Release" "$SCRIPT_DIR"
 
 cd "$BUILD_DIR" || exit
 # shellcheck disable=SC1091
@@ -72,4 +107,18 @@ if [ -n "$STRIP" ]; then
 	$STRIP -s --strip-unneeded $BINARIES
 	file $BINARIES
 	echo
+fi
+
+if [ "$PACK" = "1" ]; then
+	cd "$BUILD_DIR" || exit 1
+
+	echo "# Copy all proto files in $BUILD_DIR/proto/"
+	cp -rav "$SCRIPT_DIR/../proto" .
+	cp -rav "$SCRIPT_DIR/proto" .
+
+	ARCHIVE="$SCRIPT_DIR/bin_vservice-seat_${TARGET_ARCH}_release.tar.gz"
+	tar -czvf "$ARCHIVE" install/ licenses/ proto/
+
+	echo "### Packed release to $ARCHIVE"
+	ls -sh "$ARCHIVE"
 fi
