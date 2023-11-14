@@ -15,7 +15,6 @@
 import json
 import logging
 import os
-from pickle import FALSE
 
 import pytest
 from sdv.databroker.v1.types_pb2 import Datapoint
@@ -63,7 +62,7 @@ async def test_feeder_metadata_registered(setup_helper: VDBHelper) -> None:
     feeder_names = [
         "Vehicle.OBD.Speed",
         "Vehicle.OBD.EngineLoad",
-        "Vehicle.Powertrain.Transmission.CurrentGear",       # [feedercan:v0.1.10]: "Vehicle.Powertrain.Transmission.Gear",
+        "Vehicle.Powertrain.Transmission.CurrentGear",  # [feedercan:v0.1.10]: "Vehicle.Powertrain.Transmission.Gear",
         "Vehicle.Powertrain.Transmission.IsParkLockEngaged"  # [feedercan:v0.1.10]: "Vehicle.Chassis.ParkingBrake.IsEngaged",
         # "Vehicle.Cabin.DogMode",
         # "Vehicle.Cabin.DogModeTemperature",

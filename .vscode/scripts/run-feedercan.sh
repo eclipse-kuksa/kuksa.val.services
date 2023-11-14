@@ -70,7 +70,7 @@ if [ -z "$(which python3.9)" ]; then
 	echo "  python3.9 --version"
 	echo "  pip3.9 --version"
 	echo
-	# fallback to default python (e.g. it may be 9.10)
+	# fallback to default python (e.g. it may be 3.10)
 	PYTHON_BIN="python3"
 	PIP3_BIN="pip3"
 fi
