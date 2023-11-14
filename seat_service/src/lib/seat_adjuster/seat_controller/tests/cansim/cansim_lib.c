@@ -343,7 +343,7 @@ int ioctl(int fd, unsigned long request, ...) {
             // TODO: check if we should handle other ioctl() requests on mocked socket
             ret = 0;
             if (debug || verbose) {
-                fprintf(sim_log, MOCK "ioctl(%d, %lu, %p) -> %d (Unhandled request)\n", fd, request, arg, ret);
+                fprintf(sim_log, MOCK "ioctl(%d, %lu, %p) -> %d (Unhandled request)\n", fd, request, (void*)arg, ret);
             }
             return ret;
         }

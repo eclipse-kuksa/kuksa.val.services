@@ -32,8 +32,8 @@ FROM --platform=$TARGETPLATFORM ubuntu:20.04 as runtime
 LABEL org.opencontainers.image.description "VAL Seat Service container, providing VSC Seat impl and supporting simulated/real can ECU"
 
 ## Uncomment for ip/can tools
-#RUN apt-get -qqy update && apt-get install -qqy net-tools can-utils iproute2 && apt clean && rm -rf /var/lib/apt/lists/*
-RUN apt-get -qqy update && apt-get install --no-install-recommends can-utils && apt clean && rm -rf /var/lib/apt/lists/*
+#RUN apt-get -qqy update && apt-get install -qqy net-tools can-utils iproute2 && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN apt-get -qqy update && apt-get -qqy install --no-install-recommends can-utils && apt-get clean && rm -rf /var/lib/apt/lists/*
 # make sure localhost can be resolved!
 RUN cat /etc/hosts | grep -q localhost || echo "127.0.0.1 localhost" >> /etc/hosts
 
