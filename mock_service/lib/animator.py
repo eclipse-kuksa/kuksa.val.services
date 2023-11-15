@@ -72,7 +72,6 @@ class ValueAnimator(Animator):
         self._done = False
         self._repeat_mode = repeat_mode
         self._value_update_callback = value_update_callback
-        self._value = self._values[0]
 
     def tick(self, delta_time: float):
         if self._done:
@@ -87,18 +86,8 @@ class ValueAnimator(Animator):
             elif self._repeat_mode == RepeatMode.REPEAT:
                 self._anim_time = self._anim_time - self._duration
 
-        self._value = self._interpolation(self._anim_time)
-
         if self._value_update_callback is not None:
-            self._value_update_callback(self.value())
-
-    def value(self):
-        if isinstance(self._values[0], int):
-            return int(self._value)
-        elif isinstance(self._values[0], float):
-            return float(self._value)
-        else:
-            return self._value
+            self._value_update_callback(self._interpolation(self._anim_time))
 
     def is_done(self) -> bool:
         return self._done
