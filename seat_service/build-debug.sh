@@ -86,15 +86,25 @@ cmake --build . -j $(nproc)
 cmake --install .
 
 if [ "$PACK" = "1" ]; then
-	cd "$BUILD_DIR" || exit 1
+	ARCHIVE_PATH="target/${TARGET_ARCH}/debug"
+	TMPDIR="/tmp/.seat_service-$$"
+	[ -d "$TMPDIR" ] && rm -rf "$TMPDIR"
+	mkdir -p "$TMPDIR"
+	cd "$TMPDIR" || exit 1
+	# create Docker compatible structure
+	mkdir -p "$ARCHIVE_PATH"
 
-	echo "# Copy all proto files in $BUILD_DIR/proto/"
-	cp -rav "$SCRIPT_DIR/../proto" .
-	cp -rav "$SCRIPT_DIR/proto" .
+	echo "# Copy all proto files in ./proto/"
+	cp -ra "$SCRIPT_DIR/../proto" .
+	cp -ra "$SCRIPT_DIR/proto" .
+	cp -ra "$BUILD_DIR/." "$ARCHIVE_PATH"
 
 	ARCHIVE="$SCRIPT_DIR/bin_vservice-seat_${TARGET_ARCH}_debug.tar.gz"
-	tar -czvf "$ARCHIVE" install/ licenses/ proto/
+	tar -czvf "$ARCHIVE" "$ARCHIVE_PATH/install/" "$ARCHIVE_PATH/licenses/" proto/
 
-	echo "### Packed release to $ARCHIVE"
+	# cleanup
+	rm -rf "$TMPDIR"
+
+	echo "### Packed debug build to $ARCHIVE"
 	ls -sh "$ARCHIVE"
 fi
