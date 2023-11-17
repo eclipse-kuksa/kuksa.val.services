@@ -123,8 +123,8 @@ jobs:
           push: true
           tags: "ttl.sh/kuksa.val.services/oci_kuksa-val-services-ci-${{github.sha}}"
           labels: ${{ steps.meta.outputs.labels }}
-          
+
       - name: Posting message
-        uses: ./.github/actions/post-container-location
+        uses: eclipse-kuksa/kuksa-actions/post-container-location@2
         with:
           image: ttl.sh/kuksa.val.services/oci_kuksa-val-services-ci-${{github.sha}}

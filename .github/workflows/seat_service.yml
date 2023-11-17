@@ -11,7 +11,7 @@
 # * SPDX-License-Identifier: Apache-2.0
 # ********************************************************************************/
 
-name: mock-service
+name: seat-service-docker-build
 
 on:
   push:
@@ -19,8 +19,8 @@ on:
       - main
   pull_request:
     paths:
-      - ".github/workflows/mock_service.yml"
-      - "mock_service/**"
+      - ".github/workflows/seat_service.yml"
+      - "seat_service/**"
       - "proto/**"
   workflow_call:
   workflow_dispatch:
@@ -55,13 +55,26 @@ jobs:
           echo "tag=${IMAGE_TAG}" >> $GITHUB_OUTPUT
 
 
+  call_seat_service_release:
+    uses: ./.github/workflows/seat_service_release_build.yml
+
   build-container:
+    # The Dockerfile itself does not build from scratch, it relies on existing build artifacts
     runs-on: ubuntu-latest
-    needs: check_ghcr_push
+    needs:
+      [
+        check_ghcr_push,
+        call_seat_service_release
+      ]
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+
+      - name: Retrieve build binaries
+        uses: actions/download-artifact@v3
+        with:
+          path: ${{github.workspace}}/seat_service
 
       - name: Docker meta
         id: meta
@@ -69,7 +82,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            ghcr.io/eclipse/kuksa.val.services/mock_service
+            ghcr.io/eclipse/kuksa.val.services/seat_service
           # generate Docker tags based on the following events/attributes
           tags: |
             type=ref,event=branch
@@ -93,12 +106,12 @@ jobs:
           platforms: |
             linux/amd64
             linux/arm64
-          file: ./mock_service/Dockerfile
-          context: ./mock_service
+          file: ./seat_service/Dockerfile
+          context: .
           push: true
           tags: |
             ${{ steps.meta.outputs.tags }}
-            ttl.sh/kuksa.val.services/mock_service-${{github.sha}}
+            ttl.sh/kuksa.val.services/seat_service-${{github.sha}}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Build container and push to ttl.sh
@@ -109,71 +122,13 @@ jobs:
           platforms: |
             linux/amd64
             linux/arm64
-          file: ./mock_service/Dockerfile
-          context: ./mock_service
+          file: ./seat_service/Dockerfile
+          context: .
           push: true
-          tags: "ttl.sh/kuksa.val.services/mock_service-${{github.sha}}"
+          tags: "ttl.sh/kuksa.val.services/seat_service-${{github.sha}}"
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Posting message
         uses: eclipse-kuksa/kuksa-actions/post-container-location@2
         with:
-          image: ttl.sh/kuksa.val.services/mock_service-${{github.sha}}
-
-  ensure-docs-up2date:
-    name: Ensure docs are up2date
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: (Re-) Build Pydoc Markdown
-        shell: bash
-        working-directory: mock_service
-        run: |
-          ./update-api-docs.sh
-
-      - name: Has Changes
-        id: changes
-        run: |
-          if [[ -z "$(git status --porcelain .)" ]];
-          then
-            echo "changed=0" >> $GITHUB_OUTPUT
-          else
-            echo "changed=1" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
-
-      - name: Fail if there are changes
-        if: steps.changes.outputs.changed == 1
-        run: exit 1
-
-  run-tests:
-    name: Run tests
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-
-      - name: Install dependencies
-        shell: bash
-        working-directory: mock_service
-        run: |
-          python3 -m pip install --pre -r ./requirements.txt
-          python3 -m pip install -r ./requirements-dev.txt
-
-      - name: Run tests
-        shell: bash
-        working-directory: mock_service
-        run: |
-          python3 -m pytest
+          image: ttl.sh/kuksa.val.services/seat_service-${{github.sha}}
