@@ -45,7 +45,7 @@
 
 #define PREFIX_CAN      "        [CAN]: "
 #define PREFIX_CTL      "   [CTL Loop]: "
-#define PREFIX_STAT     " [SECU1_STAT]: "
+#define PREFIX_STAT     " [SECU2_STAT]: "
 #define PREFIX_APP      "[SeatCtrl:"
 #define SELF_INIT         PREFIX_APP ":init_ctx] "
 #define SELF_OPEN         PREFIX_APP ":open] "
@@ -63,8 +63,8 @@
 int64_t get_ts();
 const char* mov_state_string(int dir);
 
-void print_secu1_cmd_1(const char* prefix, CAN_secu1_cmd_1_t *cmd);
-void print_secu1_stat(const char* prefix, CAN_secu1_stat_t *stat);
+void print_secu2_cmd_1(const char* prefix, CAN_secu2_cmd_1_t *cmd);
+void print_secu2_stat(const char* prefix, CAN_secu2_stat_t *stat);
 void print_can_raw(const struct can_frame *frame, bool is_received);
 void print_ctl_stats(seatctrl_context_t *ctx, const char* prefix);
 
@@ -108,7 +108,7 @@ const char* mov_state_string(int dir)
 
 
 /**
- * @brief Describes CAN_secu1_stat_t.motorX_learning_state
+ * @brief Describes CAN_secu2_stat_t.motorX_learning_state
  *
  * @param state
  * @return const char*
@@ -116,11 +116,11 @@ const char* mov_state_string(int dir)
 const char* learning_state_string(int state)
 {
     switch (state) {
-        case CAN_SECU1_STAT_MOTOR1_LEARNING_STATE_NOT_LEARNED_CHOICE:
+        case CAN_SECU2_STAT_MOTOR1_LEARNING_STATE_NOT_LEARNED_CHOICE:
             return "NOK";
-        case CAN_SECU1_STAT_MOTOR1_LEARNING_STATE_LEARNED_CHOICE:
+        case CAN_SECU2_STAT_MOTOR1_LEARNING_STATE_LEARNED_CHOICE:
             return "OK";
-        case CAN_SECU1_STAT_MOTOR1_LEARNING_STATE_INVALID_CHOICE:
+        case CAN_SECU2_STAT_MOTOR1_LEARNING_STATE_INVALID_CHOICE:
             return "INV";
         default:
             return "Undefined!";
@@ -165,22 +165,22 @@ void print_ctl_stats(seatctrl_context_t *ctx, const char* prefix)
 
 
 /**
- * @brief Prints CAN_secu1_cmd_1_t* in human readable format to stdout
+ * @brief Prints CAN_secu2_cmd_1_t* in human readable format to stdout
  *
  * @param prefix string to print before stats
- * @param cmd CAN_secu1_cmd_1_t*
+ * @param cmd CAN_secu2_cmd_1_t*
  */
-void print_secu1_cmd_1(const char* prefix, CAN_secu1_cmd_1_t *cmd)
+void print_secu2_cmd_1(const char* prefix, CAN_secu2_cmd_1_t *cmd)
 {
 #ifdef SEAT_CTRL_ALL_MOTORS // reduce extra dumps on console, we care about motor1 only
-    printf("%s[SECU1]{ m1_cmd: %s, m1_rpm: %d, m2_cmd: %s, m2_rpm: %d, m3_cmd: %s, m3_rpm: %d, m4_cmd: %s, m4_rpm: %d }\n",
+    printf("%s[SECU2]{ m1_cmd: %s, m1_rpm: %d, m2_cmd: %s, m2_rpm: %d, m3_cmd: %s, m3_rpm: %d, m4_cmd: %s, m4_rpm: %d }\n",
             prefix,
             mov_state_string(cmd->motor1_manual_cmd), cmd->motor1_set_rpm * 100,
             mov_state_string(cmd->motor2_manual_cmd), cmd->motor2_set_rpm * 100,
             mov_state_string(cmd->motor3_manual_cmd), cmd->motor3_set_rpm * 100,
             mov_state_string(cmd->motor4_manual_cmd), cmd->motor4_set_rpm * 100);
 #else
-    printf("%s[SECU1]{ motor1_cmd: %s, motor1_rpm: %d }\n",
+    printf("%s[SECU2]{ motor1_cmd: %s, motor1_rpm: %d }\n",
             prefix,
             mov_state_string(cmd->motor1_manual_cmd), cmd->motor1_set_rpm * 100);
 #endif
@@ -188,17 +188,17 @@ void print_secu1_cmd_1(const char* prefix, CAN_secu1_cmd_1_t *cmd)
 
 
 /**
- * @brief Prints CAN_secu1_stat_t* in human readable format to stdout
+ * @brief Prints CAN_secu2_stat_t* in human readable format to stdout
  *
  * @param prefix
  * @param stat
  */
-void print_secu1_stat(const char* prefix, CAN_secu1_stat_t *stat)
+void print_secu2_stat(const char* prefix, CAN_secu2_stat_t *stat)
 {
 #ifdef SEAT_CTRL_ALL_MOTORS
     printf("%s m1:{pos:%3d%%, mov: %-3s, lrn: %s} m2:{pos:%3d%%, mov: %-3s, lrn: %s} \n",
             prefix,
-            stat->motor1_pos, // CAN_secu1_stat_motor1_pos_decode() - not generated if float code is disabled! Make sure scaling remains "default"!
+            stat->motor1_pos, // CAN_secu2_stat_motor1_pos_decode() - not generated if float code is disabled! Make sure scaling remains "default"!
             mov_state_string(stat->motor1_mov_state),
             learning_state_string(stat->motor1_learning_state),
             stat->motor2_pos,
@@ -208,7 +208,7 @@ void print_secu1_stat(const char* prefix, CAN_secu1_stat_t *stat)
 #else
     printf("%s{ motor1_pos:%3d%%, motor1_mov_state: %-3s, motor1_learning_state: %s }\n",
             prefix,
-            stat->motor1_pos, // CAN_secu1_stat_motor1_pos_decode() - not generated if float code is disabled! Make sure scaling remains "default"!
+            stat->motor1_pos, // CAN_secu2_stat_motor1_pos_decode() - not generated if float code is disabled! Make sure scaling remains "default"!
             mov_state_string(stat->motor1_mov_state),
             learning_state_string(stat->motor1_learning_state)
         );
@@ -220,29 +220,29 @@ void print_secu1_stat(const char* prefix, CAN_secu1_stat_t *stat)
  * @brief Handler function for processing SECUx_STAT commands
  *
  * @param ctx SeatCtrl context
- * @param frame can_frame with CanID = CAN_SECU1_STAT_FRAME_ID
+ * @param frame can_frame with CanID = CAN_SECU2_STAT_FRAME_ID
  * @return SEAT_CTRL_OK on success, SEAT_CTRL_ERR* (<0) on error.
  */
 error_t handle_secu_stat(seatctrl_context_t *ctx, const struct can_frame *frame)
 {
-    CAN_secu1_stat_t stat;
-    memset(&stat, 0, sizeof(CAN_secu1_stat_t));
+    CAN_secu2_stat_t stat;
+    memset(&stat, 0, sizeof(CAN_secu2_stat_t));
 
-    if (frame->can_id != CAN_SECU1_STAT_FRAME_ID) {
-        printf(PREFIX_CTL "ERR: Not a CAN_SECU1_STAT_FRAME_ID frame! (%d)\n", frame->can_id);
+    if (frame->can_id != CAN_SECU2_STAT_FRAME_ID) {
+        printf(PREFIX_CTL "ERR: Not a CAN_SECU2_STAT_FRAME_ID frame! (%d)\n", frame->can_id);
         return SEAT_CTRL_ERR_INVALID;
     }
-    int rc = CAN_secu1_stat_unpack(&stat, frame->data, frame->can_dlc);
+    int rc = CAN_secu2_stat_unpack(&stat, frame->data, frame->can_dlc);
     if (rc != 0) {
-        printf(PREFIX_CTL "ERR: Failed unpacking CAN_SECU1_STAT_FRAME_ID frame!\n");
+        printf(PREFIX_CTL "ERR: Failed unpacking CAN_SECU2_STAT_FRAME_ID frame!\n");
         return SEAT_CTRL_ERR;
     }
 
     // if values in range -> update motor1 last known pos. helpful against cangen attacks
-    if (CAN_secu1_stat_motor1_pos_is_in_range(stat.motor1_pos) &&
+    if (CAN_secu2_stat_motor1_pos_is_in_range(stat.motor1_pos) &&
         ((int)stat.motor1_pos <= 100 || (int)stat.motor1_pos == MOTOR_POS_INVALID) && // range always positive
-        CAN_secu1_stat_motor1_mov_state_is_in_range(stat.motor1_mov_state) &&
-        CAN_secu1_stat_motor1_learning_state_is_in_range(stat.motor1_learning_state))
+        CAN_secu2_stat_motor1_mov_state_is_in_range(stat.motor1_mov_state) &&
+        CAN_secu2_stat_motor1_learning_state_is_in_range(stat.motor1_learning_state))
     {
         if (ctx->config.debug_stats) {
             // dump unique?
@@ -251,7 +251,7 @@ error_t handle_secu_stat(seatctrl_context_t *ctx, const struct can_frame *frame)
                 ctx->motor1_learning_state != stat.motor1_learning_state ||
                 ctx->motor1_mov_state != stat.motor1_mov_state)
             {
-                print_secu1_stat(PREFIX_STAT, &stat);
+                print_secu2_stat(PREFIX_STAT, &stat);
             }
         }
 
@@ -388,7 +388,7 @@ error_t seatctrl_control_loop(seatctrl_context_t *ctx)
                         perror(PREFIX_CTL "seatctrl_send_cmd1(OFF) error");
                     }
                     ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
-                    printf(PREFIX_CTL ">>> Re-sending: SECU1_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
+                    printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                             ctx->motor1_pos, ctx->desired_position, mov_state_string(ctx->desired_direction), ctx->command_ts);
                     seatctrl_send_cmd1(ctx, ctx->desired_direction, ctx->config.motor_rpm);
                     if (rc != SEAT_CTRL_OK) {
@@ -499,7 +499,7 @@ void *seatctrl_threadFunc(void *arg)
              }
         }
         // TODO: pthread_mutex lock in ctx
-        if (frame.can_id == CAN_SECU1_STAT_FRAME_ID)
+        if (frame.can_id == CAN_SECU2_STAT_FRAME_ID)
         {
             if (handle_secu_stat(ctx, &frame) == SEAT_CTRL_OK) {
                 seatctrl_control_loop(ctx);
@@ -514,7 +514,7 @@ void *seatctrl_threadFunc(void *arg)
 
 
 /**
- * @brief Sends an CAN_secu1_cmd_1_t to SocketCAN
+ * @brief Sends an CAN_secu2_cmd_1_t to SocketCAN
  *
  * @param ctx SeatCtrl context
  * @param motor1_dir motor1 move direction: value of MotorDirection enum
@@ -524,7 +524,7 @@ void *seatctrl_threadFunc(void *arg)
 error_t seatctrl_send_cmd1(seatctrl_context_t *ctx, uint8_t motor1_dir, uint8_t motor1_rpm)
 {
     int rc;
-    CAN_secu1_cmd_1_t cmd1;
+    CAN_secu2_cmd_1_t cmd1;
     struct can_frame frame;
 
     if (ctx->socket == SOCKET_INVALID) {
@@ -533,20 +533,20 @@ error_t seatctrl_send_cmd1(seatctrl_context_t *ctx, uint8_t motor1_dir, uint8_t 
     }
     // argument check?
 
-    memset(&cmd1, 0, sizeof(CAN_secu1_cmd_1_t));
+    memset(&cmd1, 0, sizeof(CAN_secu2_cmd_1_t));
     // FIXME: range checks! [0..254]
     cmd1.motor1_manual_cmd = motor1_dir;
     cmd1.motor1_set_rpm = motor1_rpm;
 
     memset(&frame, 0, sizeof(struct can_frame));
-    frame.can_id = CAN_SECU1_CMD_1_FRAME_ID;
-    rc = CAN_secu1_cmd_1_pack(frame.data, &cmd1, sizeof(CAN_secu1_cmd_1_t));
+    frame.can_id = CAN_SECU2_CMD_1_FRAME_ID;
+    rc = CAN_secu2_cmd_1_pack(frame.data, &cmd1, sizeof(CAN_secu2_cmd_1_t));
     if (rc < 0) {
-        printf(SELF_CMD1 "ERR: CAN_secu1_cmd_1_pack() error\n");
+        printf(SELF_CMD1 "ERR: CAN_secu2_cmd_1_pack() error\n");
         return SEAT_CTRL_ERR;
     }
-    frame.can_dlc = 8; // = rc; BUGFIX: we have to send full 8 bytes, regardless of actual CAN_secu1_cmd_1_pack packed size, append 00s
-    print_secu1_cmd_1(SELF_CMD1 "*** Sending SECU1_CMD_1: " , &cmd1);
+    frame.can_dlc = 8; // = rc; BUGFIX: we have to send full 8 bytes, regardless of actual CAN_secu2_cmd_1_pack packed size, append 00s
+    print_secu2_cmd_1(SELF_CMD1 "*** Sending SECU2_CMD_1: " , &cmd1);
     if (ctx->config.debug_raw) {
         print_can_raw(&frame, false);
     }
@@ -616,7 +616,7 @@ error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired_position)
             usleep(100 * 1000L);
         }
         if (ctx->motor1_pos == MOTOR_POS_INVALID) {
-            printf(SELF_SETPOS "Check %s interface for incoming SECU1_STAT frames!\n", ctx->config.can_device);
+            printf(SELF_SETPOS "Check %s interface for incoming SECU2_STAT frames!\n", ctx->config.can_device);
             printf(SELF_SETPOS "Seat Adjustment to %d%% aborted.\n", desired_position);
             return SEAT_CTRL_ERR_NO_FRAMES;
         }
@@ -661,7 +661,7 @@ error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired_position)
     ctx->desired_direction = direction;
     ctx->desired_position = desired_position;
     // FIXME: SECUx_CMD1 Movement Status has the same values as SECUX
-    printf(SELF_SETPOS "Sending: SECU1_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
+    printf(SELF_SETPOS "Sending: SECU2_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
             ctx->motor1_pos, ctx->desired_position, mov_state_string(direction), ctx->command_ts);
 
     rc = seatctrl_send_cmd1(ctx, direction, ctx->config.motor_rpm);
@@ -840,7 +840,7 @@ error_t seatctrl_open(seatctrl_context_t *ctx)
 
     printf(SELF_OPEN "### SocketCAN opened.\n");
 
-    // FIXME: wait some time and check if SECU1_STAT signals are incoming from the thread
+    // FIXME: wait some time and check if SECU2_STAT signals are incoming from the thread
     return SEAT_CTRL_OK;
 }
 

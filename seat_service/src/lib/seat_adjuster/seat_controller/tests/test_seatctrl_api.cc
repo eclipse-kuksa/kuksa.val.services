@@ -98,15 +98,15 @@ class TestSeatCtrlApi : public ::testing::Test {
         if (!frame) return -1;
         ::memset(frame, 0, sizeof(can_frame));
 
-        CAN_secu1_stat_t stat;
-        ::memset(&stat, 0, sizeof(CAN_secu1_stat_t));
+        CAN_secu2_stat_t stat;
+        ::memset(&stat, 0, sizeof(CAN_secu2_stat_t));
         stat.motor1_pos = motor_pos;
         stat.motor1_mov_state = mov_state;
         stat.motor1_learning_state = learn_state;
 
-        frame->can_id = CAN_SECU1_STAT_FRAME_ID;
+        frame->can_id = CAN_SECU2_STAT_FRAME_ID;
         frame->can_dlc = 8;
-        int rc = CAN_secu1_stat_pack(frame->data, &stat, sizeof(stat));
+        int rc = CAN_secu2_stat_pack(frame->data, &stat, sizeof(stat));
         if (rc == 8) {
             return 0;
         } else {
@@ -485,7 +485,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
             std::string output = testing::internal::GetCapturedStdout();
             std::cout << output << std::endl;
             EXPECT_TRUE(output.find("Sending MotorOff command") != std::string::npos &&
-                        output.find("Re-sending: SECU1_CMD_1") != std::string::npos)
+                        output.find("Re-sending: SECU2_CMD_1") != std::string::npos)
                     << "Expected motor off + resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }
@@ -578,7 +578,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
             std::string output = testing::internal::GetCapturedStdout();
             std::cout << output << std::endl;
             EXPECT_TRUE(output.find("Sending MotorOff command") != std::string::npos &&
-                        output.find("Re-sending: SECU1_CMD_1") != std::string::npos)
+                        output.find("Re-sending: SECU2_CMD_1") != std::string::npos)
                     << "Expected motor off + resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }

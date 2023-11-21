@@ -113,15 +113,15 @@ enum SeatCtrlEvent { CanError, Motor1Pos };
 typedef void (*seatctrl_event_cb_t)(SeatCtrlEvent type, int value, void* userContext);
 
 /**
- * @brief Common enum for CAN_secu1_cmd_1_t.motor1_manual_cmd and CAN_secu1_stat_t.motor1_mov_state
+ * @brief Common enum for CAN_secu2_cmd_1_t.motor1_manual_cmd and CAN_secu2_stat_t.motor1_mov_state
  *
  * @fixme: Use cantools generated constants per CAN ID in case those are different in the future
  */
 enum MotorDirection {
-	OFF = 0, // CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_OFF_CHOICE
-	DEC = 1, // CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_DEC_CHOICE
-	INC = 2, // CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_INC_CHOICE
-	INV = 3	 // CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_DEF_CHOICE
+	OFF = 0, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_OFF_CHOICE
+	DEC = 1, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEC_CHOICE
+	INC = 2, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_INC_CHOICE
+	INV = 3	 // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEF_CHOICE
 };
 
 /**
@@ -168,9 +168,9 @@ typedef struct {
  * @param desired_position Desired target motor position for active operation. (internal)
  * @param desired_direction Calculated direction of movement towards desired_position. (internal)
  *
- * @param motor1_pos Last received (valid) value from CAN_secu1_stat_t.motor1_pos
- * @param motor1_mov_state Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
- * @param motor1_learning_state Last Received (valid) value from CAN_secu1_stat_t.motor1_learning_state
+ * @param motor1_pos Last received (valid) value from CAN_secu2_stat_t.motor1_pos
+ * @param motor1_mov_state Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
+ * @param motor1_learning_state Last Received (valid) value from CAN_secu2_stat_t.motor1_learning_state
  *
  * @param event_cb Callback function (seatctrl_event_cb_t) for motor position changes.
  * @param event_cb_user_data Callback function for motor position change user context*.
@@ -187,23 +187,23 @@ typedef struct
 	uint8_t desired_position;   // Desired target motor position for active operation
 	MotorDirection desired_direction; // Calculated direction of movement towards desired_position
 
-	// motor*_* fields below are updated from CAN_SECU1_STAT signal on state change:
-	uint8_t motor1_pos;            // Last received (valid) value from CAN_secu1_stat_t.motor1_pos
-	uint8_t motor1_mov_state;      // Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
-	uint8_t motor1_learning_state; // Last received (valid) value from CAN_secu1_stat_t.motor1_learning_state
+	// motor*_* fields below are updated from CAN_SECU2_STAT signal on state change:
+	uint8_t motor1_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor1_pos
+	uint8_t motor1_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
+	uint8_t motor1_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor1_learning_state
 
 #ifdef SEAT_CTRL_ALL_MOTORS
-	uint8_t motor2_pos;            // Last received (valid) value from CAN_secu1_stat_t.motor2_pos
-	uint8_t motor2_mov_state;      // Last received (valid) value from CAN_secu1_stat_t.motor2_mov_state
-	uint8_t motor2_learning_state; // Last received (valid) value from CAN_secu1_stat_t.motor2_learning_state
+	uint8_t motor2_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor2_pos
+	uint8_t motor2_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor2_mov_state
+	uint8_t motor2_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor2_learning_state
 
-	uint8_t motor3_pos;            // Last received (valid) value from CAN_secu1_stat_t.motor3_pos
-	uint8_t motor3_mov_state;      // Last received (valid) value from CAN_secu1_stat_t.motor3_mov_state
-	uint8_t motor3_learning_state; // Last received (valid) value from CAN_secu1_stat_t.motor3_learning_state
+	uint8_t motor3_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor3_pos
+	uint8_t motor3_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
+	uint8_t motor3_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor3_learning_state
 
-	uint8_t motor4_pos;            // Last received (valid) value from CAN_secu1_stat_t.motor4_pos
-	uint8_t motor4_mov_state;      // Last received (valid) value from CAN_secu1_stat_t.motor4_mov_state
-	uint8_t motor4_learning_state; // Last received (valid) value from CAN_secu1_stat_t.motor4_learning_state
+	uint8_t motor4_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor4_pos
+	uint8_t motor4_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor4_mov_state
+	uint8_t motor4_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor4_learning_state
 #endif // # SEAT_CTRL_ALL_MOTORS
 
 	// Callback for position changes

@@ -310,10 +310,10 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
     int motor3_pos_percent = sae_pos_percent(ctx->_sim_motor3_pos); // ignore fractional
     int motor4_pos_percent = sae_pos_percent(ctx->_sim_motor4_pos); // ignore fractional
 #endif
-    cf->can_id = 0x0712;  // CAN_SECU1_STAT_FRAME_ID
+    cf->can_id = 0x0714;  // CAN_SECU2_STAT_FRAME_ID
     cf->can_dlc = 8;
     memset(cf->data, 0, sizeof(cf->data));
-    // data ### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: 'learned', MOTOR1_POS: 0..100 ]
+    // data ### Sending SECU2_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: 'learned', MOTOR1_POS: 0..100 ]
     // cansend vcan0 712#46.44.01.00.00.00.00.00
     // cansend 712#${DIR}.44.${POS}.00.00.00.00.00 // $DIR: { 0x44=OFF, 0x46=Motor1::INC, 0x45=Notor1::DEC=0x45 }
 
@@ -351,7 +351,7 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
 
     if (_sae_debug && ctx->_sim_motor1_oldpos != motor1_pos_percent) {
 #ifdef SAE_ALL_MOTORS
-        fprintf(sim_log, SELF_CAN_RCB "Generated: SECU1_STAT "
+        fprintf(sim_log, SELF_CAN_RCB "Generated: SECU2_STAT "
                  "{ m1_pos:%3d%%, m1_state:%3s, m1_lrn:%3s } "
                  "{ m2_pos:%3d%%, m2_state:%3s, m2_lrn:%3s } "
                  "{ m3_pos:%3d%%, m3_state:%3s, m3_lrn:%3s } "
@@ -361,7 +361,7 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
                 motor3_pos_percent, sae_mov_state(ctx->_sim_motor3_status), sae_lrn_state(ctx->_sim_motor3_lrn),
                 motor4_pos_percent, sae_mov_state(ctx->_sim_motor4_status), sae_lrn_state(ctx->_sim_motor4_lrn));
 #else
-        fprintf(sim_log, SELF_CAN_RCB "Generated: SECU1_STAT { pos:%3d%%, mov_state:%3s, lrn:%3s }\n",
+        fprintf(sim_log, SELF_CAN_RCB "Generated: SECU2_STAT { pos:%3d%%, mov_state:%3s, lrn:%3s }\n",
                 motor1_pos_percent, sae_mov_state(ctx->_sim_motor1_status), sae_lrn_state(ctx->_sim_motor1_lrn));
 #endif
     }
@@ -404,7 +404,7 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
         fprintf_hex(sim_log, cf->data, cf->can_dlc);
         fprintf(sim_log, " }\n");
     }
-    if (cf->can_id == 0x705) { // CAN_SECU1_CMD_1_FRAME_ID
+    if (cf->can_id == 0x707) { // CAN_SECU2_CMD_1_FRAME_ID
         unsigned char motor1_dir = (cf->data[0] >> 0) & 0x3;
         unsigned char motor2_dir = (cf->data[0] >> 2) & 0x3;
         unsigned char motor3_dir = (cf->data[0] >> 4) & 0x3;
@@ -415,7 +415,7 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
         unsigned char motor3_rpm = cf->data[3];
         unsigned char motor4_rpm = cf->data[4];
 
-        fprintf(sim_log, SELF_CAN_WCB "SECU1_CMD_1 { m1_dir:%d, m1_rpm:%d,  m2_dir:%d, m2_rpm:%d,  m3_dir:%d, m3_rpm:%d,  m4_dir:%d, m4_rpm:%d }\n",
+        fprintf(sim_log, SELF_CAN_WCB "SECU2_CMD_1 { m1_dir:%d, m1_rpm:%d,  m2_dir:%d, m2_rpm:%d,  m3_dir:%d, m3_rpm:%d,  m4_dir:%d, m4_rpm:%d }\n",
                 motor1_dir, motor1_rpm, motor2_dir, motor2_rpm, motor3_dir, motor3_rpm, motor4_dir, motor4_rpm);
 
         ctx->_sim_motor1_rpm = motor1_rpm;
