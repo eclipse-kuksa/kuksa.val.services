@@ -11,7 +11,7 @@
 ## Naming of Tags
 
 * Release tags need to be in the following form:
-    **v\<mayor>.\<minor>.\<bugfix>\* eg: v1.2.1, v2.0.0alpha**
+    **\<major>.\<minor>.\<bugfix>\* eg: 1.2.1, 2.0.0**
 ## Workflow and branching model
 ![ci_workflow](./doc/ci_workflow.svg)
 
@@ -28,10 +28,7 @@ In general the naming shall follow: **<type>(_<sub-type>)_<componenent-name>.tar
 * Documentation: **docu_\<component-name\>.\**, e.g: docu_vservice-seat
 
 ## How to create a new release
-1. Adapt the version tags in all needed files, (e.g.: for v0.15.0) via executing
-   * ``./prepare_release.sh 0.15.0``
-2. tag a main branch version with a release tag
-    * This trigger a github workflow which automatically creates a draft release
-3. Publish the release on the repo webpage
-   * navigate to the repo webpage -> Release -> edited the create draft -> Publish
+
+See [Release Process](https://github.com/eclipse/kuksa.val.services/wiki/Release-Process)
+
 
