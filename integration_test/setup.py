@@ -13,7 +13,7 @@
 
 from setuptools import find_packages, setup
 
-PKG_VERSION = "v0.1.0"
+PKG_VERSION = "v0.3.0"
 
 pkg_packages = find_packages()
 

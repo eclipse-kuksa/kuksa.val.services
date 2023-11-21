@@ -28,25 +28,11 @@ fi
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
-WORKFLOWS_ROOT="$REPO_ROOT/.github/workflows"
-# Update workflow versions.
-sed -i -E "s/(^.*):v${VERSION_REGEX}(.*)$/\1:v${VERSION}/" \
-	"$WORKFLOWS_ROOT/seat_service_build.yml" \
-	"$WORKFLOWS_ROOT/seat_service_docu_build.yml" \
-	"$WORKFLOWS_ROOT/seat_service_release.yml" \
-	"$WORKFLOWS_ROOT/seat_service_seatctrl_test.yml"
-
 DOCKERDEV_ROOT="$REPO_ROOT/.devcontainer"
-# Update docker dev files.
-sed -i -E "s/(^.*):v${VERSION_REGEX}(.*)$/\1:v${VERSION}/" \
-	"$DOCKERDEV_ROOT/Dockerfile"
 
 # replace python package versions
 PYTHON_ROOT="$REPO_ROOT"
-sed -i -E "s/^[[:space:]]*PKG_VERSION[[:space:]]*=[[:space:]]*\"(.*)\"\$/PKG_VERSION=\"v${VERSION}\"/" \
+sed -i -E "s/^[[:space:]]*PKG_VERSION[[:space:]]*=[[:space:]]*\"(.*)\"\$/PKG_VERSION = \"v${VERSION}\"/" \
 	"$PYTHON_ROOT/integration_test/setup.py" \
 	"$PYTHON_ROOT/hvac_service/setup.py"
 
-# Create release commit and tag it
-#git commit -a -m "Release ${VERSION}"
-#git tag -a "v${VERSION}" -m "Release ${VERSION}"
