@@ -31,11 +31,12 @@ from lib.dsl import (
     create_set_action,
     get_datapoint_value,
     mock_datapoint,
-    create_EventTrigger
+    create_event_trigger
 )
 from lib.trigger import ClockTrigger, EventType
 from lib.animator import RepeatMode
 from lib.behavior import Behavior
+
 
 class GUIElement:
     def __init__(self, name, vss_path, metadata, read_only):
@@ -44,6 +45,7 @@ class GUIElement:
         self.read_only = read_only
         self.behaviors: list(Behavior) = []
         self.metadata = metadata
+
 
 class GUIApp:
     def __init__(self, client):
@@ -75,10 +77,10 @@ class GUIApp:
         if datatype == DataType.BOOLEAN:
             element = self.create_toggle_button(new_element)
         elif datatype == DataType.STRING:
-            label = ttk.Label(root, text=name+":")
+            label = ttk.Label(root, text=name + ":")
             element = self.create_entry(new_element)
         else:
-            label = ttk.Label(root, text=name+":")
+            label = ttk.Label(root, text=name + ":")
             element, value_label = self.create_slider(new_element)
 
         if label is not None:
@@ -92,8 +94,7 @@ class GUIApp:
             self.create_new_behavior(new_element)
         self.update_layout()
 
-
-    def actual_mock_datapoint(self, element):           
+    def actual_mock_datapoint(self, element):
         mock_datapoint(
             path=element.vss_path,
             initial_value=0,
@@ -102,8 +103,7 @@ class GUIApp:
 
         self.popup.destroy()
 
-
-    def create_mock_behavior(self, element, use_animation, use_set, setValue, cond_path, cond_val, clicked, str_values, duration, repeat, trigger_path, ms=0):
+    def create_mock_behavior(self, element, use_animation, use_set, setValue, cond_path, cond_val, clicked, str_values, duration, repeat, trigger_path, sec=0):
         if use_set or use_animation:
             if use_set:
                 if setValue != "":
@@ -115,7 +115,7 @@ class GUIApp:
                         action = create_set_action(bool(setValue))
                     else:
                         action = create_set_action(int(float(setValue)))
-                else: 
+                else:
                     action = create_set_action("$event.value")
             elif use_animation:
                 _repeat_mode = None
@@ -136,7 +136,7 @@ class GUIApp:
                                 elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
                                     value = bool(value)
                                 else:
-                                    value = int(float(value)) 
+                                    value = int(float(value))
                         else:
                             if element.metadata.data_type == DataType.STRING or element.metadata.data_type == DataType.STRING_ARRAY:
                                 pass
@@ -145,28 +145,27 @@ class GUIApp:
                             elif element.metadata.data_type == DataType.BOOLEAN or element.metadata.data_type == DataType.BOOLEAN_ARRAY:
                                 value = bool(value)
                             else:
-                                value = int(float(value)) 
-                        _values.append(value) 
-                    
+                                value = int(float(value))
+                        _values.append(value)
+
                     action = create_animation_action(_values, float(duration), _repeat_mode)
-                else: 
+                else:
                     _Values = ["$self", "$event.value"]
                     action = create_animation_action(_Values, float(duration), _repeat_mode)
 
             if clicked == "ClockTrigger":
-                _trigger = ClockTrigger(float(ms))
+                _trigger = ClockTrigger(float(sec))
             elif clicked == "TargetTrigger":
                 if trigger_path != "":
-                    _trigger = create_EventTrigger(EventType.ACTUATOR_TARGET, trigger_path)
+                    _trigger = create_event_trigger(EventType.ACTUATOR_TARGET, trigger_path)
                 else:
-                    _trigger = create_EventTrigger(EventType.ACTUATOR_TARGET)
+                    _trigger = create_event_trigger(EventType.ACTUATOR_TARGET)
             elif clicked == "ValueTrigger":
                 if trigger_path != "":
-                    _trigger = create_EventTrigger(EventType.VALUE, trigger_path)
-                else: 
-                    _trigger = create_EventTrigger(EventType.VALUE)
+                    _trigger = create_event_trigger(EventType.VALUE, trigger_path)
+                else:
+                    _trigger = create_event_trigger(EventType.VALUE)
 
-            
             if cond_val != "":
                 if cond_path == "":
                     cond_path = element.vss_path
@@ -182,7 +181,7 @@ class GUIApp:
                         trigger=_trigger,
                         condition=lambda ctx: get_datapoint_value(
                             ctx, cond_path
-                        )== cond_val,
+                        ) == cond_val,
                         action=action
                     )
                 else:
@@ -201,18 +200,17 @@ class GUIApp:
                             trigger=_trigger,
                             condition=lambda ctx: get_datapoint_value(
                                 ctx, cond_path
-                            )== cond_val,
+                            ) == cond_val,
                             action=action
                         )
-                        
-                    except VSSClientError as e:
+
+                    except VSSClientError:
                         messagebox.showinfo(title="Info", message="The provided path does not exist.")
             else:
-               new_behavior = create_behavior(
-                trigger=_trigger,
-                action=action
-            )
-                
+                new_behavior = create_behavior(
+                    trigger=_trigger,
+                    action=action
+                )
 
             element.behaviors.append(new_behavior)
             messagebox.showinfo(title="Info", message="Behavior created")
@@ -242,7 +240,7 @@ class GUIApp:
                 self.update_layout()
         else:
             set_var.set(0)
-    
+
     def checkAnimationButton(self, animation_var, set_var, animationValue_elements):
         if not set_var.get():
             if animation_var.get():
@@ -267,16 +265,16 @@ class GUIApp:
         else:
             animation_var.set(0)
 
-    def showClockTriggerEntry(self, clicked, ms, label0, repeat, label1, trigger_path):
+    def showClockTriggerEntry(self, clicked, sec, label0, repeat, label1, trigger_path):
         last_entry = len(self.elements)
         # insert before buttons
-        last_entry -= 2 
+        last_entry -= 2
         if clicked == "ClockTrigger":
             # add GUI elements for ClockTrigger
             if repeat not in self.elements:
                 self.elements.insert(last_entry, repeat)
-            if ms not in self.elements:
-                self.elements.insert(last_entry, ms)
+            if sec not in self.elements:
+                self.elements.insert(last_entry, sec)
             if label0 not in self.elements:
                 self.elements.insert(last_entry, label0)
 
@@ -303,20 +301,19 @@ class GUIApp:
                 index = self.elements.index(label0)
                 self.elements[index].grid_forget()
                 self.elements.remove(label0)
-            if ms in self.elements:
-                index = self.elements.index(ms)
+            if sec in self.elements:
+                index = self.elements.index(sec)
                 self.elements[index].grid_forget()
-                self.elements.remove(ms)
+                self.elements.remove(sec)
             if repeat in self.elements:
                 index = self.elements.index(repeat)
                 self.elements[index].grid_forget()
                 self.elements.remove(repeat)
-            
+
             self.update_layout()
 
-
     def show_mock_popup(self, element):
-        
+
         self.popup = tk.Toplevel(root)
         self.popup.title("Specify Properties")
         self.popup.protocol("WM_DELETE_WINDOW", self.popup.destroy)
@@ -324,21 +321,15 @@ class GUIApp:
         animation_elements = []
         setToValue_elements = []
 
-        options=[
+        options = [
             "ClockTrigger",
             "ValueTrigger",
         ]
         if element.metadata.entry_type == EntryType.ACTUATOR and (element.metadata.data_type != DataType.STRING or element.metadata.data_type != DataType.STRING_ARRAY):
             options.append("TargetTrigger")
-        # datatype of dropdown text
-        clicked = tk.StringVar()
-        
-        # initial dropdown text
-        clicked.set("ClockTrigger")
 
-
-        label0 = ttk.Label(self.popup, text="clock trigger interval ms:")
-        ms = tk.Entry(self.popup)
+        label0 = ttk.Label(self.popup, text="clock trigger interval sec:")
+        sec = tk.Entry(self.popup)
 
         repeat_var = tk.BooleanVar()
         repeat = ttk.Checkbutton(
@@ -350,11 +341,17 @@ class GUIApp:
         label1 = ttk.Label(self.popup, text="VSS path the trigger acts on. if not specified it uses the the mocked VSS path:")
         trigger_path = tk.Entry(self.popup)
         # Create Dropdown
+        # datatype of dropdown text
+        clicked = tk.StringVar()
+
+        # initial dropdown text
+        clicked.set("ClockTrigger")
+
         drop = tk.OptionMenu(
             self.popup,
-            clicked , 
+            clicked,
             *options,
-            command=lambda clicked=clicked: self.showClockTriggerEntry(clicked, ms, label0, repeat, label1, trigger_path)
+            command=lambda clicked=clicked: self.showClockTriggerEntry(clicked, sec, label0, repeat, label1, trigger_path)
         )
 
         label2 = ttk.Label(self.popup, text="set Value on event to:")
@@ -409,13 +406,13 @@ class GUIApp:
             command=lambda: self.checksetToValueButton(set_var, animation_var, setToValue_elements)
         )
 
-        buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_mock_behavior(element, animation_var.get(), set_var.get(), setValue.get(), cond_path.get(), cond_val.get(), clicked.get(), values.get(), duration.get(), repeat_var.get(), trigger_path.get(), ms.get()))
+        buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_mock_behavior(element, animation_var.get(), set_var.get(), setValue.get(), cond_path.get(), cond_val.get(), clicked.get(), values.get(), duration.get(), repeat_var.get(), trigger_path.get(), sec.get()))
         buttonAdd = tk.Button(self.popup, text="Mock", command=lambda: self.actual_mock_datapoint(element))
 
         self.elements.append(setToValue)
         self.elements.append(buttonBehavior)
         self.elements.append(buttonAdd)
-        
+
         self.update_layout()
 
     def create_new_behavior(self, element):
@@ -432,7 +429,7 @@ class GUIApp:
             else:
                 value = int(float(value))
             if not element.read_only:
-                try: 
+                try:
                     self.client.set_current_values({element.vss_path: Datapoint(value)})
                 except VSSClientError as e:
                     messagebox.showerror(f"{e} set initial value to avoid this.")
@@ -466,7 +463,7 @@ class GUIApp:
     def create_entry(self, element):
         entry_var = tk.StringVar()
         entry_var.trace("w", lambda *args: self.update_datapoint(entry_var.get(), element))
-        
+
         entry = ttk.Entry(root, textvariable=entry_var)
         setattr(entry, 'name', element.vss_path)
         return entry
@@ -475,7 +472,7 @@ class GUIApp:
         self.popup = tk.Toplevel(root)
         self.popup.title("Specify Properties")
         self.popup.protocol("WM_DELETE_WINDOW", self.popup.destroy)
-        
+
         # Create labels and entry fields for the properties in the self.popup window
         label1 = ttk.Label(self.popup, text="name:")
         name = tk.Entry(self.popup)
@@ -503,8 +500,9 @@ class GUIApp:
 
     def update_layout(self):
         # Clear existing elements
-        for element in self.elements.copy(): # Create a copy of the list
-            if element.winfo_exists(): 
+        # Create a copy of the list
+        for element in self.elements.copy():
+            if element.winfo_exists():
                 # Check if the widget exists
                 element.grid_forget()
             else:
@@ -530,7 +528,6 @@ class GUIApp:
                     else:
                         print("Something wrong!")
 
-    
     def mainloop(self):
         mock = MockService("127.0.0.1:50053")
 
@@ -571,5 +568,3 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = GUIApp(client)
     app.mainloop()
-
-
