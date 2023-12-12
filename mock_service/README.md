@@ -81,10 +81,6 @@ Firstly, you will need to install all necessary Python dependencies by using the
 ```bash
 # install requirements of mock service
 python3 -m pip install -r ./requirements.txt
-# install additional requirements of the GUI
-python3 -m pip install --pre kuksa-client
-# install mock service from mock_service directory to make it available in the GUI
-python3 -m pip install -e .
 ```
 
 To run the GUI do the following in your favourtie terminal:
