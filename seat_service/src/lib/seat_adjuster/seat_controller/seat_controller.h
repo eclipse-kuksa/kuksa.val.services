@@ -104,7 +104,7 @@ extern "C" {
  */
 typedef int error_t;
 
-enum SeatCtrlEvent { CanError, Motor1Pos };
+enum SeatCtrlEvent { CanError, Motor1Pos, Motor2Pos, Motor3Pos };
 
 /**
  * @brief SeatController Event callback (Motor position changed, CAN Errors)
@@ -165,14 +165,26 @@ typedef struct {
  * @param thread_id ThreadID of the CTL handler thread. (internal)
  * @param command_ts Timestamp when manual command was sent. (internal)
  *
- * @param desired_position Desired target motor position for active operation. (internal)
- * @param desired_direction Calculated direction of movement towards desired_position. (internal)
+ * @param desired1_position Desired target motor position for active operation. (internal)
+ * @param desired2_position Desired target motor position for active operation. (internal)
+ * @param desired3_position Desired target motor position for active operation. (internal)
+ * @param desired1_direction Calculated direction of movement towards desired_position. (internal)
+ * @param desired2_direction Calculated direction of movement towards desired_position. (internal)
+ * @param desired3_direction Calculated direction of movement towards desired_position. (internal)
  *
  * @param motor1_pos Last received (valid) value from CAN_secu2_stat_t.motor1_pos
  * @param motor1_mov_state Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
  * @param motor1_learning_state Last Received (valid) value from CAN_secu2_stat_t.motor1_learning_state
+ * @param motor2_pos Last received (valid) value from CAN_secu2_stat_t.motor3_pos
+ * @param motor2_mov_state Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
+ * @param motor2_learning_state Last Received (valid) value from CAN_secu2_stat_t.motor3_learning_state
+ * @param motor3_pos Last received (valid) value from CAN_secu1_stat_t.motor1_pos
+ * @param motor3_mov_state Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
+ * @param motor3_learning_state Last Received (valid) value from CAN_secu1_stat_t.motor1_learning_state
  *
  * @param event_cb Callback function (seatctrl_event_cb_t) for motor position changes.
+ * @param event_cb_tilt Callback function (seatctrl_event_cb_t) for motor position changes.
+ * @param event_cb_height Callback function (seatctrl_event_cb_t) for motor position changes.
  * @param event_cb_user_data Callback function for motor position change user context*.
  */
 typedef struct
@@ -184,23 +196,27 @@ typedef struct
 	pthread_t thread_id;        // ThreadID of the CTL handler thread
 
 	int64_t command_ts;         // Timestamp when manual command was sent
-	uint8_t desired_position;   // Desired target motor position for active operation
-	MotorDirection desired_direction; // Calculated direction of movement towards desired_position
+	uint8_t desired1_position;   // Desired target motor position for active operation
+	uint8_t desired2_position;   // Desired target motor position for active operation
+	uint8_t desired3_position;   // Desired target motor position for active operation
+	MotorDirection desired1_direction; // Calculated direction of movement towards desired_position
+	MotorDirection desired2_direction; // Calculated direction of movement towards desired_position
+	MotorDirection desired3_direction; // Calculated direction of movement towards desired_position
 
 	// motor*_* fields below are updated from CAN_SECU2_STAT signal on state change:
 	uint8_t motor1_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor1_pos
 	uint8_t motor1_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
 	uint8_t motor1_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor1_learning_state
 
+	uint8_t motor2_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor3_pos
+	uint8_t motor2_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
+	uint8_t motor2_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor3_learning_state
+
+	uint8_t motor3_pos;            // Last received (valid) value from CAN_secu1_stat_t.motor1_pos
+	uint8_t motor3_mov_state;      // Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
+	uint8_t motor3_learning_state; // Last received (valid) value from CAN_secu1_stat_t.motor1_learning_state
+
 #ifdef SEAT_CTRL_ALL_MOTORS
-	uint8_t motor2_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor2_pos
-	uint8_t motor2_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor2_mov_state
-	uint8_t motor2_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor2_learning_state
-
-	uint8_t motor3_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor3_pos
-	uint8_t motor3_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
-	uint8_t motor3_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor3_learning_state
-
 	uint8_t motor4_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor4_pos
 	uint8_t motor4_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor4_mov_state
 	uint8_t motor4_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor4_learning_state
@@ -208,6 +224,8 @@ typedef struct
 
 	// Callback for position changes
 	seatctrl_event_cb_t event_cb;  // Callback function for motor position changes.
+	seatctrl_event_cb_t event_cb_tilt;  // Callback function for motor position changes.
+	seatctrl_event_cb_t event_cb_height;  // Callback function for motor position changes.
 	void* event_cb_user_data; // Callback function for motor position change user context*.
 
 } seatctrl_context_t;
@@ -257,7 +275,35 @@ error_t seatctrl_open(seatctrl_context_t *ctx);
  *         - SEAT_CTRL_ERR_INVALID: invalid arguments.
  *         - SEAT_CTRL_ERR: generic error.
  */
-error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired_position);
+error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired1_position);
+
+/**
+ * @brief Main business logic, sends command to change seat position based on current position and desired_position.
+ * Must follow a successful seatctrl_open() call.
+ *
+ * @param ctx opened seatctrl context.
+ * @param desired_position motor1 absolute position(%). Range is [0%..100%], 255=invalid position.
+ * @return error_t
+ *         - SEAT_CTRL_OK: on success.
+ *         - SEAT_CTRL_ERR_NO_FRAMES:  Motor1 position is invalid (probably not learned or no CAN signals are coming, e.g. missing hw, sim).
+ *         - SEAT_CTRL_ERR_INVALID: invalid arguments.
+ *         - SEAT_CTRL_ERR: generic error.
+ */
+error_t seatctrl_set_tilt(seatctrl_context_t *ctx, int32_t desired2_position);
+
+/**
+ * @brief Main business logic, sends command to change seat position based on current position and desired_position.
+ * Must follow a successful seatctrl_open() call.
+ *
+ * @param ctx opened seatctrl context.
+ * @param desired_position motor1 absolute position(%). Range is [0%..100%], 255=invalid position.
+ * @return error_t
+ *         - SEAT_CTRL_OK: on success.
+ *         - SEAT_CTRL_ERR_NO_FRAMES:  Motor1 position is invalid (probably not learned or no CAN signals are coming, e.g. missing hw, sim).
+ *         - SEAT_CTRL_ERR_INVALID: invalid arguments.
+ *         - SEAT_CTRL_ERR: generic error.
+ */
+error_t seatctrl_set_height(seatctrl_context_t *ctx, int32_t desired3_position);
 
 /**
  * @brief Gets last known motor1 position (%).
@@ -269,6 +315,28 @@ error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired_position)
  *             SEAT_CTRL_ERR_INVALID: invalid arguments.
  */
 int seatctrl_get_position(seatctrl_context_t *ctx);
+
+/**
+ * @brief Gets last known motor1 position (%).
+ *
+ * @param ctx seatctrl context.
+ * @return int motor1 absolute position(%). Range is [0%..100%],
+ *             #MOTOR_POS_INVALID (255): Unknown motor position.
+ *             SEAT_CTRL_ERR: generic error.
+ *             SEAT_CTRL_ERR_INVALID: invalid arguments.
+ */
+int seatctrl_get_tilt(seatctrl_context_t *ctx);
+
+/**
+ * @brief Gets last known motor1 position (%).
+ *
+ * @param ctx seatctrl context.
+ * @return int motor1 absolute position(%). Range is [0%..100%],
+ *             #MOTOR_POS_INVALID (255): Unknown motor position.
+ *             SEAT_CTRL_ERR: generic error.
+ *             SEAT_CTRL_ERR_INVALID: invalid arguments.
+ */
+int seatctrl_get_height(seatctrl_context_t *ctx);
 
 /**
  * @brief Helper to abort any seat active seatctrl_set_position() operations and stop motors.

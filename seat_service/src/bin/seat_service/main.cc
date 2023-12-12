@@ -48,6 +48,10 @@ using sdv::databroker::v1::ChangeType;
 
 const std::string SEAT_POS_VSS_3 = "Vehicle.Cabin.Seat.Row1.Pos1.Position";
 const std::string SEAT_POS_VSS_4 = "Vehicle.Cabin.Seat.Row1.DriverSide.Position";
+const std::string SEAT_TILT_VSS_3 = "Vehicle.Cabin.Seat.Row1.Pos1.Tilt";
+const std::string SEAT_TILT_VSS_4 = "Vehicle.Cabin.Seat.Row1.DriverSide.Tilt";
+const std::string SEAT_HEIGHT_VSS_3 = "Vehicle.Cabin.Seat.Row1.Pos1.Height";
+const std::string SEAT_HEIGHT_VSS_4 = "Vehicle.Cabin.Seat.Row1.DriverSide.Height";
 
 const sdv::broker_feeder::DatapointConfiguration metadata_4 {
     { SEAT_POS_VSS_4,
@@ -56,6 +60,20 @@ const sdv::broker_feeder::DatapointConfiguration metadata_4 {
         ChangeType::ON_CHANGE,
         sdv::broker_feeder::createNotAvailableValue(),
         "Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported."
+    },
+    { SEAT_TILT_VSS_4,
+        DataType::UINT16,
+        // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
+        ChangeType::ON_CHANGE,
+        sdv::broker_feeder::createNotAvailableValue(),
+        "Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward."
+    },
+    { SEAT_HEIGHT_VSS_4,
+        DataType::UINT16,
+        // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
+        ChangeType::ON_CHANGE,
+        sdv::broker_feeder::createNotAvailableValue(),
+        "Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported."
     },
     { "Vehicle.Cabin.SeatRowCount",
         DataType::UINT8,
@@ -78,6 +96,20 @@ const sdv::broker_feeder::DatapointConfiguration metadata_3 {
         ChangeType::ON_CHANGE,
         sdv::broker_feeder::createNotAvailableValue(),
         "Longitudinal position of overall seat"
+    },
+    { SEAT_TILT_VSS_3,
+        DataType::UINT16,
+        // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
+        ChangeType::ON_CHANGE,
+        sdv::broker_feeder::createNotAvailableValue(),
+        "Tilting of seat (seating and backrest) relative to vehicle x-axis. 0 = seat bottom is flat, seat bottom and vehicle x-axis are parallel. Positive degrees = seat tilted backwards, seat x-axis tilted upward, seat z-axis is tilted backward."
+    },
+    { SEAT_HEIGHT_VSS_3,
+        DataType::UINT16,
+        // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
+        ChangeType::ON_CHANGE,
+        sdv::broker_feeder::createNotAvailableValue(),
+        "Seat position on vehicle z-axis. Position is relative within available movable range of the seating. 0 = Lowermost position supported."
     },
     { "Vehicle.Cabin.SeatRowCount",
         DataType::UINT8,
@@ -154,9 +186,11 @@ void Run(std::string can_if_name, std::string listen_address, std::string port, 
     sdv::broker_feeder::DatapointConfiguration metadata = vss_4 ? metadata_4 : metadata_3;
 
     std::string seat_pos_name = vss_4 ? SEAT_POS_VSS_4 : SEAT_POS_VSS_3;
+    std::string seat_tilt_name = vss_4 ? SEAT_TILT_VSS_4 : SEAT_TILT_VSS_3;
+    std::string seat_height_name = vss_4 ? SEAT_HEIGHT_VSS_4 : SEAT_HEIGHT_VSS_3;
 
     // runtime check for valid 1st entry name
-    if (metadata.size() < 1 || seat_pos_name != metadata[0].name) {
+    if (metadata.size() < 1 || seat_pos_name != metadata[0].name || seat_tilt_name != metadata[1].name || seat_height_name != metadata[2].name) {
         std::cerr << SELF "Invalid metadata configuration!" << std::endl;
         exit(1);
     }
@@ -166,16 +200,26 @@ void Run(std::string can_if_name, std::string listen_address, std::string port, 
 
     // Setup feeder
     //
-    sdv::seat_service::SeatDataFeeder seat_data_feeder(seat_adjuster, client, seat_pos_name, std::move(metadata));
+    sdv::seat_service::SeatDataFeeder seat_data_feeder(seat_adjuster, client, seat_pos_name, seat_tilt_name, seat_height_name, std::move(metadata));
     std::cout << SELF "SeatDataFeeder connecting to " << broker_addr << std::endl;
     std::thread feeder_thread(&sdv::seat_service::SeatDataFeeder::Run, &seat_data_feeder);
 
 
     // Setup target actuator subscriber
-    sdv::seat_service::SeatPositionSubscriber seat_position_subscriber(seat_adjuster, client, seat_pos_name);
+    sdv::seat_service::SeatPositionSubscriber seat_position_subscriber(seat_adjuster, client, seat_pos_name, sdv::seat_service::posSub::POSITION);
     std::cout << SELF "Start seat position subscription " << broker_addr << std::endl;
 
-    std::thread subscriber_thread(&sdv::seat_service::SeatPositionSubscriber::Run, &seat_position_subscriber);
+    // Setup target actuator subscriber
+    sdv::seat_service::SeatPositionSubscriber seat_tilt_subscriber(seat_adjuster, client, seat_tilt_name, sdv::seat_service::posSub::TILT);
+    std::cout << SELF "Start seat tilt subscription " << broker_addr << std::endl;
+
+    // Setup target actuator subscriber
+    sdv::seat_service::SeatPositionSubscriber seat_height_subscriber(seat_adjuster, client, seat_height_name, sdv::seat_service::posSub::HEIGHT);
+    std::cout << SELF "Start seat height subscription " << broker_addr << std::endl;
+
+    std::thread subscriber1_thread(&sdv::seat_service::SeatPositionSubscriber::Run, &seat_position_subscriber);
+    std::thread subscriber2_thread(&sdv::seat_service::SeatPositionSubscriber::Run, &seat_tilt_subscriber);
+    std::thread subscriber3_thread(&sdv::seat_service::SeatPositionSubscriber::Run, &seat_height_subscriber);
 
     // Setup grpc server and register the services
     //
@@ -204,11 +248,15 @@ void Run(std::string can_if_name, std::string listen_address, std::string port, 
 
     seat_data_feeder.Shutdown();
     seat_position_subscriber.Shutdown();
+    seat_tilt_subscriber.Shutdown();
+    seat_height_subscriber.Shutdown();
     if (server) {
         server->Shutdown();
         server_thread->join();
     }
-    subscriber_thread.join();
+    subscriber1_thread.join();
+    subscriber2_thread.join();
+    subscriber3_thread.join();
     feeder_thread.join();
 
     // Optional: Delete all global objects allocated by libprotobuf.

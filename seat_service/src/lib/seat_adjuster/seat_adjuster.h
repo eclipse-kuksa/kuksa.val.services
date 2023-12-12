@@ -57,8 +57,14 @@ public:
     virtual ~SeatAdjuster() = default;
 
     virtual int GetSeatPosition() = 0;
+    virtual int GetSeatTilt() = 0;
+    virtual int GetSeatHeight() = 0;
     virtual SetResult SetSeatPosition(int position_in_percent) = 0;
+    virtual SetResult SetSeatTilt(int position_in_percent) = 0;
+    virtual SetResult SetSeatHeight(int position_in_percent) = 0;
     virtual void SubscribePosition(std::function<void(int)> cb) = 0;
+    virtual void SubscribeTilt(std::function<void(int)> cb) = 0;
+    virtual void SubscribeHeight(std::function<void(int)> cb) = 0;
 
 protected:
     SeatAdjuster() = default;

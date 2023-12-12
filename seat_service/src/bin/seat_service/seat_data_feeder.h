@@ -42,6 +42,8 @@ public:
     SeatDataFeeder(std::shared_ptr<SeatAdjuster>,
                    std::shared_ptr<sdv::broker_feeder::KuksaClient> collector_client,
                    std::string& seat_pos_name,
+                   std::string& seat_tilt_name,
+                   std::string& seat_height_name,
                    sdv::broker_feeder::DatapointConfiguration&& dpConfig);
     /**
      * Starts the feeder trying to connect to the data broker, registering data points

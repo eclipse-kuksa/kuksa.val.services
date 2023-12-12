@@ -42,11 +42,17 @@ class KuksaClient;
 
 namespace seat_service {
 
+enum class posSub{
+    POSITION,
+    TILT,
+    HEIGHT
+};
+
 class SeatPositionSubscriber {
    public:
     SeatPositionSubscriber(std::shared_ptr<SeatAdjuster>,
                            std::shared_ptr<broker_feeder::KuksaClient> kuksa_client,
-                           const std::string& seat_pos_name);
+                           const std::string& seat_pos_name, const sdv::seat_service::posSub& pos);
     /**
      * Starts the subscriber.
      * Note: This function will block the calling thread until it's terminated by
@@ -62,6 +68,7 @@ class SeatPositionSubscriber {
     std::shared_ptr<broker_feeder::KuksaClient> kuksa_client_;
     std::unique_ptr<grpc::ClientContext> subscriber_context_;
     std::string seat_pos_name_;
+    sdv::seat_service::posSub pos_;
 
     std::atomic_bool running_;
 };

@@ -53,7 +53,7 @@ ENV CAN=cansim
 #ENV CAN_WAIT=30
 
 # SeatService VSS support [3, 4]
-ENV VSS=4
+ENV VSS=3
 
 # Seat Service GRPC bind host
 ENV SERVICE_HOST=0.0.0.0
