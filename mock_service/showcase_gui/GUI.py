@@ -217,7 +217,7 @@ class GUIApp:
         else:
             messagebox.showerror(title="Mock generation error", message="You need to choose one of mocking a datapoint through animation or setting to a fixed value")
 
-    def checksetToValueButton(self, set_var, animation_var, setToValue_elements):
+    def checksetToValueButton(self, set_var, animation_var, setToValue_elements, drop_elements, clicked):
         if not animation_var.get():
             if set_var.get():
                 messagebox.showinfo(title="Info", message="You are creating a set action. This will lead to setting a fixed value if the target value is set. If you want that the target value is set leave the field empty. Otherwise provide a value. If you do not want a condition leave it empty.")
@@ -229,9 +229,15 @@ class GUIApp:
                     if element not in self.elements:
                         self.elements.insert(last_entry + counter, element)
                     counter += 1
+                self.showTriggerEntry(clicked.get(), drop_elements[0], drop_elements[1], drop_elements[2], drop_elements[3], drop_elements[4])
                 self.update_layout()
             else:
                 for element in setToValue_elements:
+                    if element in self.elements:
+                        index = self.elements.index(element)
+                        self.elements[index].grid_forget()
+                        self.elements.remove(element)
+                for element in drop_elements:
                     if element in self.elements:
                         index = self.elements.index(element)
                         self.elements[index].grid_forget()
@@ -241,7 +247,7 @@ class GUIApp:
         else:
             set_var.set(0)
 
-    def checkAnimationButton(self, animation_var, set_var, animationValue_elements):
+    def checkAnimationButton(self, animation_var, set_var, animationValue_elements, drop_elements, clicked):
         if not set_var.get():
             if animation_var.get():
                 messagebox.showinfo(title="Info", message="You are creating an animation action. This will lead to setting a value through an animation with duration and some values. If you do not want a condition to be set leave it empty.")
@@ -253,9 +259,15 @@ class GUIApp:
                     if element not in self.elements:
                         self.elements.insert(last_entry + counter, element)
                     counter += 1
+                self.showTriggerEntry(clicked.get(), drop_elements[0], drop_elements[1], drop_elements[2], drop_elements[3], drop_elements[4])
                 self.update_layout()
             else:
                 for element in animationValue_elements:
+                    if element in self.elements:
+                        index = self.elements.index(element)
+                        self.elements[index].grid_forget()
+                        self.elements.remove(element)
+                for element in drop_elements:
                     if element in self.elements:
                         index = self.elements.index(element)
                         self.elements[index].grid_forget()
@@ -265,7 +277,7 @@ class GUIApp:
         else:
             animation_var.set(0)
 
-    def showClockTriggerEntry(self, clicked, sec, label0, repeat, label1, trigger_path):
+    def showTriggerEntry(self, clicked, sec, label0, repeat, label1, trigger_path):
         last_entry = len(self.elements)
         # insert before buttons
         last_entry -= 2
@@ -320,6 +332,7 @@ class GUIApp:
 
         animation_elements = []
         setToValue_elements = []
+        drop_elements = []
 
         options = [
             "ClockTrigger",
@@ -344,14 +357,13 @@ class GUIApp:
         # datatype of dropdown text
         clicked = tk.StringVar()
 
-        # initial dropdown text
         clicked.set("ClockTrigger")
 
         drop = tk.OptionMenu(
             self.popup,
             clicked,
             *options,
-            command=lambda clicked=clicked: self.showClockTriggerEntry(clicked, sec, label0, repeat, label1, trigger_path)
+            command=lambda clicked=clicked: self.showTriggerEntry(clicked, sec, label0, repeat, label1, trigger_path)
         )
 
         label2 = ttk.Label(self.popup, text="set Value on event to:")
@@ -385,6 +397,12 @@ class GUIApp:
         animation_elements.append(values)
         animation_elements.append(drop)
 
+        drop_elements.append(sec)
+        drop_elements.append(label0)
+        drop_elements.append(repeat)
+        drop_elements.append(label1)
+        drop_elements.append(trigger_path)
+
         animation_var = tk.BooleanVar()
         set_var = tk.BooleanVar()
 
@@ -395,7 +413,7 @@ class GUIApp:
                 self.popup,
                 text="Set Datapoint through animation",
                 variable=animation_var,
-                command=lambda: self.checkAnimationButton(animation_var, set_var, animation_elements)
+                command=lambda: self.checkAnimationButton(animation_var, set_var, animation_elements, drop_elements, clicked)
             )
             self.elements.append(animationValue)
 
@@ -403,7 +421,7 @@ class GUIApp:
             self.popup,
             text="Set Datapoint to value",
             variable=set_var,
-            command=lambda: self.checksetToValueButton(set_var, animation_var, setToValue_elements)
+            command=lambda: self.checksetToValueButton(set_var, animation_var, setToValue_elements, drop_elements, clicked)
         )
 
         buttonBehavior = tk.Button(self.popup, text="Create behavior", command=lambda: self.create_mock_behavior(element, animation_var.get(), set_var.get(), setValue.get(), cond_path.get(), cond_val.get(), clicked.get(), values.get(), duration.get(), repeat_var.get(), trigger_path.get(), sec.get()))
