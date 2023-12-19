@@ -32,4 +32,4 @@ ENV PYTHONUNBUFFERED=yes
 
 LABEL org.opencontainers.image.source="https://github.com/eclipse/kuksa.val.services"
 
-CMD ["python3", "/mockservice.py"]
+CMD ["python3", "/mock/mockservice.py"]
