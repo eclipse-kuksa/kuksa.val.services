@@ -277,12 +277,12 @@ void print_secu2_stat(const char* prefix, CAN_secu2_stat_t *stat)
             learning_state_string(stat->motor2_learning_state)
         );
 #else
-    printf("%s{ motor1_pos:%3d%%, motor1_mov_state: %-3s, motor1_learning_state: %s; motor1_pos:%3d%%, motor1_mov_state: %-3s, motor1_learning_state: %s }\n",
+    printf("%s{ motor1_pos:%3d%%, motor1_mov_state: %-3s, motor1_learning_state: %s; motor3_pos:%3d%%, motor3_mov_state: %-3s, motor3_learning_state: %s }\n",
             prefix,
             stat->motor1_pos, // CAN_secu2_stat_motor1_pos_decode() - not generated if float code is disabled! Make sure scaling remains "default"!
             mov_state_string(stat->motor1_mov_state),
             learning_state_string(stat->motor1_learning_state),
-            stat->motor3_pos, // CAN_secu2_stat_motor1_pos_decode() - not generated if float code is disabled! Make sure scaling remains "default"!
+            stat->motor3_pos, // CAN_secu2_stat_motor3_pos_decode() - not generated if float code is disabled! Make sure scaling remains "default"!
             mov_state_string(stat->motor3_mov_state),
             learning_state_string(stat->motor3_learning_state)
         );
@@ -367,11 +367,8 @@ error_t handle_secu2_stat(seatctrl_context_t *ctx, const struct can_frame *frame
         if (ctx->running && ctx->event_cb != NULL && ctx->motor1_pos != stat.motor1_pos) {
             if (ctx->config.debug_verbose) printf(PREFIX_CTL " calling cb: %p(Motor1Pos, %d)\n", (void*)ctx->event_cb, stat.motor1_pos);
             ctx->event_cb(SeatCtrlEvent::Motor1Pos, stat.motor1_pos, ctx->event_cb_user_data);
-        }
-
-        if (ctx->running && ctx->event_cb != NULL && ctx->motor2_pos != stat.motor2_pos) {
             if (ctx->config.debug_verbose) printf(PREFIX_CTL " calling cb: %p(Motor2Pos, %d)\n", (void*)ctx->event_cb, stat.motor2_pos);
-            ctx->event_cb(SeatCtrlEvent::Motor2Pos, stat.motor2_pos, ctx->event_cb_user_data);
+            ctx->event_cb(SeatCtrlEvent::Motor2Pos, stat.motor3_pos, ctx->event_cb_user_data);
         }
 
         ctx->motor1_mov_state = stat.motor1_mov_state;
@@ -432,9 +429,9 @@ error_t handle_secu1_stat(seatctrl_context_t *ctx, const struct can_frame *frame
             ctx->event_cb(SeatCtrlEvent::Motor3Pos, stat.motor1_pos, ctx->event_cb_user_data);
         }
 
-        ctx->motor1_mov_state = stat.motor1_mov_state;
-        ctx->motor1_learning_state = stat.motor1_learning_state;
-        ctx->motor1_pos = stat.motor1_pos; // decode?
+        ctx->motor3_mov_state = stat.motor1_mov_state;
+        ctx->motor3_learning_state = stat.motor1_learning_state;
+        ctx->motor3_pos = stat.motor1_pos; // decode?
 
         return SEAT_CTRL_OK;
     }
@@ -562,81 +559,85 @@ error_t seatctrl_control_ecu1_loop(seatctrl_context_t *ctx)
     }
     //   In that state normalization loop must be done on real hw.
     if (is_ctl_running(ctx)) {
-        int64_t elapsed = get_ts() - ctx->command_ts;
-        // Preliminary phase: operation was just scheduled (up to 500ms ago),
-        // but can signal may not yet come, i.e. waiting for motor tor start moving
-        if (elapsed < 500 && ctx->motor3_mov_state == MotorDirection::OFF && ctx->motor3_pos != ctx->desired3_position) {
-            printf(PREFIX_CTL "* Seat Adjustment to (%d, %s) active, waiting motor movement for %" PRId64 "ms.\n",
-                    ctx->desired3_position,
-                    mov_state_string(ctx->desired3_direction),
-                    elapsed);
-            ::usleep(1000);
-        }
+        bool timeout = true;
+        while((ctx->motor1_pos != ctx->desired1_position) && timeout){
+            int64_t elapsed = get_ts() - ctx->command_ts;
+            // Preliminary phase: operation was just scheduled (up to 500ms ago),
+            // but can signal may not yet come, i.e. waiting for motor tor start moving
+            if (elapsed < 500 && ctx->motor3_mov_state == MotorDirection::OFF && ctx->motor3_pos != ctx->desired3_position) {
+                printf(PREFIX_CTL "* Seat Adjustment to (%d, %s) active, waiting motor movement for %" PRId64 "ms.\n",
+                        ctx->desired3_position,
+                        mov_state_string(ctx->desired3_direction),
+                        elapsed);
+                ::usleep(1000);
+            }
 
-        // reduce frequency of dumps, only if something relevant changed,
-        // but don't cache states when command was just started (e.g. motor off warning will be dumped always)
-        if (last_ctl_pos != ctx->motor3_pos || last_ctl_dir != ctx->motor3_mov_state) {
-            if (ctx->config.debug_ctl) print_ctl_stats3(ctx, PREFIX_CTL);
-            if (ctx->motor3_mov_state != ctx->desired3_direction && ctx->motor3_pos != ctx->desired3_position) {
-                printf("\n");
-                printf(PREFIX_CTL "WARN: *** Seat Adjustment to (%d, %s) active, but motor3_mov_state is %s.\n",
-                        ctx->desired3_position,
-                        mov_state_string(ctx->desired3_direction),
-                        mov_state_string(ctx->motor3_mov_state));
-                // Workaround for possible "bug" in seat adjuster ECU that is stopping (OFF) at
-                // some thresholds at both ends of the range (e.g. 14% and 80%)
-                if (ctx->motor1_mov_state == MotorDirection::OFF) {
-                    printf(PREFIX_CTL " >>> Sending MotorOff command...\n");
-                    error_t rc0 = seatctrl_send_ecu1_cmd1(ctx, MotorDirection::OFF, 0, 1); // off, 0rpm
-                    if (rc0 != SEAT_CTRL_OK) {
-                        perror(PREFIX_CTL "seatctrl_send_ecu1_cmd1(OFF) error");
+            // reduce frequency of dumps, only if something relevant changed,
+            // but don't cache states when command was just started (e.g. motor off warning will be dumped always)
+            if (last_ctl_pos != ctx->motor3_pos || last_ctl_dir != ctx->motor3_mov_state) {
+                if (ctx->config.debug_ctl) print_ctl_stats3(ctx, PREFIX_CTL);
+                if (ctx->motor3_mov_state != ctx->desired3_direction && ctx->motor3_pos != ctx->desired3_position) {
+                    printf("\n");
+                    printf(PREFIX_CTL "WARN: *** Seat Adjustment to (%d, %s) active, but motor3_mov_state is %s.\n",
+                            ctx->desired3_position,
+                            mov_state_string(ctx->desired3_direction),
+                            mov_state_string(ctx->motor3_mov_state));
+                    // Workaround for possible "bug" in seat adjuster ECU that is stopping (OFF) at
+                    // some thresholds at both ends of the range (e.g. 14% and 80%)
+                    if (ctx->motor1_mov_state == MotorDirection::OFF) {
+                        printf(PREFIX_CTL " >>> Sending MotorOff command...\n");
+                        error_t rc0 = seatctrl_send_ecu1_cmd1(ctx, MotorDirection::OFF, 0, 1); // off, 0rpm
+                        if (rc0 != SEAT_CTRL_OK) {
+                            perror(PREFIX_CTL "seatctrl_send_ecu1_cmd1(OFF) error");
+                        }
+                        ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
+                        printf(PREFIX_CTL ">>> Re-sending: SECU1_CMD_1 [ motor3_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
+                                ctx->motor3_pos, ctx->desired3_position, mov_state_string(ctx->desired3_direction), ctx->command_ts);
+                        error_t rc = seatctrl_send_ecu1_cmd1(ctx, ctx->desired1_direction, ctx->config.motor_rpm, 1);
+                        if (rc != SEAT_CTRL_OK) {
+                            perror(PREFIX_CTL "seatctrl_send_ecu1_cmd1(desired_pos) error");
+                        }
                     }
-                    ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
-                    printf(PREFIX_CTL ">>> Re-sending: SECU1_CMD_1 [ motor3_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
-                            ctx->motor3_pos, ctx->desired3_position, mov_state_string(ctx->desired3_direction), ctx->command_ts);
-                    error_t rc = seatctrl_send_ecu1_cmd1(ctx, ctx->desired1_direction, ctx->config.motor_rpm, 1);
-                    if (rc != SEAT_CTRL_OK) {
-                        perror(PREFIX_CTL "seatctrl_send_ecu1_cmd1(desired_pos) error");
-                    }
+                    printf("\n");
                 }
-                printf("\n");
+                if (ctx->motor3_pos == MOTOR_POS_INVALID) {
+                    printf(PREFIX_CTL "WARN: *** Seat Adjustment to (%d, %s) active, but motor1_pos is: %d.\n",
+                            ctx->desired3_position,
+                            mov_state_string(ctx->desired3_direction),
+                            ctx->motor3_pos);
+                            // break; ?
+                }
+                last_ctl_dir = ctx->motor3_mov_state;
+                last_ctl_pos = ctx->motor3_pos;
             }
-            if (ctx->motor3_pos == MOTOR_POS_INVALID) {
-                printf(PREFIX_CTL "WARN: *** Seat Adjustment to (%d, %s) active, but motor1_pos is: %d.\n",
+            // FIXME: if desired3_direction INC && ctx->desired3_position >= ctx->motor3_pos
+            if ( ctx->motor3_pos != MOTOR_POS_INVALID &&
+                ((ctx->desired3_direction == MotorDirection::INC && ctx->motor3_pos >= ctx->desired3_position) ||
+                (ctx->desired3_direction == MotorDirection::DEC && ctx->motor3_pos <= ctx->desired3_position) ))
+            {
+                // Terminal state, reached destination
+                printf(PREFIX_CTL "*** Seat Adjustment (%d, %s) finished at pos: %d for %" PRId64 "ms.\n",
                         ctx->desired3_position,
                         mov_state_string(ctx->desired3_direction),
-                        ctx->motor3_pos);
-                        // break; ?
+                        ctx->motor3_pos,
+                        elapsed);
+                seatctrl_stop_movement(ctx);
+                // invalidate last states
+                last_ctl_dir = 0;
+                last_ctl_pos = MOTOR_POS_INVALID;
+            } else
+            if (elapsed > ctx->config.command_timeout) {
+                // stop movement due to timeout
+                printf(PREFIX_CTL "WARN: *** Seat adjustment to (%d, %s) timed out (%" PRId64 "ms). Stopping motors.\n",
+                        ctx->desired3_position,
+                        mov_state_string(ctx->desired3_direction),
+                        elapsed);
+                seatctrl_stop_movement(ctx);
+                // invalidate last states
+                last_ctl_dir = 0;
+                last_ctl_pos = MOTOR_POS_INVALID;
+                timeout = false;
             }
-            last_ctl_dir = ctx->motor3_mov_state;
-            last_ctl_pos = ctx->motor3_pos;
-        }
-        // FIXME: if desired3_direction INC && ctx->desired3_position >= ctx->motor3_pos
-        if ( ctx->motor3_pos != MOTOR_POS_INVALID &&
-            ((ctx->desired3_direction == MotorDirection::INC && ctx->motor3_pos >= ctx->desired3_position) ||
-            (ctx->desired3_direction == MotorDirection::DEC && ctx->motor3_pos <= ctx->desired3_position) ))
-        {
-            // Terminal state, reached destination
-            printf(PREFIX_CTL "*** Seat Adjustment (%d, %s) finished at pos: %d for %" PRId64 "ms.\n",
-                    ctx->desired3_position,
-                    mov_state_string(ctx->desired3_direction),
-                    ctx->motor3_pos,
-                    elapsed);
-            seatctrl_stop_movement(ctx);
-            // invalidate last states
-            last_ctl_dir = 0;
-            last_ctl_pos = MOTOR_POS_INVALID;
-        } else
-        if (elapsed > ctx->config.command_timeout) {
-            // stop movement due to timeout
-            printf(PREFIX_CTL "WARN: *** Seat adjustment to (%d, %s) timed out (%" PRId64 "ms). Stopping motors.\n",
-                    ctx->desired3_position,
-                    mov_state_string(ctx->desired3_direction),
-                    elapsed);
-            seatctrl_stop_movement(ctx);
-            // invalidate last states
-            last_ctl_dir = 0;
-            last_ctl_pos = MOTOR_POS_INVALID;
         }
     }
     return rc;
@@ -677,7 +678,7 @@ error_t seatctrl_control_ecu2_loop(seatctrl_context_t *ctx)
     if (is_ctl_running(ctx)) {
         bool timeout = true;
         bool timeout2 = true;
-        if((ctx->motor1_pos != ctx->desired1_position) && timeout){
+        while((ctx->motor1_pos != ctx->desired1_position) && timeout){
             int64_t elapsed = get_ts() - ctx->command_ts;
             // Preliminary phase: operation was just scheduled (up to 500ms ago),
             // but can signal may not yet come, i.e. waiting for motor tor start moving
@@ -703,14 +704,14 @@ error_t seatctrl_control_ecu2_loop(seatctrl_context_t *ctx)
                     // some thresholds at both ends of the range (e.g. 14% and 80%)
                     if (ctx->motor1_mov_state == MotorDirection::OFF) {
                         printf(PREFIX_CTL " >>> Sending MotorOff command...\n");
-                        error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorDirection::OFF, 0, 3); // off, 0rpm
+                        error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorDirection::OFF, 0, 1); // off, 0rpm
                         if (rc0 != SEAT_CTRL_OK) {
                             perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(OFF) error");
                         }
                         ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                         printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                                 ctx->motor2_pos, ctx->desired1_position, mov_state_string(ctx->desired1_direction), ctx->command_ts);
-                        rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired1_direction, ctx->config.motor_rpm, 3);
+                        rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired1_direction, ctx->config.motor_rpm, 1);
                         if (rc != SEAT_CTRL_OK) {
                             perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(desired_pos) error");
                         }
@@ -756,7 +757,7 @@ error_t seatctrl_control_ecu2_loop(seatctrl_context_t *ctx)
                 timeout = false;
             }
         }
-        else if((ctx->motor2_pos != ctx->desired2_position) && timeout2){
+        while((ctx->motor2_pos != ctx->desired2_position) && timeout2){
             int64_t elapsed = get_ts() - ctx->command_ts;
             // Preliminary phase: operation was just scheduled (up to 500ms ago),
             // but can signal may not yet come, i.e. waiting for motor tor start moving
@@ -782,16 +783,16 @@ error_t seatctrl_control_ecu2_loop(seatctrl_context_t *ctx)
                     // some thresholds at both ends of the range (e.g. 14% and 80%)
                     if (ctx->motor2_mov_state == MotorDirection::OFF) {
                         printf(PREFIX_CTL " >>> Sending MotorOff command...\n");
-                        error_t rc0 = seatctrl_send_ecu1_cmd1(ctx, MotorDirection::OFF, 0, 1); // off, 0rpm
+                        error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorDirection::OFF, 0, 3); // off, 0rpm
                         if (rc0 != SEAT_CTRL_OK) {
-                            perror(PREFIX_CTL "seatctrl_send_ecu1_cmd1(OFF) error");
+                            perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(OFF) error");
                         }
                         ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                         printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor2_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                                 ctx->motor2_pos, ctx->desired2_position, mov_state_string(ctx->desired2_direction), ctx->command_ts);
-                        rc = seatctrl_send_ecu1_cmd1(ctx, ctx->desired2_direction, ctx->config.motor_rpm, 1);
+                        rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired2_direction, ctx->config.motor_rpm, 3);
                         if (rc != SEAT_CTRL_OK) {
-                            perror(PREFIX_CTL "seatctrl_send_ecu1_cmd1(desired_pos) error");
+                            perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(desired_pos) error");
                         }
                     }
                     printf("\n");

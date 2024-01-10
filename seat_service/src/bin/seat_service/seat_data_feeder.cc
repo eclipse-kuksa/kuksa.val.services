@@ -136,9 +136,8 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std:
             std::cout << self << "got pos: " << position_in_percent << "%" << std::endl;
         }
         Datapoint datapoint;
-        // NOTE: we are using uint32 value as grpc does not have smaller integers
         if (0 <= position_in_percent && position_in_percent <= 100) {
-            datapoint.set_uint32_value(position_in_percent * 10); // scale up to [0..1000]
+            datapoint.set_float_value(static_cast<float>(position_in_percent * 10)); // scale up to [0..1000]
         } else
         if (position_in_percent == -1) { // -1 replaces MOTOR_POS_INVALID in SeatAdjusterImpl::seatctrl_event_cb()
             datapoint.set_failure_value(Datapoint_Failure::Datapoint_Failure_NOT_AVAILABLE);
@@ -152,9 +151,9 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std:
                     << "FeedValue(" << seat_tilt_name << ", failure:"
                     << Datapoint_Failure_Name(datapoint.failure_value()) << ")" << std::endl;
             } else
-            if (datapoint.has_uint32_value()) {
+            if (datapoint.has_float_value()) {
                 std::cout << self << "pos: " << position_in_percent << "% -> "
-                    << "FeedValue(" << seat_tilt_name << ", uint32:" << datapoint.uint32_value() << ")" << std::endl;
+                    << "FeedValue(" << seat_tilt_name << ", float:" << datapoint.float_value() << ")" << std::endl;
             } else {
                 std::cout << self << "pos: " << position_in_percent << "% -> "
                     << "FeedValue(" << seat_tilt_name << ", unknown)" << std::endl;

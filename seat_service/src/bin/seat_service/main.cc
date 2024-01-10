@@ -62,7 +62,7 @@ const sdv::broker_feeder::DatapointConfiguration metadata_4 {
         "Seat position on vehicle x-axis. Position is relative to the frontmost position supported by the seat. 0 = Frontmost position supported."
     },
     { SEAT_TILT_VSS_4,
-        DataType::UINT16,
+        DataType::FLOAT,
         // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
         ChangeType::ON_CHANGE,
         sdv::broker_feeder::createNotAvailableValue(),
@@ -98,7 +98,7 @@ const sdv::broker_feeder::DatapointConfiguration metadata_3 {
         "Longitudinal position of overall seat"
     },
     { SEAT_TILT_VSS_3,
-        DataType::UINT16,
+        DataType::FLOAT,
         // EntryType::ENTRY_TYPE_ACTUATOR, // entry type can't be set with current API
         ChangeType::ON_CHANGE,
         sdv::broker_feeder::createNotAvailableValue(),

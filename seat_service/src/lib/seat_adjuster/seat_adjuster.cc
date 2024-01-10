@@ -95,6 +95,8 @@ std::shared_ptr<SeatAdjuster> SeatAdjuster::createInstance(const std::string& ca
 SeatAdjusterImpl::SeatAdjusterImpl(const std::string& can_if_name)
     : can_if_name_{can_if_name}
     , cb_{nullptr}
+    , cb_tilt_{nullptr}
+    , cb_height_{nullptr}
 {
     error_t rc;
     // init
@@ -342,6 +344,7 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
                             << std::endl;
                 }
                 // adjust scaling for value to match GetSeatPosition()
+                std::cout << value << std::endl;
                 int pos = (value == MOTOR_POS_INVALID) ? -1 : value;
                 seat_adjuster->cb_tilt_(pos);
                 cb_null_dumped = false;
