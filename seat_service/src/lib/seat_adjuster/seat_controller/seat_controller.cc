@@ -560,7 +560,7 @@ error_t seatctrl_control_ecu1_loop(seatctrl_context_t *ctx)
     //   In that state normalization loop must be done on real hw.
     if (is_ctl_running(ctx)) {
         bool timeout = true;
-        while((ctx->motor1_pos != ctx->desired1_position) && timeout){
+        if((ctx->motor1_pos != ctx->desired1_position) && timeout){
             int64_t elapsed = get_ts() - ctx->command_ts;
             // Preliminary phase: operation was just scheduled (up to 500ms ago),
             // but can signal may not yet come, i.e. waiting for motor tor start moving
@@ -678,7 +678,7 @@ error_t seatctrl_control_ecu2_loop(seatctrl_context_t *ctx)
     if (is_ctl_running(ctx)) {
         bool timeout = true;
         bool timeout2 = true;
-        while((ctx->motor1_pos != ctx->desired1_position) && timeout){
+        if((ctx->motor1_pos != ctx->desired1_position) && timeout){
             int64_t elapsed = get_ts() - ctx->command_ts;
             // Preliminary phase: operation was just scheduled (up to 500ms ago),
             // but can signal may not yet come, i.e. waiting for motor tor start moving
@@ -710,7 +710,7 @@ error_t seatctrl_control_ecu2_loop(seatctrl_context_t *ctx)
                         }
                         ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                         printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
-                                ctx->motor2_pos, ctx->desired1_position, mov_state_string(ctx->desired1_direction), ctx->command_ts);
+                                ctx->motor1_pos, ctx->desired1_position, mov_state_string(ctx->desired1_direction), ctx->command_ts);
                         rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired1_direction, ctx->config.motor_rpm, 1);
                         if (rc != SEAT_CTRL_OK) {
                             perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(desired_pos) error");
@@ -757,7 +757,7 @@ error_t seatctrl_control_ecu2_loop(seatctrl_context_t *ctx)
                 timeout = false;
             }
         }
-        while((ctx->motor2_pos != ctx->desired2_position) && timeout2){
+        if((ctx->motor2_pos != ctx->desired2_position) && timeout2){
             int64_t elapsed = get_ts() - ctx->command_ts;
             // Preliminary phase: operation was just scheduled (up to 500ms ago),
             // but can signal may not yet come, i.e. waiting for motor tor start moving
@@ -903,6 +903,7 @@ void *seatctrl_threadFunc(void *arg)
         // TODO: pthread_mutex lock in ctx
         if (frame.can_id == CAN_SECU2_STAT_FRAME_ID)
         {
+            printf("SECU2_STAT\n");
             if (handle_secu2_stat(ctx, &frame) == SEAT_CTRL_OK) {
                     seatctrl_control_ecu2_loop(ctx);
             }
@@ -910,6 +911,7 @@ void *seatctrl_threadFunc(void *arg)
 
         if (frame.can_id == CAN_SECU1_STAT_FRAME_ID)
         {
+            printf("SECU1_STAT\n");
             if (handle_secu1_stat(ctx, &frame) == SEAT_CTRL_OK) {
                     seatctrl_control_ecu1_loop(ctx);
             }
