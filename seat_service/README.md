@@ -21,6 +21,7 @@
     - [Seat Controller configuration](#seat-controller-configuration)
   - [Seat Controller Documentation](#seat-controller-documentation)
   - [Generate documentation](#generate-documentation)
+- [Known Issues](#known-issues)
 
 ## Overview
 
@@ -208,3 +209,7 @@ check [SeatController README](./src/lib/seat_adjuster/seat_controller/README.md)
 
 - The output will be stored to ``./docs/out``. You can watch the documentation with open the following file in the browser:
   `./docs/doxygen/out/html/index.html`
+
+# Known Issues
+
+If you are setting the seat to 1000 or 0 (100%, 0%) the logic for moving the seat for a direction does not reach its final stage. Then it is not possible to move in another direction. New movements in the same direction are possible. Final stage is reached for maximum/minimum 990/10. It is recommended to not move the seat to 100% or 0%.
