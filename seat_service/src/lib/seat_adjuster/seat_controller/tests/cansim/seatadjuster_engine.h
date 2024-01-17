@@ -57,7 +57,6 @@ typedef struct {
     int  _sim_motor1_lrn; // simulated motor1_lrn []
     int  _sim_motor1_status; // simulated motor1_status, based on write
 
-#ifdef SAE_ALL_MOTORS
     int  _sim_motor2_pos; // simulated motor2_pos [0..100] (fixed point)
     int  _sim_motor2_rpm; // simulated motor2_rpm/100: [30..254]
     int  _sim_motor2_lrn; // simulated motor2_lrn []
@@ -68,12 +67,6 @@ typedef struct {
     int  _sim_motor3_lrn; // simulated motor3_lrn []
     int  _sim_motor3_status; // simulated motor1_status, based on write
 
-    int  _sim_motor4_pos; // simulated motor4_pos [0..100] (fixed point)
-    int  _sim_motor4_rpm; // simulated motor4_rpm/100: [30..254]
-    int  _sim_motor4_lrn; // simulated motor4_lrn []
-    int  _sim_motor4_status; // simulated motor4_status, based on write
-#endif // #SAE_ALL_MOTORS
-
     bool _sim_threshold_enabled; // enable/disable stopping at thresholds
     bool _sim_motor1_threshold_hi_stop; // true if stopped at high threshold
     bool _sim_motor1_threshold_lo_stop; // true if stopped at low threshold
@@ -81,6 +74,22 @@ typedef struct {
 
     int64_t _sim_motor1_ts; // timestamp of last move start operation
     int  _sim_motor1_inc; // fractional increase per read tick
+
+    bool _sim_motor2_threshold_hi_stop; // true if stopped at high threshold
+    bool _sim_motor2_threshold_lo_stop; // true if stopped at low threshold
+    int  _sim_motor2_oldpos; // used to reduce cyclic dumps
+
+    int64_t _sim_motor2_ts; // timestamp of last move start operation
+    int  _sim_motor2_inc; // fractional increase per read tick
+
+    bool _sim_motor3_threshold_hi_stop; // true if stopped at high threshold
+    bool _sim_motor3_threshold_lo_stop; // true if stopped at low threshold
+    int  _sim_motor3_oldpos; // used to reduce cyclic dumps
+
+    int64_t _sim_motor3_ts; // timestamp of last move start operation
+    int  _sim_motor3_inc; // fractional increase per read tick
+
+    int _sim_ecux;
 } sae_context_t;
 
 /**
