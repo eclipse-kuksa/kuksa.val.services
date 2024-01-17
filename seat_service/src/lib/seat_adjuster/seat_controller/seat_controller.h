@@ -195,13 +195,19 @@ typedef struct
 	bool running;               // Flag for running CTL
 	pthread_t thread_id;        // ThreadID of the CTL handler thread
 
-	int64_t command_ts;         // Timestamp when manual command was sent
+	int64_t command_pos_ts;         // Timestamp when manual command was sent
+	int64_t command_tilt_ts;         // Timestamp when manual command was sent
+	int64_t command_height_ts;         // Timestamp when manual command was sent
 	uint8_t desired1_position;   // Desired target motor position for active operation
 	uint8_t desired2_position;   // Desired target motor position for active operation
 	uint8_t desired3_position;   // Desired target motor position for active operation
 	MotorDirection desired1_direction; // Calculated direction of movement towards desired_position
 	MotorDirection desired2_direction; // Calculated direction of movement towards desired_position
 	MotorDirection desired3_direction; // Calculated direction of movement towards desired_position
+
+	bool pos_running;					// position adjustment running
+	bool tilt_running;					// tilt adjustment running
+	bool height_running;				// height adjustment running
 
 	// motor*_* fields below are updated from CAN_SECU2_STAT signal on state change:
 	uint8_t motor1_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor1_pos
@@ -344,7 +350,23 @@ int seatctrl_get_height(seatctrl_context_t *ctx);
  * @param ctx opened seatctrl context.
  * @return SEAT_CTRL_OK on success, SEAT_CTRL_ERR* (<0) on error.
  */
-error_t seatctrl_stop_movement(seatctrl_context_t *ctx);
+error_t seatctrl_stop_pos_movement(seatctrl_context_t *ctx);
+
+/**
+ * @brief Helper to abort any seat active seatctrl_set_tilt() operations and stop motors.
+ *
+ * @param ctx opened seatctrl context.
+ * @return SEAT_CTRL_OK on success, SEAT_CTRL_ERR* (<0) on error.
+ */
+error_t seatctrl_stop_tilt_movement(seatctrl_context_t *ctx);
+
+/**
+ * @brief Helper to abort any seat active seatctrl_set_height() operations and stop motors.
+ *
+ * @param ctx opened seatctrl context.
+ * @return SEAT_CTRL_OK on success, SEAT_CTRL_ERR* (<0) on error.
+ */
+error_t seatctrl_stop_height_movement(seatctrl_context_t *ctx);
 
 /**
  * @brief Set callback function for seatctrl events (e.g. motorX position updates, CAN I/O errors).

@@ -343,8 +343,7 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
                     std::cerr << prefix << "calling *" << seat_adjuster->cb_tilt_.target_type().name() << "(" << value << ")"
                             << std::endl;
                 }
-                // adjust scaling for value to match GetSeatPosition()
-                std::cout << value << std::endl;
+                // adjust scaling for value to match GetSeatTilt()
                 int pos = (value == MOTOR_POS_INVALID) ? -1 : value;
                 seat_adjuster->cb_tilt_(pos);
                 cb_null_dumped = false;
@@ -369,7 +368,7 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
                     std::cerr << prefix << "calling *" << seat_adjuster->cb_height_.target_type().name() << "(" << value << ")"
                             << std::endl;
                 }
-                // adjust scaling for value to match GetSeatPosition()
+                // adjust scaling for value to match GetSeatHeight()
                 int pos = (value == MOTOR_POS_INVALID) ? -1 : value;
                 seat_adjuster->cb_height_(pos);
                 cb_null_dumped = false;
