@@ -30,7 +30,7 @@ extern int seatctrl_control_loop(seatctrl_context_t *ctx);
  * @brief
  *
  */
-extern int handle_secu_stat(seatctrl_context_t *ctx, const struct can_frame *frame);
+extern int handle_secu2_stat(seatctrl_context_t *ctx, const struct can_frame *frame);
 /**
  * @brief
  *
@@ -286,7 +286,7 @@ TEST_F(TestSeatCtrlApi, TestGetPosition) {
     int test_pos = 42;
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, test_pos, MotorDirection::INV, LearningState::Invalid)) << "Internal can generator failed!";
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
 
     //ctx.motor1_pos = test_pos;
     EXPECT_EQ(SEAT_CTRL_ERR, seatctrl_get_position(&ctx)) << "Motor pos should be: " << SEAT_CTRL_ERR << " if CTL thread is not running";
@@ -340,19 +340,19 @@ TEST_F(TestSeatCtrlApi, TestPosCallback) {
 
     // initial secu stat change: callback not set yet, no data is received
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, test_pos, MotorDirection::OFF, LearningState::Learned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(test_pos, cb.received_pos) << "Callback should have received: " << test_pos;
 
 
     // change motor pos
     test_pos++;
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, test_pos, MotorDirection::INC, LearningState::Learned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(test_pos, cb.received_pos) << "Callback should have received: " << test_pos;
 
     // check with thea same pos, invalidate cb value
     cb.received_pos = -1;
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(-1, cb.received_pos) << "Callback calles with the same value";
 
     // check invalid values
@@ -362,7 +362,7 @@ TEST_F(TestSeatCtrlApi, TestPosCallback) {
     int old_calls = pos_cb_calls; // cache old cb counter
     cb.received_pos = -1;
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, test_pos, MotorDirection::INC, LearningState::Learned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(-1, cb.received_pos) << "Callback value should not be updated";
     EXPECT_EQ(old_calls + 1, pos_cb_calls) << "Callback function should be called with null arg";
 
@@ -373,7 +373,7 @@ TEST_F(TestSeatCtrlApi, TestPosCallback) {
     old_calls = pos_cb_calls; // cache old cb counter
     cb.received_pos = -1;
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, test_pos, MotorDirection::OFF, LearningState::Learned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(-1, cb.received_pos) << "Callback value should not be updated";
     EXPECT_EQ(old_calls, pos_cb_calls) << "Callback function should not be called";
 
@@ -397,18 +397,18 @@ TEST_F(TestSeatCtrlApi, TestInternals) {
     can_frame frame;
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 42, MotorDirection::INV, LearningState::Invalid)) << "Internal can generator failed!";
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
 
     // check if invalid values are rejected (e.g. cangen frames).
     // Actually generated frames have enum values in range..
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 255, 0xF, 0xE)) << "Internal can generator failed!";
     frame.can_dlc = 1; // make it invalid
-    EXPECT_EQ(-1, handle_secu_stat(&ctx, &frame)) << "Invalid SECU_STAT values should return an error";
+    EXPECT_EQ(-1, handle_secu2_stat(&ctx, &frame)) << "Invalid SECU_STAT values should return an error";
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 99, MotorDirection::INC, LearningState::NotLearned)) << "Internal can generator failed!";
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 100, MotorDirection::DEC, LearningState::Learned)) << "Internal can generator failed!";
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     // just call it
     EXPECT_NO_THROW(print_can_raw(&frame, true));
 }
@@ -684,7 +684,7 @@ TEST_F(TestSeatCtrlApi, TestNotLearnedMode) {
     std::string output;
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, MOTOR_POS_INVALID, MotorDirection::OFF, LearningState::NotLearned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
 
     testing::internal::CaptureStdout();
     EXPECT_EQ(0, seatctrl_control_loop(&ctx));
@@ -693,18 +693,18 @@ TEST_F(TestSeatCtrlApi, TestNotLearnedMode) {
 
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 0, MotorDirection::OFF, LearningState::Learned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     testing::internal::CaptureStdout();
     EXPECT_EQ(0, seatctrl_control_loop(&ctx));
     output = testing::internal::GetCapturedStdout();
     EXPECT_FALSE(output.find("ECU in not-learned state") != std::string::npos) << "Dublicate not-learned state warning: " << output;
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 0, MotorDirection::OFF, LearningState::NotLearned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     EXPECT_EQ(0, GenerateSecuStatFrame(&frame, 1, MotorDirection::OFF, LearningState::Learned));
-    EXPECT_EQ(0, handle_secu_stat(&ctx, &frame));
+    EXPECT_EQ(0, handle_secu2_stat(&ctx, &frame));
     EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     testing::internal::CaptureStdout();
