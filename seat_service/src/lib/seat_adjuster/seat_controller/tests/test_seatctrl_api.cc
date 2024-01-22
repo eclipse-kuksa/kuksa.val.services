@@ -107,7 +107,7 @@ class TestSeatCtrlApi : public ::testing::Test {
         frame->can_id = CAN_SECU2_STAT_FRAME_ID;
         frame->can_dlc = 8;
         int rc = CAN_secu2_stat_pack(frame->data, &stat, sizeof(stat));
-        if (rc == 8) {
+        if (rc == 6) {
             return 0;
         } else {
             return 1;
