@@ -195,7 +195,7 @@ TEST_F(TestSeatCtrlApi, TestContext) {
     EXPECT_EQ(config.debug_verbose, ctx.config.debug_verbose);
 
     // check if current operation is reset
-    EXPECT_EQ(ctx.command_ts, 0);
+    EXPECT_EQ(ctx.command_pos_ts, 0);
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position);
     EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction);
 
@@ -446,7 +446,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_pos, ctx.motor1_pos) << "Must start from initial position: " << initial_pos;
 
-    EXPECT_GT(ctx.command_ts, now_ts);
+    EXPECT_GT(ctx.command_pos_ts, now_ts);
     EXPECT_EQ(target_pos, ctx.desired1_position);
     EXPECT_EQ(MotorDirection::INC, ctx.desired1_direction);
 
@@ -495,7 +495,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     EXPECT_EQ(target_pos, ctx.motor1_pos) << "Motor should be at " << target_pos << "%";
-    EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
+    EXPECT_EQ(0, ctx.command_pos_ts) << "pending command should be finished!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position) << "pending command should be finished!";;
     EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction) << "pending command should be finished!";
     if (sockfd != SOCKET_INVALID) {
@@ -537,7 +537,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_pos, ctx.motor1_pos) << "Must start from initial position: " << initial_pos;
 
-    EXPECT_NE(ctx.command_ts, 0);
+    EXPECT_NE(ctx.command_pos_ts, 0);
     EXPECT_EQ(target_pos, ctx.desired1_position);
     EXPECT_EQ(MotorDirection::DEC, ctx.desired1_direction);
 
@@ -590,7 +590,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     EXPECT_EQ(0, seatctrl_control_loop(&ctx));
 
     EXPECT_EQ(target_pos, ctx.motor1_pos) << "Motor should be at " << target_pos << "%";
-    EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
+    EXPECT_EQ(0, ctx.command_pos_ts) << "pending command should be finished!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position) << "pending command should be finished!";;
     EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction) << "pending command should be finished!";
 
@@ -639,7 +639,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_pos, ctx.motor1_pos) << "Must start from initial position: " << initial_pos;
 
-    EXPECT_GT(ctx.command_ts, now_ts);
+    EXPECT_GT(ctx.command_pos_ts, now_ts);
     EXPECT_EQ(target_pos, ctx.desired1_position);
     EXPECT_EQ(MotorDirection::INC, ctx.desired1_direction);
 
@@ -657,7 +657,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
 
 
     EXPECT_NE(target_pos, ctx.motor1_pos) << "Motor should be at dofferent position than: " << target_pos << "%";
-    EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
+    EXPECT_EQ(0, ctx.command_pos_ts) << "pending command should be finished!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position) << "pending command should be finished!";;
     EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction) << "pending command should be finished!";
 
