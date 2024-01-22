@@ -1018,7 +1018,6 @@ error_t seatctrl_send_ecu2_cmd1(seatctrl_context_t *ctx, uint8_t motor_dir, uint
         printf(SELF_CMD1 "ERR: CAN_secu2_cmd_1_pack() error\n");
         return SEAT_CTRL_ERR;
     }
-    frame.can_dlc = 8; // = rc; BUGFIX: we have to send full 8 bytes, regardless of actual CAN_secu2_cmd_1_pack packed size, append 00s
     print_secu2_cmd_1(SELF_CMD1 "*** Sending SECU2_CMD_1: " , &cmd1);
     if (ctx->config.debug_raw) {
         print_can_raw(&frame, false);
@@ -1088,7 +1087,6 @@ error_t seatctrl_send_ecu1_cmd1(seatctrl_context_t *ctx, uint8_t motor_dir, uint
         printf(SELF_CMD1 "ERR: CAN_secu1_cmd_1_pack() error\n");
         return SEAT_CTRL_ERR;
     }
-    frame.can_dlc = 8; // = rc; BUGFIX: we have to send full 8 bytes, regardless of actual CAN_secu1_cmd_1_pack packed size, append 00s
     print_secu1_cmd_1(SELF_CMD1 "*** Sending SECU1_CMD_1: " , &cmd1);
     if (ctx->config.debug_raw) {
         print_can_raw(&frame, false);
