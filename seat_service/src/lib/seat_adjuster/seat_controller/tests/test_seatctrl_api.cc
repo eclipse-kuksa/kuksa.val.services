@@ -90,9 +90,9 @@ class TestSeatCtrlApi : public ::testing::Test {
      * @brief Generates SECU_STAT can frame with specified position, movement state and learning state for motor1
      *
      * @param frame Pointer to can_frame
-     * @param motor_pos desired motor pos
-     * @param mov_state desired movement state
-     * @param learn_state desired learning state
+     * @param motor_pos desired1 motor pos
+     * @param mov_state desired1 movement state
+     * @param learn_state desired1 learning state
      */
     int GenerateSecuStatFrame(struct can_frame *frame, int motor_pos, int mov_state, int learn_state) {
         if (!frame) return -1;
@@ -196,8 +196,8 @@ TEST_F(TestSeatCtrlApi, TestContext) {
 
     // check if current operation is reset
     EXPECT_EQ(ctx.command_ts, 0);
-    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction);
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position);
+    EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction);
 
     // check if initial stats are invalidated
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.motor1_pos);
@@ -447,8 +447,8 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     EXPECT_EQ(initial_pos, ctx.motor1_pos) << "Must start from initial position: " << initial_pos;
 
     EXPECT_GT(ctx.command_ts, now_ts);
-    EXPECT_EQ(target_pos, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::INC, ctx.desired_direction);
+    EXPECT_EQ(target_pos, ctx.desired1_position);
+    EXPECT_EQ(MotorDirection::INC, ctx.desired1_direction);
 
     usleep(450 * 1000L); // simulate motor spin up time
 
@@ -475,9 +475,9 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
             if (pos == 85) {
                 testing::internal::CaptureStdout();
                 captured = true;
-                ctx.motor1_mov_state = MotorDirection::OFF; // == desired direction
+                ctx.motor1_mov_state = MotorDirection::OFF; // == desired1 direction
             } else {
-                ctx.motor1_mov_state = MotorDirection::INC; // == desired direction
+                ctx.motor1_mov_state = MotorDirection::INC; // == desired1 direction
             }
         }
         EXPECT_EQ(0, seatctrl_control_loop(&ctx));
@@ -496,8 +496,8 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
 
     EXPECT_EQ(target_pos, ctx.motor1_pos) << "Motor should be at " << target_pos << "%";
     EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
-    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position) << "pending command should be finished!";;
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction) << "pending command should be finished!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position) << "pending command should be finished!";;
+    EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction) << "pending command should be finished!";
     if (sockfd != SOCKET_INVALID) {
         ::close(sockfd);
     }
@@ -538,8 +538,8 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     EXPECT_EQ(initial_pos, ctx.motor1_pos) << "Must start from initial position: " << initial_pos;
 
     EXPECT_NE(ctx.command_ts, 0);
-    EXPECT_EQ(target_pos, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::DEC, ctx.desired_direction);
+    EXPECT_EQ(target_pos, ctx.desired1_position);
+    EXPECT_EQ(MotorDirection::DEC, ctx.desired1_direction);
 
     usleep(450 * 1000L); // simulate motor spin up time
 
@@ -565,12 +565,12 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
             ctx.motor1_learning_state = LearningState::Learned;
             // simulate stop @ threshold
             if (pos == 14) {
-                ctx.motor1_mov_state = MotorDirection::OFF; // == desired direction
+                ctx.motor1_mov_state = MotorDirection::OFF; // == desired1 direction
                 // capture stdout to check for stop / re-stat cmd1
                 testing::internal::CaptureStdout();
                 captured = true;
             } else {
-                ctx.motor1_mov_state = MotorDirection::DEC; // == desired direction
+                ctx.motor1_mov_state = MotorDirection::DEC; // == desired1 direction
             }
         }
         EXPECT_EQ(0, seatctrl_control_loop(&ctx));
@@ -591,8 +591,8 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
 
     EXPECT_EQ(target_pos, ctx.motor1_pos) << "Motor should be at " << target_pos << "%";
     EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
-    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position) << "pending command should be finished!";;
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction) << "pending command should be finished!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position) << "pending command should be finished!";;
+    EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction) << "pending command should be finished!";
 
     if (sockfd != SOCKET_INVALID) {
         ::close(sockfd);
@@ -640,15 +640,15 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
     EXPECT_EQ(initial_pos, ctx.motor1_pos) << "Must start from initial position: " << initial_pos;
 
     EXPECT_GT(ctx.command_ts, now_ts);
-    EXPECT_EQ(target_pos, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::INC, ctx.desired_direction);
+    EXPECT_EQ(target_pos, ctx.desired1_position);
+    EXPECT_EQ(MotorDirection::INC, ctx.desired1_direction);
 
     // do actual move(s)...
     for (auto pos = initial_pos; pos <= target_pos; pos++) {
         if (pos == 85) {
-            ctx.motor1_mov_state = MotorDirection::OFF; // == desired direction
+            ctx.motor1_mov_state = MotorDirection::OFF; // == desired1 direction
         } else {
-            ctx.motor1_mov_state = MotorDirection::INC; // == desired direction
+            ctx.motor1_mov_state = MotorDirection::INC; // == desired1 direction
         }
         EXPECT_EQ(0, seatctrl_control_loop(&ctx));
         usleep(1 * 1000L);  // 1ms
@@ -658,8 +658,8 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
 
     EXPECT_NE(target_pos, ctx.motor1_pos) << "Motor should be at dofferent position than: " << target_pos << "%";
     EXPECT_EQ(0, ctx.command_ts) << "pending command should be finished!";
-    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position) << "pending command should be finished!";;
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction) << "pending command should be finished!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired1_position) << "pending command should be finished!";;
+    EXPECT_EQ(MotorDirection::OFF, ctx.desired1_direction) << "pending command should be finished!";
 
     if (sockfd != SOCKET_INVALID) {
         ::close(sockfd);
