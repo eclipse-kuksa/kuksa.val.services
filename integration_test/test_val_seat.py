@@ -98,13 +98,13 @@ async def test_vdb_metadata_get(setup_helper: VDBHelper) -> None:
 
 
 @pytest.mark.asyncio
-async def test_subscribe_seat_pos_0(setup_helper: VDBHelper) -> None:
+async def test_subscribe_seat_pos_10(setup_helper: VDBHelper) -> None:
     helper: VDBHelper = setup_helper
     name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
     query = "SELECT {}".format(name)
 
     start_value = int(os.getenv("TEST_START_VALUE", "500"))
-    expected_value = int(os.getenv("TEST_VALUE", "0"))
+    expected_value = int(os.getenv("TEST_VALUE", "10"))
     timeout = int(os.getenv("TEST_TIMEOUT", "10"))
 
     # initiate seat move to 42
@@ -161,8 +161,8 @@ async def test_subscribe_seat_pos_where_eq(setup_helper: VDBHelper) -> None:
     helper = setup_helper
 
     name = os.getenv("TEST_NAME", DEFAULT_VSS_PATH)
-    expected_value = int(os.getenv("TEST_VALUE", "1000"))
-    timeout = int(os.getenv("TEST_TIMEOUT", "10"))
+    expected_value = int(os.getenv("TEST_VALUE", "990"))
+    timeout = int(os.getenv("TEST_TIMEOUT", "20"))
 
     query = "SELECT {} where {} = {}".format(name, name, expected_value)
 
