@@ -34,7 +34,9 @@
 #define SAE_POS_INVALID -1//0xFF // MOTOR_POS_INVALID
 
 // maps: MotorDirection enum
-enum { MotorDirection_OFF=0, MotorDirection_DEC=1, MotorDirection_INC=2, MotorDirection_INV=3 };
+enum { MotorPosDirection_OFF=0, MotorPosDirection_DEC=1, MotorPosDirection_INC=2, MotorPosDirection_INV=3 };
+enum { MotorTiltDirection_OFF=0, MotorTiltDirection_DEC=1, MotorTiltDirection_INC=2, MotorTiltDirection_INV=3 };
+enum { MotorHeightDirection_OFF=0, MotorHeightDirection_DEC=1, MotorHeightDirection_INC=2, MotorHeightDirection_INV=3 };
 
 /**
  * @brief maps LearningState enum
@@ -52,42 +54,42 @@ typedef struct {
     bool _sim_active; // disable read/write handling
     int  _sim_delay; // read delay in ms
 
-    int  _sim_motor1_pos; // simulated motor1_pos [0..100] (fixed point)
-    int  _sim_motor1_rpm; // simulated motor1_rpm/100: [30..254]
-    int  _sim_motor1_lrn; // simulated motor1_lrn []
-    int  _sim_motor1_status; // simulated motor1_status, based on write
+    int  _sim_motor_pos; // simulated motor1_pos [0..100] (fixed point)
+    int  _sim_motor_pos_rpm; // simulated motor1_rpm/100: [30..254]
+    int  _sim_motor_pos_lrn; // simulated motor1_lrn []
+    int  _sim_motor_pos_status; // simulated motor1_status, based on write
 
-    int  _sim_motor2_pos; // simulated motor2_pos [0..100] (fixed point)
-    int  _sim_motor2_rpm; // simulated motor2_rpm/100: [30..254]
-    int  _sim_motor2_lrn; // simulated motor2_lrn []
-    int  _sim_motor2_status; // simulated motor2_status, based on write
+    int  _sim_motor_tilt; // simulated motor2_pos [0..100] (fixed point)
+    int  _sim_motor_tilt_rpm; // simulated motor2_rpm/100: [30..254]
+    int  _sim_motor_tilt_lrn; // simulated motor2_lrn []
+    int  _sim_motor_tilt_status; // simulated motor2_status, based on write
 
-    int  _sim_motor3_pos; // simulated motor3_pos [0..100] (fixed point)
-    int  _sim_motor3_rpm; // simulated motor3_rpm/100: [30..254]
-    int  _sim_motor3_lrn; // simulated motor3_lrn []
-    int  _sim_motor3_status; // simulated motor1_status, based on write
+    int  _sim_motor_height; // simulated motor3_pos [0..100] (fixed point)
+    int  _sim_motor_height_rpm; // simulated motor3_rpm/100: [30..254]
+    int  _sim_motor_height_lrn; // simulated motor3_lrn []
+    int  _sim_motor_height_status; // simulated motor1_status, based on write
 
     bool _sim_threshold_enabled; // enable/disable stopping at thresholds
-    bool _sim_motor1_threshold_hi_stop; // true if stopped at high threshold
-    bool _sim_motor1_threshold_lo_stop; // true if stopped at low threshold
-    int  _sim_motor1_oldpos; // used to reduce cyclic dumps
+    bool _sim_motor_pos_threshold_hi_stop; // true if stopped at high threshold
+    bool _sim_motor_pos_threshold_lo_stop; // true if stopped at low threshold
+    int  _sim_motor_pos_oldpos; // used to reduce cyclic dumps
 
-    int64_t _sim_motor1_ts; // timestamp of last move start operation
-    int  _sim_motor1_inc; // fractional increase per read tick
+    int64_t _sim_motor_pos_ts; // timestamp of last move start operation
+    int  _sim_motor_pos_inc; // fractional increase per read tick
 
-    bool _sim_motor2_threshold_hi_stop; // true if stopped at high threshold
-    bool _sim_motor2_threshold_lo_stop; // true if stopped at low threshold
-    int  _sim_motor2_oldpos; // used to reduce cyclic dumps
+    bool _sim_motor_tilt_threshold_hi_stop; // true if stopped at high threshold
+    bool _sim_motor_tilt_threshold_lo_stop; // true if stopped at low threshold
+    int  _sim_motor_tilt_oldpos; // used to reduce cyclic dumps
 
-    int64_t _sim_motor2_ts; // timestamp of last move start operation
-    int  _sim_motor2_inc; // fractional increase per read tick
+    int64_t _sim_motor_tilt_ts; // timestamp of last move start operation
+    int  _sim_motor_tilt_inc; // fractional increase per read tick
 
-    bool _sim_motor3_threshold_hi_stop; // true if stopped at high threshold
-    bool _sim_motor3_threshold_lo_stop; // true if stopped at low threshold
-    int  _sim_motor3_oldpos; // used to reduce cyclic dumps
+    bool _sim_motor_height_threshold_hi_stop; // true if stopped at high threshold
+    bool _sim_motor_height_threshold_lo_stop; // true if stopped at low threshold
+    int  _sim_motor_height_oldpos; // used to reduce cyclic dumps
 
-    int64_t _sim_motor3_ts; // timestamp of last move start operation
-    int  _sim_motor3_inc; // fractional increase per read tick
+    int64_t _sim_motor_height_ts; // timestamp of last move start operation
+    int  _sim_motor_height_inc; // fractional increase per read tick
 
     int _sim_ecux;
 } sae_context_t;

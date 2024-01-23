@@ -49,7 +49,7 @@ seatctrl_context_t ctx;
  * @param position
  */
 void pos_cb(SeatCtrlEvent event, int value, void* ctx) {
-    if (event == SeatCtrlEvent::Motor1Pos) {
+    if (event == SeatCtrlEvent::MotorPos) {
         printf("****** motor1 pos changed: %3d%%, ctx:%p\n", value, ctx);
     } else
     if (event == SeatCtrlEvent::CanError) {

@@ -38,6 +38,9 @@ extern "C" {
 #include <inttypes.h>
 #include <pthread.h>
 
+// cantools generated code from .dbc
+#include "CAN.h"
+
 /**
  * error_t constants
  */
@@ -104,7 +107,7 @@ extern "C" {
  */
 typedef int error_t;
 
-enum SeatCtrlEvent { CanError, Motor1Pos, Motor2Pos, Motor3Pos };
+enum SeatCtrlEvent { CanError, MotorPos, MotorTilt, MotorHeight };
 
 /**
  * @brief SeatController Event callback (Motor position changed, CAN Errors)
@@ -113,24 +116,87 @@ enum SeatCtrlEvent { CanError, Motor1Pos, Motor2Pos, Motor3Pos };
 typedef void (*seatctrl_event_cb_t)(SeatCtrlEvent type, int value, void* userContext);
 
 /**
- * @brief Common enum for CAN_secu2_cmd_1_t.motor1_manual_cmd and CAN_secu2_stat_t.motor1_mov_state
+ * @brief enum for CAN_secu2_cmd_1_t.motor1_manual_cmd
+ *
+ */
+enum MotorPosDirection {
+	POS_OFF = CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_OFF_CHOICE
+	POS_DEC = CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEC_CHOICE
+	POS_INC = CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_INC_CHOICE
+	POS_INV = CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE	 // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEF_CHOICE
+};
+
+/**
+ * @brief enum for CAN_secu2_stat_t.motor1_mov_state
+ *
+ */
+enum RecMotorPosDirection {
+	REC_POS_OFF = CAN_SECU2_STAT_MOTOR1_MOV_STATE_OFF_CHOICE,
+	REC_POS_DEC = CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEC_CHOICE,
+	REC_POS_INC = CAN_SECU2_STAT_MOTOR1_MOV_STATE_INC_CHOICE,
+	REC_POS_INV = CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEF_CHOICE
+};
+
+/**
+ * @brief enum for CAN_secu2_cmd_1_t.motor3_manual_cmd
+ *
+ */
+enum MotorTiltDirection {
+	TILT_OFF = CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_OFF_CHOICE,
+	TILT_DEC = CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_DEC_CHOICE,
+	TILT_INC = CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_INC_CHOICE,
+	TILT_INV = CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_INV_CHOICE	
+};
+
+/**
+ * @brief enum for CAN_secu2_stat_t.motor3_mov_state
+ *
+ */
+enum RecMotorTiltDirection {
+	REC_TILT_OFF = CAN_SECU2_STAT_MOTOR3_MOV_STATE_OFF_CHOICE,
+	REC_TILT_DEC = CAN_SECU2_STAT_MOTOR3_MOV_STATE_DEC_CHOICE,
+	REC_TILT_INC = CAN_SECU2_STAT_MOTOR3_MOV_STATE_INC_CHOICE,
+	REC_TILT_INV = CAN_SECU2_STAT_MOTOR3_MOV_STATE_DEF_CHOICE
+};
+
+
+/**
+ * @brief Common enum for CAN_secu1_cmd_1_t.motor1_manual_cmd and CAN_secu1_stat_t.motor1_mov_state
  *
  * @fixme: Use cantools generated constants per CAN ID in case those are different in the future
  */
-enum MotorDirection {
-	OFF = 0, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_OFF_CHOICE
-	DEC = 1, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEC_CHOICE
-	INC = 2, // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_INC_CHOICE
-	INV = 3	 // CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE, CAN_SECU2_STAT_MOTOR1_MOV_STATE_DEF_CHOICE
+enum MotorHeightDirection {
+	HEIGHT_OFF = CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, // CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_OFF_CHOICE
+	HEIGHT_DEC = CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE, // CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_DEC_CHOICE
+	HEIGHT_INC = CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, // CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_INC_CHOICE
+	HEIGHT_INV = CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE	// CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE, CAN_SECU1_STAT_MOTOR1_MOV_STATE_DEF_CHOICE
 };
 
 /**
  * @brief Motor learning state values.
  */
-enum LearningState {
-	NotLearned = 0,
-	Learned = 1,
-	Invalid = 2
+enum PosLearningState {
+	PosNotLearned = CAN_SECU2_STAT_MOTOR1_LEARNING_STATE_NOT_LEARNED_CHOICE,
+	PosLearned = CAN_SECU2_STAT_MOTOR1_LEARNING_STATE_LEARNED_CHOICE,
+	PosInvalid = CAN_SECU2_STAT_MOTOR1_LEARNING_STATE_INVALID_CHOICE
+};
+
+/**
+ * @brief Motor learning state values.
+ */
+enum TiltLearningState {
+	TiltNotLearned = CAN_SECU2_STAT_MOTOR3_LEARNING_STATE_NOT_LEARNED_CHOICE,
+	TiltLearned = CAN_SECU2_STAT_MOTOR3_LEARNING_STATE_LEARNED_CHOICE,
+	TiltInvalid = CAN_SECU2_STAT_MOTOR3_LEARNING_STATE_INVALID_CHOICE
+};
+
+/**
+ * @brief Motor learning state values.
+ */
+enum HeightLearningState {
+	HeightNotLearned = CAN_SECU1_STAT_MOTOR1_LEARNING_STATE_NOT_LEARNED_CHOICE,
+	HeightLearned = CAN_SECU1_STAT_MOTOR1_LEARNING_STATE_LEARNED_CHOICE,
+	HeightInvalid = CAN_SECU1_STAT_MOTOR1_LEARNING_STATE_INVALID_CHOICE
 };
 
 /**
@@ -165,22 +231,22 @@ typedef struct {
  * @param thread_id ThreadID of the CTL handler thread. (internal)
  * @param command_ts Timestamp when manual command was sent. (internal)
  *
- * @param desired1_position Desired target motor position for active operation. (internal)
- * @param desired2_position Desired target motor position for active operation. (internal)
- * @param desired3_position Desired target motor position for active operation. (internal)
- * @param desired1_direction Calculated direction of movement towards desired_position. (internal)
- * @param desired2_direction Calculated direction of movement towards desired_position. (internal)
- * @param desired3_direction Calculated direction of movement towards desired_position. (internal)
+ * @param desired_position Desired target motor position for active operation. (internal)
+ * @param desired_tilt Desired target motor position for active operation. (internal)
+ * @param desired_height Desired target motor position for active operation. (internal)
+ * @param desired_pos_direction Calculated direction of movement towards desired_position. (internal)
+ * @param desired_tilt_direction Calculated direction of movement towards desired_position. (internal)
+ * @param desired_height_direction Calculated direction of movement towards desired_position. (internal)
  *
- * @param motor1_pos Last received (valid) value from CAN_secu2_stat_t.motor1_pos
- * @param motor1_mov_state Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
- * @param motor1_learning_state Last Received (valid) value from CAN_secu2_stat_t.motor1_learning_state
- * @param motor2_pos Last received (valid) value from CAN_secu2_stat_t.motor3_pos
- * @param motor2_mov_state Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
- * @param motor2_learning_state Last Received (valid) value from CAN_secu2_stat_t.motor3_learning_state
- * @param motor3_pos Last received (valid) value from CAN_secu1_stat_t.motor1_pos
- * @param motor3_mov_state Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
- * @param motor3_learning_state Last Received (valid) value from CAN_secu1_stat_t.motor1_learning_state
+ * @param motor_pos Last received (valid) value from CAN_secu2_stat_t.motor1_pos
+ * @param motor_pos_mov_state Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
+ * @param motor_pos_learning_state Last Received (valid) value from CAN_secu2_stat_t.motor1_learning_state
+ * @param motor_tilt Last received (valid) value from CAN_secu2_stat_t.motor3_pos
+ * @param motor_tilt_mov_state Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
+ * @param motor_tilt_learning_state Last Received (valid) value from CAN_secu2_stat_t.motor3_learning_state
+ * @param motor_height Last received (valid) value from CAN_secu1_stat_t.motor1_pos
+ * @param motor_height_mov_state Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
+ * @param motor_height_learning_state Last Received (valid) value from CAN_secu1_stat_t.motor1_learning_state
  *
  * @param event_cb Callback function (seatctrl_event_cb_t) for motor position changes.
  * @param event_cb_tilt Callback function (seatctrl_event_cb_t) for motor position changes.
@@ -198,35 +264,29 @@ typedef struct
 	int64_t command_pos_ts;         // Timestamp when manual command was sent
 	int64_t command_tilt_ts;         // Timestamp when manual command was sent
 	int64_t command_height_ts;         // Timestamp when manual command was sent
-	uint8_t desired1_position;   // Desired target motor position for active operation
-	uint8_t desired2_position;   // Desired target motor position for active operation
-	uint8_t desired3_position;   // Desired target motor position for active operation
-	MotorDirection desired1_direction; // Calculated direction of movement towards desired_position
-	MotorDirection desired2_direction; // Calculated direction of movement towards desired_position
-	MotorDirection desired3_direction; // Calculated direction of movement towards desired_position
+	uint8_t desired_position;   // Desired target motor position for active operation
+	uint8_t desired_tilt;   // Desired target motor position for active operation
+	uint8_t desired_height;   // Desired target motor position for active operation
+	MotorPosDirection desired_pos_direction; // Calculated direction of movement towards desired_position
+	MotorTiltDirection desired_tilt_direction; // Calculated direction of movement towards desired_position
+	MotorHeightDirection desired_height_direction; // Calculated direction of movement towards desired_position
 
 	bool pos_running;					// position adjustment running
 	bool tilt_running;					// tilt adjustment running
 	bool height_running;				// height adjustment running
 
 	// motor*_* fields below are updated from CAN_SECU2_STAT signal on state change:
-	uint8_t motor1_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor1_pos
-	uint8_t motor1_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
-	uint8_t motor1_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor1_learning_state
+	uint8_t motor_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor1_pos
+	uint8_t motor_pos_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor1_mov_state
+	uint8_t motor_pos_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor1_learning_state
 
-	uint8_t motor2_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor3_pos
-	uint8_t motor2_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
-	uint8_t motor2_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor3_learning_state
+	uint8_t motor_tilt;            // Last received (valid) value from CAN_secu2_stat_t.motor3_pos
+	uint8_t motor_tilt_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor3_mov_state
+	uint8_t motor_tilt_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor3_learning_state
 
-	uint8_t motor3_pos;            // Last received (valid) value from CAN_secu1_stat_t.motor1_pos
-	uint8_t motor3_mov_state;      // Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
-	uint8_t motor3_learning_state; // Last received (valid) value from CAN_secu1_stat_t.motor1_learning_state
-
-#ifdef SEAT_CTRL_ALL_MOTORS
-	uint8_t motor4_pos;            // Last received (valid) value from CAN_secu2_stat_t.motor4_pos
-	uint8_t motor4_mov_state;      // Last received (valid) value from CAN_secu2_stat_t.motor4_mov_state
-	uint8_t motor4_learning_state; // Last received (valid) value from CAN_secu2_stat_t.motor4_learning_state
-#endif // # SEAT_CTRL_ALL_MOTORS
+	uint8_t motor_height;            // Last received (valid) value from CAN_secu1_stat_t.motor1_pos
+	uint8_t motor_height_mov_state;      // Last received (valid) value from CAN_secu1_stat_t.motor1_mov_state
+	uint8_t motor_height_learning_state; // Last received (valid) value from CAN_secu1_stat_t.motor1_learning_state
 
 	// Callback for position changes
 	seatctrl_event_cb_t event_cb;  // Callback function for motor position changes.
@@ -281,7 +341,7 @@ error_t seatctrl_open(seatctrl_context_t *ctx);
  *         - SEAT_CTRL_ERR_INVALID: invalid arguments.
  *         - SEAT_CTRL_ERR: generic error.
  */
-error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired1_position);
+error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired_position);
 
 /**
  * @brief Main business logic, sends command to change seat position based on current position and desired_position.
@@ -295,7 +355,7 @@ error_t seatctrl_set_position(seatctrl_context_t *ctx, int32_t desired1_position
  *         - SEAT_CTRL_ERR_INVALID: invalid arguments.
  *         - SEAT_CTRL_ERR: generic error.
  */
-error_t seatctrl_set_tilt(seatctrl_context_t *ctx, int32_t desired2_position);
+error_t seatctrl_set_tilt(seatctrl_context_t *ctx, int32_t desired_tilt);
 
 /**
  * @brief Main business logic, sends command to change seat position based on current position and desired_position.
@@ -309,7 +369,7 @@ error_t seatctrl_set_tilt(seatctrl_context_t *ctx, int32_t desired2_position);
  *         - SEAT_CTRL_ERR_INVALID: invalid arguments.
  *         - SEAT_CTRL_ERR: generic error.
  */
-error_t seatctrl_set_height(seatctrl_context_t *ctx, int32_t desired3_position);
+error_t seatctrl_set_height(seatctrl_context_t *ctx, int32_t desired_height);
 
 /**
  * @brief Gets last known motor1 position (%).

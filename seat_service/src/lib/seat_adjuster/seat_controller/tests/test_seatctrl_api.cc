@@ -307,7 +307,7 @@ static int pos_cb_calls = 0;
 
 void motor_pos_cb(SeatCtrlEvent event, int position, void* user_data)
 {
-    if (event == SeatCtrlEvent::Motor1Pos) {
+    if (event == SeatCtrlEvent::MotorPos) {
         std::cout << "  >> motor_pos_cb(" << position << ", " << user_data << ") #" << pos_cb_calls << std::endl;
         pos_cb_calls++;
         if (user_data) {
@@ -439,6 +439,10 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     ctx.config.debug_ctl = false; // unless tests with verbose?
     ctx.motor1_mov_state = MotorDirection::OFF;
     ctx.motor1_learning_state = LearningState::Learned;
+    ctx.motor2_mov_state = MotorDirection::OFF;
+    ctx.motor2_learning_state = LearningState::Learned;
+    ctx.motor3_mov_state = MotorDirection::OFF;
+    ctx.motor3_learning_state = LearningState::Learned;
     ctx.motor1_pos = initial_pos; // can't start with MOTOR_POS_INVALID, as it needs another thread to change it
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
@@ -484,7 +488,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
         if (captured) {
             std::string output = testing::internal::GetCapturedStdout();
             std::cout << output << std::endl;
-            EXPECT_TRUE(output.find("Sending MotorOff command") != std::string::npos &&
+            EXPECT_TRUE(output.find("Sending Motor1Off command") != std::string::npos &&
                         output.find("Re-sending: SECU2_CMD_1") != std::string::npos)
                     << "Expected motor off + resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
@@ -577,7 +581,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
         if (captured) {
             std::string output = testing::internal::GetCapturedStdout();
             std::cout << output << std::endl;
-            EXPECT_TRUE(output.find("Sending MotorOff command") != std::string::npos &&
+            EXPECT_TRUE(output.find("Sending Motor1Off command") != std::string::npos &&
                         output.find("Re-sending: SECU2_CMD_1") != std::string::npos)
                     << "Expected motor off + resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;

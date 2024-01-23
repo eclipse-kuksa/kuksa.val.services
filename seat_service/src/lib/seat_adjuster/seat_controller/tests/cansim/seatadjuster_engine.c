@@ -24,17 +24,9 @@
 #include <time.h>
 
 //////////////////////// SocketCanMock CAN_Read and CAN_Write callbacks ////////////////
-/*
-static int _sim_motor1_oldpos = -1;                   // used to reduce cyclic dumps
-static int _sim_motor1_pos = SAE_POS_INVALID;       // simulated motor1_pos [0..100]
-static int _sim_motor1_rpm = 80;                      // simulated motor1_rpm/100: [30..254]
-static int _sim_motor1_status = MotorDirection_OFF;  // simulated motor1_status, based on write
-static bool _sim_motor1_threshold_hi_stop = false;    // true if stopped at high threshold
-static bool _sim_motor1_threshold_lo_stop = false;    // true if stopped at low threshold
-static int _sim_fd = -1;
-*/
+
 bool _sae_verbose = false; // verbose dumps from sim loop
-bool _sae_debug = false;
+bool _sae_debug = true;
 bool _sae_all_motors = false;
 
 #define SELF_INIT    "<MOCK> [SAE Init] "
@@ -58,12 +50,32 @@ const char* sae_lrn_state(int lrn) {
     }
 }
 
-const char* sae_mov_state(int state) {
+const char* sae_pos_mov_state(int state) {
     switch (state) {
-        case MotorDirection_OFF: return "OFF";
-        case MotorDirection_INC: return "INC";
-        case MotorDirection_DEC: return "DEC";
-        case MotorDirection_INV: return "INV";
+        case MotorPosDirection_OFF: return "OFF";
+        case MotorPosDirection_INC: return "INC";
+        case MotorPosDirection_DEC: return "DEC";
+        case MotorPosDirection_INV: return "INV";
+        default: return "UNKNOWN";
+    }
+}
+
+const char* sae_tilt_mov_state(int state) {
+    switch (state) {
+        case MotorTiltDirection_OFF: return "OFF";
+        case MotorTiltDirection_INC: return "INC";
+        case MotorTiltDirection_DEC: return "DEC";
+        case MotorTiltDirection_INV: return "INV";
+        default: return "UNKNOWN";
+    }
+}
+
+const char* sae_height_mov_state(int state) {
+    switch (state) {
+        case MotorHeightDirection_OFF: return "OFF";
+        case MotorHeightDirection_INC: return "INC";
+        case MotorHeightDirection_DEC: return "DEC";
+        case MotorHeightDirection_INV: return "INV";
         default: return "UNKNOWN";
     }
 }
@@ -116,42 +128,42 @@ int sae_init(sae_context_t* ctx) {
     ctx->_sim_active = false;
 
     // motor1 = back/forward; motor2 = tilt; motor3 = height
-    ctx->_sim_motor1_pos = SAE_POS_INVALID;
-    ctx->_sim_motor1_lrn = MotorLRN_OK;
-    ctx->_sim_motor1_status = MotorDirection_OFF;
-    ctx->_sim_motor1_rpm = 0;
+    ctx->_sim_motor_pos = SAE_POS_INVALID;
+    ctx->_sim_motor_pos_lrn = MotorLRN_OK;
+    ctx->_sim_motor_pos_status = MotorPosDirection_OFF;
+    ctx->_sim_motor_pos_rpm = 0;
 
-    ctx->_sim_motor2_pos = SAE_POS_INVALID;
-    ctx->_sim_motor2_lrn = MotorLRN_OK;
-    ctx->_sim_motor2_status = MotorDirection_OFF;
-    ctx->_sim_motor2_rpm = 0;
+    ctx->_sim_motor_tilt = SAE_POS_INVALID;
+    ctx->_sim_motor_tilt_lrn = MotorLRN_OK;
+    ctx->_sim_motor_tilt_status = MotorTiltDirection_OFF;
+    ctx->_sim_motor_tilt_rpm = 0;
 
-    ctx->_sim_motor3_pos = SAE_POS_INVALID;
-    ctx->_sim_motor3_lrn = MotorLRN_OK;
-    ctx->_sim_motor3_status = MotorDirection_OFF;
-    ctx->_sim_motor3_rpm = 0;
+    ctx->_sim_motor_height = SAE_POS_INVALID;
+    ctx->_sim_motor_height_lrn = MotorLRN_OK;
+    ctx->_sim_motor_height_status = MotorHeightDirection_OFF;
+    ctx->_sim_motor_height_rpm = 0;
 
     ctx->_sim_delay = 10; // 100ms maps to real hw, 80 rpm, it needs 10s to go through range
     ctx->_sim_threshold_enabled = true;
     ctx->_sim_ecux = 1;
     
-    ctx->_sim_motor1_threshold_hi_stop = false;
-    ctx->_sim_motor1_threshold_lo_stop = false;
-    ctx->_sim_motor1_ts = -1; // not moving
-    ctx->_sim_motor1_inc = 0;
-    ctx->_sim_motor1_oldpos = -2; // really invalid
+    ctx->_sim_motor_pos_threshold_hi_stop = false;
+    ctx->_sim_motor_pos_threshold_lo_stop = false;
+    ctx->_sim_motor_pos_ts = -1; // not moving
+    ctx->_sim_motor_pos_inc = 0;
+    ctx->_sim_motor_pos_oldpos = -2; // really invalid
 
-    ctx->_sim_motor2_threshold_hi_stop = false;
-    ctx->_sim_motor2_threshold_lo_stop = false;
-    ctx->_sim_motor2_ts = -1; // not moving
-    ctx->_sim_motor2_inc = 0;
-    ctx->_sim_motor2_oldpos = -2; // really invalid
+    ctx->_sim_motor_tilt_threshold_hi_stop = false;
+    ctx->_sim_motor_tilt_threshold_lo_stop = false;
+    ctx->_sim_motor_tilt_ts = -1; // not moving
+    ctx->_sim_motor_tilt_inc = 0;
+    ctx->_sim_motor_tilt_oldpos = -2; // really invalid
 
-    ctx->_sim_motor3_threshold_hi_stop = false;
-    ctx->_sim_motor3_threshold_lo_stop = false;
-    ctx->_sim_motor3_ts = -1; // not moving
-    ctx->_sim_motor3_inc = 0;
-    ctx->_sim_motor3_oldpos = -2; // really invalid
+    ctx->_sim_motor_height_threshold_hi_stop = false;
+    ctx->_sim_motor_height_threshold_lo_stop = false;
+    ctx->_sim_motor_height_ts = -1; // not moving
+    ctx->_sim_motor_height_inc = 0;
+    ctx->_sim_motor_height_oldpos = -2; // really invalid
 
     // apply environment variables
     if (getenv("SAE_DEBUG")) {
@@ -168,19 +180,19 @@ int sae_init(sae_context_t* ctx) {
     if (getenv("SAE_POS")) {
         int pos = atoi(getenv("SAE_POS"));
         if (pos == -1 || pos == 255) {
-            ctx->_sim_motor1_pos = SAE_POS_INVALID;
-            ctx->_sim_motor2_pos = SAE_POS_INVALID;
-            ctx->_sim_motor3_pos = SAE_POS_INVALID;
+            ctx->_sim_motor_pos = SAE_POS_INVALID;
+            ctx->_sim_motor_tilt = SAE_POS_INVALID;
+            ctx->_sim_motor_height = SAE_POS_INVALID;
         } else {
-            ctx->_sim_motor1_pos = sae_pos_raw(pos);
-            ctx->_sim_motor2_pos = sae_pos_raw(pos);
-            ctx->_sim_motor3_pos = sae_pos_raw(pos);
+            ctx->_sim_motor_pos = sae_pos_raw(pos);
+            ctx->_sim_motor_tilt = sae_pos_raw(pos);
+            ctx->_sim_motor_height = sae_pos_raw(pos);
         }
     }
     if (getenv("SAE_LRN")) {
-        ctx->_sim_motor1_lrn = atoi(getenv("SAE_LRN"));
-        ctx->_sim_motor2_lrn = atoi(getenv("SAE_LRN"));
-        ctx->_sim_motor3_lrn = atoi(getenv("SAE_LRN"));
+        ctx->_sim_motor_pos_lrn = atoi(getenv("SAE_LRN"));
+        ctx->_sim_motor_tilt_lrn = atoi(getenv("SAE_LRN"));
+        ctx->_sim_motor_height_lrn = atoi(getenv("SAE_LRN"));
     }
     if (getenv("SAE_STOP")) {
         // TODO: enable stop at thresholds
@@ -192,7 +204,7 @@ int sae_init(sae_context_t* ctx) {
     }
     if (_sae_debug) {
         fprintf(sim_log, SELF_INIT "Initialized with [ SAE_POS:%d, SAE_DELAY:%d, SAE_LRN:%d, SAE_STOP:%d, SAE_DEBUG:%d, SAE_VERBOSE:%d ]\n",
-            sae_pos_percent(ctx->_sim_motor1_pos), ctx->_sim_delay, ctx->_sim_motor1_lrn,
+            sae_pos_percent(ctx->_sim_motor_pos), ctx->_sim_delay, ctx->_sim_motor_pos_lrn,
             ctx->_sim_threshold_enabled, _sae_debug, _sae_verbose);
     }
     return 0;
@@ -233,7 +245,7 @@ int sae_pos_increment(sae_context_t *ctx) {
     if (!ctx->_sim_active) {
         return 0; // same pos
     }
-    int move_time = sae_estimate_move_time(ctx->_sim_motor1_rpm);
+    int move_time = sae_estimate_move_time(ctx->_sim_motor_pos_rpm);
     if (move_time == 0) {
         return 0; // don't crash
     }
@@ -253,7 +265,7 @@ int sae_tilt_increment(sae_context_t *ctx) {
     if (!ctx->_sim_active) {
         return 0; // same pos
     }
-    int move_time = sae_estimate_move_time(ctx->_sim_motor2_rpm);
+    int move_time = sae_estimate_move_time(ctx->_sim_motor_tilt_rpm);
     if (move_time == 0) {
         return 0; // don't crash
     }
@@ -273,7 +285,7 @@ int sae_height_increment(sae_context_t *ctx) {
     if (!ctx->_sim_active) {
         return 0; // same pos
     }
-    int move_time = sae_estimate_move_time(ctx->_sim_motor3_rpm);
+    int move_time = sae_estimate_move_time(ctx->_sim_motor_height_rpm);
     if (move_time == 0) {
         return 0; // don't crash
     }
@@ -309,58 +321,58 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
     if (ctx->_sim_ecux == 1) {
         // motor3
         // go out of invalid pos. TODO: handle calibration loop in future
-        if (ctx->_sim_motor3_pos == SAE_POS_INVALID) {
+        if (ctx->_sim_motor_height == SAE_POS_INVALID) {
             usleep(ctx->_sim_delay * 1000L);
-            ctx->_sim_motor3_pos = sae_pos_raw(42);
-            fprintf(sim_log, SELF_CAN_RCB "  *** Resetting Invalid POS to %d\n", sae_pos_percent(ctx->_sim_motor3_pos));
+            ctx->_sim_motor_height = sae_pos_raw(42);
+            fprintf(sim_log, SELF_CAN_RCB "  *** Resetting Invalid POS to %d\n", sae_pos_percent(ctx->_sim_motor_height));
         }
 
         if (ctx->_sim_threshold_enabled) {
             // handle hi/low threshold reset flags
-            if (ctx->_sim_motor3_threshold_lo_stop && sae_pos_percent(ctx->_sim_motor3_pos) > 14) {
-                ctx->_sim_motor3_threshold_lo_stop = false;
+            if (ctx->_sim_motor_height_threshold_lo_stop && sae_pos_percent(ctx->_sim_motor_height) > 14) {
+                ctx->_sim_motor_height_threshold_lo_stop = false;
                 fprintf(sim_log, SELF_CAN_RCB "*** Low threshold stop reset\n");
             }
-            if (ctx->_sim_motor3_threshold_hi_stop && sae_pos_percent(ctx->_sim_motor3_pos) < 85) {
-                ctx->_sim_motor3_threshold_hi_stop = false;
+            if (ctx->_sim_motor_height_threshold_hi_stop && sae_pos_percent(ctx->_sim_motor_height) < 85) {
+                ctx->_sim_motor_height_threshold_hi_stop = false;
                 fprintf(sim_log, SELF_CAN_RCB "*** High threshold stop reset\n");
             }
         }
 
-        int next_pos = ctx->_sim_motor3_pos + ctx->_sim_motor3_inc;
-        if (_sae_verbose && ctx->_sim_motor3_inc != 0) {
-            int64_t elapsed = ctx->_sim_motor3_ts != -1 ? get_ts() - ctx->_sim_motor3_ts : 0;
+        int next_pos = ctx->_sim_motor_height + ctx->_sim_motor_height_inc;
+        if (_sae_verbose && ctx->_sim_motor_height_inc != 0) {
+            int64_t elapsed = ctx->_sim_motor_height_ts != -1 ? get_ts() - ctx->_sim_motor_height_ts : 0;
             fprintf(sim_log, SELF_CAN_RCB "    --> motor3 pos:%.2f, new:%.2f, step:%.2f, elapsed:%d\n",
-                sae_pos_fp(ctx->_sim_motor3_pos), sae_pos_fp(next_pos), sae_pos_fp(ctx->_sim_motor3_inc), (int)elapsed);
+                sae_pos_fp(ctx->_sim_motor_height), sae_pos_fp(next_pos), sae_pos_fp(ctx->_sim_motor_height_inc), (int)elapsed);
         }
-        if (ctx->_sim_motor3_status == MotorDirection_INC) {
+        if (ctx->_sim_motor_height_status == MotorHeightDirection_INC) {
             // FIXME: consider fractional part here e.g. 99.x
             if (sae_pos_percent(next_pos) <= 100) {
-                ctx->_sim_motor3_pos = next_pos;
+                ctx->_sim_motor_height = next_pos;
             } else {
-                ctx->_sim_motor3_status = MotorDirection_OFF;
+                ctx->_sim_motor_height_status = MotorHeightDirection_OFF;
             }
             // handle stop @ 85% threshold (once)
-            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor3_pos) >= 85 && !ctx->_sim_motor3_threshold_hi_stop) {
-                fprintf(sim_log, SELF_CAN_RCB "* [INC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor3_pos));
-                ctx->_sim_motor3_status = MotorDirection_OFF;
-                ctx->_sim_motor3_threshold_hi_stop = true;
+            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor_height) >= 85 && !ctx->_sim_motor_height_threshold_hi_stop) {
+                fprintf(sim_log, SELF_CAN_RCB "* [INC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor_height));
+                ctx->_sim_motor_height_status = MotorHeightDirection_OFF;
+                ctx->_sim_motor_height_threshold_hi_stop = true;
             }
-        } else if (ctx->_sim_motor3_status == MotorDirection_DEC) {
+        } else if (ctx->_sim_motor_height_status == MotorHeightDirection_DEC) {
             if (sae_pos_percent(next_pos) >= 0) {
-                ctx->_sim_motor3_pos = next_pos;
+                ctx->_sim_motor_height = next_pos;
             } else {
-                ctx->_sim_motor3_status = MotorDirection_OFF;
+                ctx->_sim_motor_height_status = MotorHeightDirection_OFF;
             }
             // handle stop @ 14% threshold (once)
-            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor3_pos) <= 14 && !ctx->_sim_motor3_threshold_lo_stop) {
-                fprintf(sim_log, SELF_CAN_RCB "* [DEC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor3_pos));
-                ctx->_sim_motor3_status = MotorDirection_OFF;
-                ctx->_sim_motor3_threshold_lo_stop = true;
+            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor_height) <= 14 && !ctx->_sim_motor_height_threshold_lo_stop) {
+                fprintf(sim_log, SELF_CAN_RCB "* [DEC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor_height));
+                ctx->_sim_motor_height_status = MotorHeightDirection_OFF;
+                ctx->_sim_motor_height_threshold_lo_stop = true;
             }
         }
 
-        int motor3_pos_percent = sae_pos_percent(ctx->_sim_motor3_pos); // ignore fractional
+        int motor3_pos_percent = sae_pos_percent(ctx->_sim_motor_height); // ignore fractional
 
         cf->can_id = 0x712;  // CAN_SECU1_STAT_FRAME_ID
         cf->can_dlc = 8;
@@ -368,14 +380,14 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
         // data ### Sending SECU2_STAT [ MOTOR3_MOV_STATE: 'INC', MOTOR3_LEARNING_STATE: 'learned', MOTOR3_POS: 0..100 ]
         // cansend vcan0 712#46.44.01.00.00.00.00.00
         // cansend 712#${DIR}.44.${POS}.00.00.00.00.00 // $DIR: { 0x44=OFF, 0x46=Motor3::INC, 0x45=Notor1::DEC=0x45 }
-        cf->data[0] = (ctx->_sim_motor3_status & 3) |      // bit 0-1
-                    ((ctx->_sim_motor3_lrn & 3) << 2);  // bit 2-3
+        cf->data[0] = (ctx->_sim_motor_height_status & 3) |      // bit 0-1
+                    ((ctx->_sim_motor_height_lrn & 3) << 2);  // bit 2-3
         cf->data[1] = 0; // all other motors off/not learned
         cf->data[2] = motor3_pos_percent;
-        if (_sae_debug && ctx->_sim_motor3_oldpos != motor3_pos_percent) {
+        if (_sae_debug && ctx->_sim_motor_height_oldpos != motor3_pos_percent) {
             fprintf(sim_log, SELF_CAN_RCB "Generated: SECU2_STAT "
                     "{ m1_pos:%3d%%, m1_state:%3s, m1_lrn:%3s } \n",
-                    motor3_pos_percent, sae_mov_state(ctx->_sim_motor3_status), sae_lrn_state(ctx->_sim_motor3_lrn));
+                    motor3_pos_percent, sae_height_mov_state(ctx->_sim_motor_height_status), sae_lrn_state(ctx->_sim_motor_height_lrn));
         }
         if (_sae_verbose) {
             fprintf(sim_log, SELF_CAN_RCB "  --> ");
@@ -387,7 +399,7 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
         ssize_t res = sizeof(struct can_frame);
         memcpy(buf, cf, res);
 
-        ctx->_sim_motor3_oldpos = motor3_pos_percent;
+        ctx->_sim_motor_height_oldpos = motor3_pos_percent;
         ctx->_sim_ecux = 2;
 
         return res;
@@ -395,112 +407,112 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
     else if (ctx->_sim_ecux == 2) {
         // motor1
         // go out of invalid pos. TODO: handle calibration loop in future
-        if (ctx->_sim_motor1_pos == SAE_POS_INVALID) {
+        if (ctx->_sim_motor_pos == SAE_POS_INVALID) {
             usleep(ctx->_sim_delay * 1000L);
-            ctx->_sim_motor1_pos = sae_pos_raw(42);
-            fprintf(sim_log, SELF_CAN_RCB "  *** Resetting Invalid POS to %d\n", sae_pos_percent(ctx->_sim_motor1_pos));
+            ctx->_sim_motor_pos = sae_pos_raw(42);
+            fprintf(sim_log, SELF_CAN_RCB "  *** Resetting Invalid POS to %d\n", sae_pos_percent(ctx->_sim_motor_pos));
         }
 
         if (ctx->_sim_threshold_enabled) {
             // handle hi/low threshold reset flags
-            if (ctx->_sim_motor1_threshold_lo_stop && sae_pos_percent(ctx->_sim_motor1_pos) > 14) {
-                ctx->_sim_motor1_threshold_lo_stop = false;
+            if (ctx->_sim_motor_pos_threshold_lo_stop && sae_pos_percent(ctx->_sim_motor_pos) > 14) {
+                ctx->_sim_motor_pos_threshold_lo_stop = false;
                 fprintf(sim_log, SELF_CAN_RCB "*** Low threshold stop reset\n");
             }
-            if (ctx->_sim_motor1_threshold_hi_stop && sae_pos_percent(ctx->_sim_motor1_pos) < 85) {
-                ctx->_sim_motor1_threshold_hi_stop = false;
+            if (ctx->_sim_motor_pos_threshold_hi_stop && sae_pos_percent(ctx->_sim_motor_pos) < 85) {
+                ctx->_sim_motor_pos_threshold_hi_stop = false;
                 fprintf(sim_log, SELF_CAN_RCB "*** High threshold stop reset\n");
             }
         }
 
-        int next_pos1 = ctx->_sim_motor1_pos + ctx->_sim_motor1_inc;
-        if (_sae_verbose && ctx->_sim_motor1_inc != 0) {
-            int64_t elapsed = ctx->_sim_motor1_ts != -1 ? get_ts() - ctx->_sim_motor1_ts : 0;
+        int next_pos1 = ctx->_sim_motor_pos + ctx->_sim_motor_pos_inc;
+        if (_sae_verbose && ctx->_sim_motor_pos_inc != 0) {
+            int64_t elapsed = ctx->_sim_motor_pos_ts != -1 ? get_ts() - ctx->_sim_motor_pos_ts : 0;
             fprintf(sim_log, SELF_CAN_RCB "    --> motor1 pos:%.2f, new:%.2f, step:%.2f, elapsed:%d\n",
-                sae_pos_fp(ctx->_sim_motor1_pos), sae_pos_fp(next_pos1), sae_pos_fp(ctx->_sim_motor1_inc), (int)elapsed);
+                sae_pos_fp(ctx->_sim_motor_pos), sae_pos_fp(next_pos1), sae_pos_fp(ctx->_sim_motor_pos_inc), (int)elapsed);
         }
-        if (ctx->_sim_motor1_status == MotorDirection_INC) {
+        if (ctx->_sim_motor_pos_status == MotorPosDirection_INC) {
             // FIXME: consider fractional part here e.g. 99.x
             if (sae_pos_percent(next_pos1) <= 100) {
-                ctx->_sim_motor1_pos = next_pos1;
+                ctx->_sim_motor_pos = next_pos1;
             } else {
-                ctx->_sim_motor1_status = MotorDirection_OFF;
+                ctx->_sim_motor_pos_status = MotorPosDirection_OFF;
             }
             // handle stop @ 85% threshold (once)
-            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor1_pos) >= 85 && !ctx->_sim_motor1_threshold_hi_stop) {
-                fprintf(sim_log, SELF_CAN_RCB "* [INC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor1_pos));
-                ctx->_sim_motor1_status = MotorDirection_OFF;
-                ctx->_sim_motor1_threshold_hi_stop = true;
+            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor_pos) >= 85 && !ctx->_sim_motor_pos_threshold_hi_stop) {
+                fprintf(sim_log, SELF_CAN_RCB "* [INC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor_pos));
+                ctx->_sim_motor_pos_status = MotorPosDirection_OFF;
+                ctx->_sim_motor_pos_threshold_hi_stop = true;
             }
-        } else if (ctx->_sim_motor1_status == MotorDirection_DEC) {
+        } else if (ctx->_sim_motor_pos_status == MotorPosDirection_DEC) {
             if (sae_pos_percent(next_pos1) >= 0) {
-                ctx->_sim_motor1_pos = next_pos1;
+                ctx->_sim_motor_pos = next_pos1;
             } else {
-                ctx->_sim_motor1_status = MotorDirection_OFF;
+                ctx->_sim_motor_pos_status = MotorPosDirection_OFF;
             }
             // handle stop @ 14% threshold (once)
-            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor1_pos) <= 14 && !ctx->_sim_motor1_threshold_lo_stop) {
-                fprintf(sim_log, SELF_CAN_RCB "* [DEC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor1_pos));
-                ctx->_sim_motor1_status = MotorDirection_OFF;
-                ctx->_sim_motor1_threshold_lo_stop = true;
+            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor_pos) <= 14 && !ctx->_sim_motor_pos_threshold_lo_stop) {
+                fprintf(sim_log, SELF_CAN_RCB "* [DEC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor_pos));
+                ctx->_sim_motor_pos_status = MotorPosDirection_OFF;
+                ctx->_sim_motor_pos_threshold_lo_stop = true;
             }
         }
 
         // motor2
         // go out of invalid pos. TODO: handle calibration loop in future
-        if (ctx->_sim_motor2_pos == SAE_POS_INVALID) {
+        if (ctx->_sim_motor_tilt == SAE_POS_INVALID) {
             usleep(ctx->_sim_delay * 1000L);
-            ctx->_sim_motor2_pos = sae_pos_raw(42);
-            fprintf(sim_log, SELF_CAN_RCB "  *** Resetting Invalid POS to %d\n", sae_pos_percent(ctx->_sim_motor2_pos));
+            ctx->_sim_motor_tilt = sae_pos_raw(42);
+            fprintf(sim_log, SELF_CAN_RCB "  *** Resetting Invalid POS to %d\n", sae_pos_percent(ctx->_sim_motor_tilt));
         }
 
         if (ctx->_sim_threshold_enabled) {
             // handle hi/low threshold reset flags
-            if (ctx->_sim_motor2_threshold_lo_stop && sae_pos_percent(ctx->_sim_motor2_pos) > 14) {
-                ctx->_sim_motor2_threshold_lo_stop = false;
+            if (ctx->_sim_motor_tilt_threshold_lo_stop && sae_pos_percent(ctx->_sim_motor_tilt) > 14) {
+                ctx->_sim_motor_tilt_threshold_lo_stop = false;
                 fprintf(sim_log, SELF_CAN_RCB "*** Low threshold stop reset\n");
             }
-            if (ctx->_sim_motor2_threshold_hi_stop && sae_pos_percent(ctx->_sim_motor2_pos) < 85) {
-                ctx->_sim_motor2_threshold_hi_stop = false;
+            if (ctx->_sim_motor_tilt_threshold_hi_stop && sae_pos_percent(ctx->_sim_motor_tilt) < 85) {
+                ctx->_sim_motor_tilt_threshold_hi_stop = false;
                 fprintf(sim_log, SELF_CAN_RCB "*** High threshold stop reset\n");
             }
         }
 
-        int next_pos2 = ctx->_sim_motor2_pos + ctx->_sim_motor2_inc;
-        if (_sae_verbose && ctx->_sim_motor2_inc != 0) {
-            int64_t elapsed = ctx->_sim_motor2_ts != -1 ? get_ts() - ctx->_sim_motor2_ts : 0;
+        int next_pos2 = ctx->_sim_motor_tilt + ctx->_sim_motor_tilt_inc;
+        if (_sae_verbose && ctx->_sim_motor_tilt_inc != 0) {
+            int64_t elapsed = ctx->_sim_motor_tilt_ts != -1 ? get_ts() - ctx->_sim_motor_tilt_ts : 0;
             fprintf(sim_log, SELF_CAN_RCB "    --> motor2 pos:%.2f, new:%.2f, step:%.2f, elapsed:%d\n",
-                sae_pos_fp(ctx->_sim_motor2_pos), sae_pos_fp(next_pos2), sae_pos_fp(ctx->_sim_motor2_inc), (int)elapsed);
+                sae_pos_fp(ctx->_sim_motor_tilt), sae_pos_fp(next_pos2), sae_pos_fp(ctx->_sim_motor_tilt_inc), (int)elapsed);
         }
-        if (ctx->_sim_motor2_status == MotorDirection_INC) {
+        if (ctx->_sim_motor_tilt_status == MotorTiltDirection_INC) {
             // FIXME: consider fractional part here e.g. 99.x
             if (sae_pos_percent(next_pos2) <= 100) {
-                ctx->_sim_motor2_pos = next_pos2;
+                ctx->_sim_motor_tilt = next_pos2;
             } else {
-                ctx->_sim_motor2_status = MotorDirection_OFF;
+                ctx->_sim_motor_tilt_status = MotorTiltDirection_OFF;
             }
             // handle stop @ 85% threshold (once)
-            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor2_pos) >= 85 && !ctx->_sim_motor2_threshold_hi_stop) {
-                fprintf(sim_log, SELF_CAN_RCB "* [INC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor2_pos));
-                ctx->_sim_motor2_status = MotorDirection_OFF;
-                ctx->_sim_motor2_threshold_hi_stop = true;
+            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor_tilt) >= 85 && !ctx->_sim_motor_tilt_threshold_hi_stop) {
+                fprintf(sim_log, SELF_CAN_RCB "* [INC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor_tilt));
+                ctx->_sim_motor_tilt_status = MotorTiltDirection_OFF;
+                ctx->_sim_motor_tilt_threshold_hi_stop = true;
             }
-        } else if (ctx->_sim_motor2_status == MotorDirection_DEC) {
+        } else if (ctx->_sim_motor_tilt_status == MotorTiltDirection_DEC) {
             if (sae_pos_percent(next_pos2) >= 0) {
-                ctx->_sim_motor2_pos = next_pos2;
+                ctx->_sim_motor_tilt = next_pos2;
             } else {
-                ctx->_sim_motor2_status = MotorDirection_OFF;
+                ctx->_sim_motor_tilt_status = MotorTiltDirection_OFF;
             }
             // handle stop @ 14% threshold (once)
-            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor2_pos) <= 14 && !ctx->_sim_motor2_threshold_lo_stop) {
-                fprintf(sim_log, SELF_CAN_RCB "* [DEC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor2_pos));
-                ctx->_sim_motor2_status = MotorDirection_OFF;
-                ctx->_sim_motor2_threshold_lo_stop = true;
+            if (ctx->_sim_threshold_enabled && sae_pos_percent(ctx->_sim_motor_tilt) <= 14 && !ctx->_sim_motor_tilt_threshold_lo_stop) {
+                fprintf(sim_log, SELF_CAN_RCB "* [DEC] Stopping at %d%%\n", sae_pos_percent(ctx->_sim_motor_tilt));
+                ctx->_sim_motor_tilt_status = MotorTiltDirection_OFF;
+                ctx->_sim_motor_tilt_threshold_lo_stop = true;
             }
         }
 
-        int motor1_pos_percent = sae_pos_percent(ctx->_sim_motor1_pos); // ignore fractional
-        int motor2_pos_percent = sae_pos_percent(ctx->_sim_motor2_pos); // ignore fractional
+        int motor1_pos_percent = sae_pos_percent(ctx->_sim_motor_pos); // ignore fractional
+        int motor2_pos_percent = sae_pos_percent(ctx->_sim_motor_tilt); // ignore fractional
 
         cf->can_id = 0x714;  // CAN_SECU2_STAT_FRAME_ID
         cf->can_dlc = 8;
@@ -508,22 +520,22 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
         // data ### Sending SECU2_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: 'learned', MOTOR1_POS: 0..100 ]
         // cansend vcan0 714#46.44.01.00.00.00.00.00
         // cansend 714#${DIR}.44.${POS}.00.00.00.00.00 // $DIR: { 0x44=OFF, 0x46=Motor1::INC, 0x45=Notor1::DEC=0x45 }
-        cf->data[0] = (ctx->_sim_motor1_status & 3) |      // bit 0-1
-                    ((ctx->_sim_motor1_lrn & 3) << 2);  // bit 2-3
+        cf->data[0] = (ctx->_sim_motor_pos_status & 3) |      // bit 0-1
+                    ((ctx->_sim_motor_pos_lrn & 3) << 2);  // bit 2-3
 
         cf->data[1] =  // 0x44; // motor 2 && 3 OFF / LRN
-                    (ctx->_sim_motor2_status & 3) |      // bit 0-1
-                    ((ctx->_sim_motor2_lrn & 3) << 2);  // bit 2-3
+                    (ctx->_sim_motor_tilt_status & 3) |      // bit 0-1
+                    ((ctx->_sim_motor_tilt_lrn & 3) << 2);  // bit 2-3
 
         cf->data[2] = motor1_pos_percent;
         cf->data[3] = 0; // all other motors off/not learned
         cf->data[4] = motor2_pos_percent;
-        if (_sae_debug && ctx->_sim_motor1_oldpos != motor1_pos_percent) {
+        if (_sae_debug && ctx->_sim_motor_pos_oldpos != motor1_pos_percent) {
             fprintf(sim_log, SELF_CAN_RCB "Generated: SECU2_STAT "
                     "{ m1_pos:%3d%%, m1_state:%3s, m1_lrn:%3s } "
                     "{ m2_pos:%3d%%, m2_state:%3s, m2_lrn:%3s } \n",
-                    motor1_pos_percent, sae_mov_state(ctx->_sim_motor1_status), sae_lrn_state(ctx->_sim_motor1_lrn),
-                    motor2_pos_percent, sae_mov_state(ctx->_sim_motor2_status), sae_lrn_state(ctx->_sim_motor2_lrn));
+                    motor1_pos_percent, sae_pos_mov_state(ctx->_sim_motor_pos_status), sae_lrn_state(ctx->_sim_motor_pos_lrn),
+                    motor2_pos_percent, sae_tilt_mov_state(ctx->_sim_motor_tilt_status), sae_lrn_state(ctx->_sim_motor_tilt_lrn));
         }
         if (_sae_verbose) {
             fprintf(sim_log, SELF_CAN_RCB "  --> ");
@@ -535,8 +547,8 @@ ssize_t sae_read_cb(sae_context_t *ctx, void *buf, size_t len) {
         ssize_t res = sizeof(struct can_frame);
         memcpy(buf, cf, res);
 
-        ctx->_sim_motor1_oldpos = motor1_pos_percent;
-        ctx->_sim_motor2_oldpos = motor2_pos_percent;
+        ctx->_sim_motor_pos_oldpos = motor1_pos_percent;
+        ctx->_sim_motor_tilt_oldpos = motor2_pos_percent;
 
         ctx->_sim_ecux = 1;
 
@@ -585,68 +597,68 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
         fprintf(sim_log, SELF_CAN_WCB "SECU2_CMD_1 { m1_dir:%d, m1_rpm:%d,  m2_dir:%d, m2_rpm:%d,  m3_dir:%d, m3_rpm:%d,  m4_dir:%d, m4_rpm:%d }\n",
                 motor1_dir, motor1_rpm, motor2_dir, motor2_rpm, motor3_dir, motor3_rpm, motor4_dir, motor4_rpm);
 
-        ctx->_sim_motor1_rpm = motor1_rpm;
+        ctx->_sim_motor_pos_rpm = motor1_rpm;
         int motor_inc = sae_pos_increment(ctx); // calculate increase per read 'tick' (defined by sim_delay)
-        if (motor1_dir == MotorDirection_OFF) {
+        if (motor1_dir == MotorPosDirection_OFF) {
             fprintf(sim_log, SELF_CAN_WCB "*** Motor1::OFF\n");
-            ctx->_sim_motor1_status = MotorDirection_OFF;
-            ctx->_sim_motor1_rpm = 0; // make sure it is zero
-            ctx->_sim_motor1_ts = -1; // reset move timestamp
-            ctx->_sim_motor1_inc = 0;
-        } else if (motor1_dir == MotorDirection_INC && motor1_rpm > 0) {
+            ctx->_sim_motor_pos_status = MotorPosDirection_OFF;
+            ctx->_sim_motor_pos_rpm = 0; // make sure it is zero
+            ctx->_sim_motor_pos_ts = -1; // reset move timestamp
+            ctx->_sim_motor_pos_inc = 0;
+        } else if (motor1_dir == MotorPosDirection_INC && motor1_rpm > 0) {
             if (_sae_debug) {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor1::INC [ step:%f, delay:%d, move_time:%d ] \n",
-                        sae_pos_fp(motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor1_rpm));
+                        sae_pos_fp(motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor_pos_rpm));
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor1::INC\n");
             }
-            ctx->_sim_motor1_status = MotorDirection_INC;
-            ctx->_sim_motor1_inc = motor_inc;
-            ctx->_sim_motor1_ts = get_ts();
+            ctx->_sim_motor_pos_status = MotorPosDirection_DEC;
+            ctx->_sim_motor_pos_inc = -motor_inc;
+            ctx->_sim_motor_pos_ts = get_ts();
             // todo : calculate increment per sim_delay cycle
-        } else if (motor1_dir == MotorDirection_DEC && motor1_rpm > 0) {
+        } else if (motor1_dir == MotorPosDirection_DEC && motor1_rpm > 0) {
             if (_sae_debug) {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor1::DEC [ step:%f, delay:%d, move_time:%d ] \n",
-                        sae_pos_fp(-motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor1_rpm));
+                        sae_pos_fp(-motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor_pos_rpm));
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor1::DEC\n");
             }
-            ctx->_sim_motor1_status = MotorDirection_DEC;
-            ctx->_sim_motor1_inc = -motor_inc;
-            ctx->_sim_motor1_ts = get_ts();
+            ctx->_sim_motor_pos_status = MotorPosDirection_INC;
+            ctx->_sim_motor_pos_inc = motor_inc;
+            ctx->_sim_motor_pos_ts = get_ts();
         } else {
             fprintf(sim_log, SELF_CAN_WCB "Warning! Unhandled motor status: 0x%02X\n", motor1_dir);
         }
 
-        ctx->_sim_motor2_rpm = motor3_rpm;
+        ctx->_sim_motor_tilt_rpm = motor3_rpm;
         int motor2_inc = sae_tilt_increment(ctx);
-        if (motor3_dir == MotorDirection_OFF) {
+        if (motor3_dir == MotorTiltDirection_OFF) {
             fprintf(sim_log, SELF_CAN_WCB "*** Motor2::OFF\n");
-            ctx->_sim_motor2_status = MotorDirection_OFF;
-            ctx->_sim_motor2_rpm = 0; // make sure it is zero
-            ctx->_sim_motor2_ts = -1; // reset move timestamp
-            ctx->_sim_motor2_inc = 0;
-        } else if (motor3_dir == MotorDirection_INC && motor3_rpm > 0) {
+            ctx->_sim_motor_tilt_status = MotorTiltDirection_OFF;
+            ctx->_sim_motor_tilt_rpm = 0; // make sure it is zero
+            ctx->_sim_motor_tilt_ts = -1; // reset move timestamp
+            ctx->_sim_motor_tilt_inc = 0;
+        } else if (motor3_dir == MotorTiltDirection_INC && motor3_rpm > 0) {
             if (_sae_debug) {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor2::INC [ step:%f, delay:%d, move_time:%d ] \n",
-                        sae_pos_fp(motor2_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor3_rpm));
+                        sae_pos_fp(motor2_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor_height_rpm));
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor2::INC\n");
             }
-            ctx->_sim_motor2_status = MotorDirection_INC;
-            ctx->_sim_motor2_inc = motor2_inc;
-            ctx->_sim_motor2_ts = get_ts();
+            ctx->_sim_motor_tilt_status = MotorTiltDirection_DEC;
+            ctx->_sim_motor_tilt_inc = -motor2_inc;
+            ctx->_sim_motor_tilt_ts = get_ts();
             // todo : calculate increment per sim_delay cycle
-        } else if (motor3_dir == MotorDirection_DEC && motor3_rpm > 0) {
+        } else if (motor3_dir == MotorTiltDirection_DEC && motor3_rpm > 0) {
             if (_sae_debug) {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor2::DEC [ step:%f, delay:%d, move_time:%d ] \n",
-                        sae_pos_fp(-motor2_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor2_rpm));
+                        sae_pos_fp(-motor2_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor_tilt_rpm));
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor2::DEC\n");
             }
-            ctx->_sim_motor2_status = MotorDirection_DEC;
-            ctx->_sim_motor2_inc = -motor2_inc;
-            ctx->_sim_motor2_ts = get_ts();
+            ctx->_sim_motor_tilt_status = MotorTiltDirection_INC;
+            ctx->_sim_motor_tilt_inc = motor2_inc;
+            ctx->_sim_motor_tilt_ts = get_ts();
         } else {
             fprintf(sim_log, SELF_CAN_WCB "Warning! Unhandled motor status: 0x%02X\n", motor3_dir);
         }
@@ -665,36 +677,36 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
         fprintf(sim_log, SELF_CAN_WCB "SECU1_CMD_1 { m1_dir:%d, m1_rpm:%d,  m2_dir:%d, m2_rpm:%d,  m3_dir:%d, m3_rpm:%d,  m4_dir:%d, m4_rpm:%d }\n",
                 motor1_dir, motor1_rpm, motor2_dir, motor2_rpm, motor3_dir, motor3_rpm, motor4_dir, motor4_rpm);
 
-        ctx->_sim_motor3_rpm = motor1_rpm;
+        ctx->_sim_motor_height_rpm = motor1_rpm;
 
         int motor_inc = sae_height_increment(ctx); // calculate increase per read 'tick' (defined by sim_delay)
-        if (motor1_dir == MotorDirection_OFF) {
+        if (motor1_dir == MotorHeightDirection_OFF) {
             fprintf(sim_log, SELF_CAN_WCB "*** Motor3::OFF\n");
-            ctx->_sim_motor3_status = MotorDirection_OFF;
-            ctx->_sim_motor3_rpm = 0; // make sure it is zero
-            ctx->_sim_motor3_ts = -1; // reset move timestamp
-            ctx->_sim_motor3_inc = 0;
-        } else if (motor1_dir == MotorDirection_INC && motor1_rpm > 0) {
+            ctx->_sim_motor_height_status = MotorHeightDirection_OFF;
+            ctx->_sim_motor_height_rpm = 0; // make sure it is zero
+            ctx->_sim_motor_height_ts = -1; // reset move timestamp
+            ctx->_sim_motor_height_inc = 0;
+        } else if (motor1_dir == MotorHeightDirection_INC && motor1_rpm > 0) {
             if (_sae_debug) {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor3::INC [ step:%f, delay:%d, move_time:%d ] \n",
-                        sae_pos_fp(motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor3_rpm));
+                        sae_pos_fp(motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor_height_rpm));
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor3::INC\n");
             }
-            ctx->_sim_motor3_status = MotorDirection_INC;
-            ctx->_sim_motor3_inc = motor_inc;
-            ctx->_sim_motor3_ts = get_ts();
+            ctx->_sim_motor_height_status = MotorHeightDirection_INC;
+            ctx->_sim_motor_height_inc = motor_inc;
+            ctx->_sim_motor_height_ts = get_ts();
             // todo : calculate increment per sim_delay cycle
-        } else if (motor1_dir == MotorDirection_DEC && motor1_rpm > 0) {
+        } else if (motor1_dir == MotorHeightDirection_DEC && motor1_rpm > 0) {
             if (_sae_debug) {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor3::DEC [ step:%f, delay:%d, move_time:%d ] \n",
-                        sae_pos_fp(-motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor3_rpm));
+                        sae_pos_fp(-motor_inc), ctx->_sim_delay, sae_estimate_move_time(ctx->_sim_motor_height_rpm));
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor3::DEC\n");
             }
-            ctx->_sim_motor3_status = MotorDirection_DEC;
-            ctx->_sim_motor3_inc = -motor_inc;
-            ctx->_sim_motor3_ts = get_ts();
+            ctx->_sim_motor_height_status = MotorHeightDirection_DEC;
+            ctx->_sim_motor_height_inc = -motor_inc;
+            ctx->_sim_motor_height_ts = get_ts();
         } else {
             fprintf(sim_log, SELF_CAN_WCB "Warning! Unhandled motor status: 0x%02X\n", motor1_dir);
         }

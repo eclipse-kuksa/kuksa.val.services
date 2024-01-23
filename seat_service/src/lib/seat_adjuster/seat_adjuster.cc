@@ -310,7 +310,7 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
         return;
     }
 
-    if (event == SeatCtrlEvent::Motor1Pos) {
+    if (event == SeatCtrlEvent::MotorPos) {
         if (user_data != nullptr) {
             SeatAdjusterImpl* seat_adjuster = static_cast<SeatAdjusterImpl*>(user_data);
             if (seat_adjuster->cb_ != nullptr) {
@@ -335,7 +335,7 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
         }
     }
 
-    if (event == SeatCtrlEvent::Motor2Pos) {
+    if (event == SeatCtrlEvent::MotorTilt) {
         if (user_data != nullptr) {
             SeatAdjusterImpl* seat_adjuster = static_cast<SeatAdjusterImpl*>(user_data);
             if (seat_adjuster->cb_tilt_ != nullptr) {
@@ -360,7 +360,7 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
         }
     }
 
-    if (event == SeatCtrlEvent::Motor3Pos) {
+    if (event == SeatCtrlEvent::MotorHeight) {
         if (user_data != nullptr) {
             SeatAdjusterImpl* seat_adjuster = static_cast<SeatAdjusterImpl*>(user_data);
             if (seat_adjuster->cb_height_ != nullptr) {
