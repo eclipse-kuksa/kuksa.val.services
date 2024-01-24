@@ -743,6 +743,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             pos_mov_state_string(ctx->desired_pos_direction),
                             elapsed_motor1);
                     ::usleep(1000);
+                    return SEAT_CTRL_OK;
                 }
 
                 // reduce frequency of dumps, only if something relevant changed,
@@ -759,10 +760,10 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                         // some thresholds at both ends of the range (e.g. 14% and 80%)
                         if (ctx->motor_pos_mov_state == MotorPosDirection::POS_OFF) {
                             printf(PREFIX_CTL " >>> Sending MotorPosOff command...\n");
-                            error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorPosDirection::POS_OFF, 0, 1); // off, 0rpm
-                            if (rc0 != SEAT_CTRL_OK) {
-                                perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(OFF) error");
-                            }
+                            // error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorPosDirection::POS_OFF, 0, 1); // off, 0rpm
+                            // if (rc0 != SEAT_CTRL_OK) {
+                            //     perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(OFF) error");
+                            // }
                             ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                             printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                                     ctx->motor_pos, ctx->desired_position, pos_mov_state_string(ctx->desired_pos_direction), ctx->command_pos_ts);
@@ -822,6 +823,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             tilt_mov_state_string(ctx->desired_tilt_direction),
                             elapsed_motor2);
                     ::usleep(1000);
+                    return SEAT_CTRL_OK;
                 }
 
                 // reduce frequency of dumps, only if something relevant changed,
@@ -838,10 +840,10 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                         // some thresholds at both ends of the range (e.g. 14% and 80%)
                         if (ctx->motor_tilt_mov_state == MotorTiltDirection::TILT_OFF) {
                             printf(PREFIX_CTL " >>> Sending MotorTiltOff command...\n");
-                            error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorTiltDirection::TILT_OFF, 0, 3); // off, 0rpm
-                            if (rc0 != SEAT_CTRL_OK) {
-                                perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(OFF) error");
-                            }
+                            // error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorTiltDirection::TILT_OFF, 0, 3); // off, 0rpm
+                            // if (rc0 != SEAT_CTRL_OK) {
+                            //     perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(OFF) error");
+                            // }
                             ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                             printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor2_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                                     ctx->motor_tilt, ctx->desired_tilt, tilt_mov_state_string(ctx->desired_tilt_direction), ctx->command_tilt_ts);
@@ -901,6 +903,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             height_mov_state_string(ctx->desired_height_direction),
                             elapsed);
                     ::usleep(1000);
+                    return SEAT_CTRL_OK;
                 }
 
                 // reduce frequency of dumps, only if something relevant changed,
@@ -1084,7 +1087,7 @@ void *seatctrl_threadFunc(void *arg)
                 printf(SELF_SETPOS "Sending: SECU1_CMD_1 [ motor3_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                         ctx->motor_height, ctx->desired_height, height_mov_state_string(ctx->desired_height_direction), ctx->command_height_ts);
 
-                if (seatctrl_send_ecu1_cmd1(ctx, ctx->desired_height_direction, ctx->config.motor_rpm, 3) < 0) {
+                if (seatctrl_send_ecu1_cmd1(ctx, ctx->desired_height_direction, ctx->config.motor_rpm, 1) < 0) {
                     perror(SELF_SETPOS "seatctrl_send_ecu1_cmd1() error");
                     // FIXME: abort operation
                 }
