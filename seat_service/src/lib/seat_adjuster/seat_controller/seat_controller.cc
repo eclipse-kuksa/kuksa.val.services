@@ -767,7 +767,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                             printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                                     ctx->motor_pos, ctx->desired_position, pos_mov_state_string(ctx->desired_pos_direction), ctx->command_pos_ts);
-                            rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired_pos_direction, ctx->config.motor_rpm, 1);
+                            rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired_pos_direction, ctx->config.motor_pos_rpm, 1);
                             if (rc != SEAT_CTRL_OK) {
                                 perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(desired_pos) error");
                             }
@@ -847,7 +847,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                             printf(PREFIX_CTL ">>> Re-sending: SECU2_CMD_1 [ motor2_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                                     ctx->motor_tilt, ctx->desired_tilt, tilt_mov_state_string(ctx->desired_tilt_direction), ctx->command_tilt_ts);
-                            rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired_tilt_direction, ctx->config.motor_rpm, 3);
+                            rc = seatctrl_send_ecu2_cmd1(ctx, ctx->desired_tilt_direction, ctx->config.motor_tilt_rpm, 3);
                             if (rc != SEAT_CTRL_OK) {
                                 perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(desired_pos) error");
                             }
@@ -927,7 +927,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             ::usleep(100*1000L); // it needs some time to process the off command. TODO: check with ECU team
                             printf(PREFIX_CTL ">>> Re-sending: SECU1_CMD_1 [ motor3_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                                     ctx->motor_height, ctx->desired_height, height_mov_state_string(ctx->desired_height_direction), ctx->command_height_ts);
-                            error_t rc = seatctrl_send_ecu1_cmd1(ctx, ctx->desired_height_direction, ctx->config.motor_rpm, 1);
+                            error_t rc = seatctrl_send_ecu1_cmd1(ctx, ctx->desired_height_direction, ctx->config.motor_height_rpm, 1);
                             if (rc != SEAT_CTRL_OK) {
                                 perror(PREFIX_CTL "seatctrl_send_ecu1_cmd1(desired_pos) error");
                             }
@@ -1065,7 +1065,7 @@ void *seatctrl_threadFunc(void *arg)
                 printf(SELF_SETPOS "Sending: SECU2_CMD_1 [ motor1_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                         ctx->motor_pos, ctx->desired_position, pos_mov_state_string(ctx->desired_pos_direction), ctx->command_pos_ts);
 
-                if (seatctrl_send_ecu2_cmd1(ctx, ctx->desired_pos_direction, ctx->config.motor_rpm, 1)) {
+                if (seatctrl_send_ecu2_cmd1(ctx, ctx->desired_pos_direction, ctx->config.motor_pos_rpm, 1)) {
                     perror(SELF_SETPOS "seatctrl_send_ecu2_cmd1() error");
                     // FIXME: abort operation
                 }
@@ -1076,7 +1076,7 @@ void *seatctrl_threadFunc(void *arg)
                 printf(SELF_SETPOS "Sending: SECU2_CMD_1 [ motor2_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                         ctx->motor_tilt, ctx->desired_tilt, tilt_mov_state_string(ctx->desired_tilt_direction), ctx->command_tilt_ts);
 
-                if (seatctrl_send_ecu2_cmd1(ctx, ctx->desired_tilt_direction, ctx->config.motor_rpm, 3) < 0) {
+                if (seatctrl_send_ecu2_cmd1(ctx, ctx->desired_tilt_direction, ctx->config.motor_tilt_rpm, 3) < 0) {
                     perror(SELF_SETPOS "seatctrl_send_ecu2_cmd1() error");
                     // FIXME: abort operation
                 }
@@ -1087,7 +1087,7 @@ void *seatctrl_threadFunc(void *arg)
                 printf(SELF_SETPOS "Sending: SECU1_CMD_1 [ motor3_pos: %d%%, desired_pos: %d%%, dir: %s ] ts: %" PRId64 "\n",
                         ctx->motor_height, ctx->desired_height, height_mov_state_string(ctx->desired_height_direction), ctx->command_height_ts);
 
-                if (seatctrl_send_ecu1_cmd1(ctx, ctx->desired_height_direction, ctx->config.motor_rpm, 1) < 0) {
+                if (seatctrl_send_ecu1_cmd1(ctx, ctx->desired_height_direction, ctx->config.motor_height_rpm, 1) < 0) {
                     perror(SELF_SETPOS "seatctrl_send_ecu1_cmd1() error");
                     // FIXME: abort operation
                 }
@@ -1119,7 +1119,7 @@ error_t seatctrl_send_ecu2_cmd1(seatctrl_context_t *ctx, uint8_t motor_dir, uint
     int rc;
     CAN_secu2_cmd_1_t cmd1;
     struct can_frame frame;
-    uint8_t rpm = ctx->config.motor_rpm;
+    uint8_t rpm = 0;
 
     if (ctx->socket == SOCKET_INVALID) {
         printf(SELF_CMD1 "ERR: CAN Socket not available!\n");
@@ -1137,6 +1137,9 @@ error_t seatctrl_send_ecu2_cmd1(seatctrl_context_t *ctx, uint8_t motor_dir, uint
             if(ctx->motor_tilt_mov_state == MotorTiltDirection::TILT_OFF || ctx->motor_tilt_mov_state == MotorTiltDirection::TILT_INV){
                 rpm = 0;
             }
+            else{
+                rpm = ctx->config.motor_tilt_rpm;
+            }
             cmd1.motor3_set_rpm = rpm;
             break;
         case 2:
@@ -1148,6 +1151,9 @@ error_t seatctrl_send_ecu2_cmd1(seatctrl_context_t *ctx, uint8_t motor_dir, uint
             cmd1.motor3_set_rpm = motor_rpm;
             if(ctx->motor_pos_mov_state == MotorPosDirection::POS_OFF || ctx->motor_pos_mov_state == MotorPosDirection::POS_INV){
                 rpm = 0;
+            }
+            else{
+                rpm = ctx->config.motor_pos_rpm;
             }
             cmd1.motor1_manual_cmd = ctx->motor_pos_mov_state;
             cmd1.motor1_set_rpm = rpm;
@@ -1614,7 +1620,9 @@ error_t seatctrl_default_config(seatctrl_config_t *config)
     config->debug_ctl = true;
     config->debug_stats = true;
     config->debug_verbose = false;
-    config->motor_rpm = DEFAULT_RPM; // WARNING! uint8_t !!!
+    config->motor_height_rpm = DEFAULT_HEIGHT_RPM; // WARNING! uint8_t !!!
+    config->motor_tilt_rpm = DEFAULT_TILT_RPM; // WARNING! uint8_t !!!
+    config->motor_pos_rpm = DEFAULT_POS_RPM; // WARNING! uint8_t !!!
     config->command_timeout = DEFAULT_OPERATION_TIMEOUT;
 
     if (getenv("SC_CAN")) config->can_device = getenv("SC_CAN");
@@ -1624,19 +1632,38 @@ error_t seatctrl_default_config(seatctrl_config_t *config)
     if (getenv("SC_STAT")) config->debug_stats = atoi(getenv("SC_STAT"));
     if (getenv("SC_VERBOSE")) config->debug_verbose = atoi(getenv("SC_VERBOSE"));
 
-    if (getenv("SC_RPM")) config->motor_rpm = atoi(getenv("SC_RPM"));
+    if (getenv("SC_TILT_RPM")) config->motor_tilt_rpm = atoi(getenv("SC_TILT_RPM"));
+    if (getenv("SC_POS_RPM")) config->motor_pos_rpm = atoi(getenv("SC_POS_RPM"));
+    if (getenv("SC_HEIGHT_RPM")) config->motor_height_rpm = atoi(getenv("SC_HEIGHT_RPM"));
     if (getenv("SC_TIMEOUT")) config->command_timeout = atoi(getenv("SC_TIMEOUT"));
 
-    printf("### seatctrl_config: { can:%s, motor_rpm:%d, operation_timeout:%d }\n",
-            config->can_device, config->motor_rpm, config->command_timeout);
+    printf("### seatctrl_config: { can:%s, motor_height_rpm:%d, operation_timeout:%d }\n",
+            config->can_device, config->motor_height_rpm, config->command_timeout);
+    printf("### seatctrl_config: { can:%s, motor_tilt_rpm:%d, operation_timeout:%d }\n",
+            config->can_device, config->motor_tilt_rpm, config->command_timeout);
+    printf("### seatctrl_config: { can:%s, motor_pos_rpm:%d, operation_timeout:%d }\n",
+            config->can_device, config->motor_pos_rpm, config->command_timeout);
     printf("### seatctrl_logs  : { raw:%d, ctl:%d, stat:%d, verb:%d }\n",
             config->debug_raw, config->debug_ctl, config->debug_stats, config->debug_verbose);
     // args check:
-    if (config->motor_rpm < 1 || config->motor_rpm > 254) {
-        printf("### SC_RPM: %d, range is [1..254]\n", config->motor_rpm);
-        config->motor_rpm = DEFAULT_RPM;
+    if (config->motor_pos_rpm < 1 || config->motor_pos_rpm > 254) {
+        printf("### SC_POS_RPM: %d, range is [1..254]\n", config->motor_pos_rpm);
+        config->motor_pos_rpm = DEFAULT_POS_RPM;
         return SEAT_CTRL_ERR_INVALID;
     }
+
+    if (config->motor_tilt_rpm < 1 || config->motor_tilt_rpm > 254) {
+        printf("### SC_TLT_RPM: %d, range is [1..254]\n", config->motor_tilt_rpm);
+        config->motor_tilt_rpm = DEFAULT_TILT_RPM;
+        return SEAT_CTRL_ERR_INVALID;
+    }
+
+    if (config->motor_height_rpm < 1 || config->motor_height_rpm > 254) {
+        printf("### SC_HEIGHT_RPM: %d, range is [1..254]\n", config->motor_height_rpm);
+        config->motor_height_rpm = DEFAULT_HEIGHT_RPM;
+        return SEAT_CTRL_ERR_INVALID;
+    }
+    
     return SEAT_CTRL_OK;
 }
 

@@ -27,7 +27,9 @@ seatctrl_config_t config = {
     true,
     true,
     DEFAULT_OPERATION_TIMEOUT,
-    DEFAULT_RPM
+    DEFAULT_HEIGHT_RPM,
+    DEFAULT_TILT_RPM,
+    DEFAULT_POS_RPM
 };
 
 /*

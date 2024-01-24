@@ -90,7 +90,19 @@ extern "C" {
  * @brief Default RPMs for motor. 80=8000 rpm.
  * NOTE: Current firmware threads RPM value as PWM in range [30..100%]. RPM<30 do not move the motor!
  */
-#define DEFAULT_RPM					80
+#define DEFAULT_HEIGHT_RPM					80
+
+/**
+ * @brief Default RPMs for motor. 30=3000 rpm.
+ * NOTE: Current firmware threads RPM value as PWM in range [30..100%]. RPM<30 do not move the motor!
+ */
+#define DEFAULT_TILT_RPM					48
+
+/**
+ * @brief Default RPMs for motor. 30=3000 rpm.
+ * NOTE: Current firmware threads RPM value as PWM in range [30..100%]. RPM<30 do not move the motor!
+ */
+#define DEFAULT_POS_RPM					48
 
 /**
  * @brief Default timeout for aborting seatctrl_set_position() if desired position is not reached.
@@ -208,7 +220,9 @@ enum HeightLearningState {
  * @param debug_stats periodic dumps of current SECUx_STAT parsed values
  * @param debug_verbose enable for troubleshooting only
  * @param command_timeout manual command tieout (ms). Moving is stopped after timeout if position not reached
- * @param motor_rpm manual command raw rpm/100. [0..254]
+ * @param motor_height_rpm manual command raw rpm/100. [0..254]
+ * @param motor_tilt_rpm manual command raw rpm/100. [0..254]
+ * @param motor_pos_rpm manual command raw rpm/100. [0..254]
  */
 typedef struct {
 	const char *can_device; // "can0", "vcan0", etc. please use literal values or allocated memory!
@@ -217,7 +231,9 @@ typedef struct {
 	bool debug_stats;       // periodic dumps of current SECUx_STAT parsed values
 	bool debug_verbose;     // enable for troubleshooting only
 	int  command_timeout;   // manual command tieout (ms). Moving is stopped after timeout if position not reached
-	int  motor_rpm;         // manual command raw rpm/100. [0..254]
+	int  motor_height_rpm;         // manual command raw rpm/100. [0..254]
+	int  motor_tilt_rpm;
+	int  motor_pos_rpm;	
 } seatctrl_config_t;
 
 /**
