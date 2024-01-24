@@ -173,17 +173,17 @@ CM_ SG_ 1800 MOTOR1_SET_RPM "0 ... 255 = 0 ... 25500 RPM
 CM_ SG_ 1800 MOTOR1_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
 CM_ SG_ 1799 MOTOR4_SET_RPM "0 ... 255 = 0 ... 25500 RPM
 ";
-CM_ SG_ 1799 MOTOR4_MANUAL_CMD "0 = off; 2 = dec; 1 = inc; 3 = invalid";
+CM_ SG_ 1799 MOTOR4_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
 CM_ SG_ 1799 MOTOR3_SET_RPM "0 ... 255 = 0 ... 25500 RPM
 ";
-CM_ SG_ 1799 MOTOR3_MANUAL_CMD "0 = off; 2 = dec; 1 = inc; 3 = invalid";
+CM_ SG_ 1799 MOTOR3_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
 CM_ SG_ 1799 MOTOR2_SET_RPM "0 ... 255 = 0 ... 25500 RPM
 ";
-CM_ SG_ 1799 MOTOR2_MANUAL_CMD "0 = off; 2 = dec; 1 = inc; 3 = invalid
+CM_ SG_ 1799 MOTOR2_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid
 ";
 CM_ SG_ 1799 MOTOR1_SET_RPM "0 ... 255 = 0 ... 25500 RPM
 ";
-CM_ SG_ 1799 MOTOR1_MANUAL_CMD "0 = off; 2 = dec; 1 = inc; 3 = invalid";
+CM_ SG_ 1799 MOTOR1_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
 CM_ SG_ 1798 MOTOR4_SET_RPM "0 ... 255 = 0 ... 25500 RPM
 ";
 CM_ SG_ 1798 MOTOR4_MANUAL_CMD "0 = off; 1 = dec; 2 = inc; 3 = invalid";
@@ -237,9 +237,9 @@ VAL_ 3221225472 MOTOR2_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
 VAL_ 3221225472 MOTOR2_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
 VAL_ 3221225472 MOTOR1_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
 VAL_ 3221225472 MOTOR1_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
-VAL_ 1812 MOTOR4_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1812 MOTOR4_MOV_STATE 3 "DEF" 1 "INC" 2 "DEC" 0 "OFF" ;
 VAL_ 1812 MOTOR4_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
-VAL_ 1812 MOTOR3_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
+VAL_ 1812 MOTOR3_MOV_STATE 3 "DEF" 1 "INC" 2 "DEC" 0 "OFF" ;
 VAL_ 1812 MOTOR3_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
 VAL_ 1812 MOTOR2_MOV_STATE 3 "DEF" 2 "INC" 1 "DEC" 0 "OFF" ;
 VAL_ 1812 MOTOR2_LEARNING_STATE 2 "invalid" 1 "learned" 0 "not learned" ;
