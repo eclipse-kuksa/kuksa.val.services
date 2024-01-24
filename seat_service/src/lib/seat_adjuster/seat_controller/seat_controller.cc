@@ -67,9 +67,11 @@ std::mutex ctx_mutex;
 
 int64_t get_ts();
 const char* pos_mov_state_string(int dir);
-int rec_pos_mov_state_string(const char* str);
+const char* rec_pos_mov_state_string(int dir);
+int pos_mov_state(const char* str);
 const char* tilt_mov_state_string(int dir);
-int rec_tilt_mov_state_string(const char* dir);
+const char* rec_tilt_mov_state_string(int dir);
+int tilt_mov_state(const char* str);
 const char* height_mov_state_string(int dir);
 
 void print_secu2_cmd_1(const char* prefix, CAN_secu2_cmd_1_t *cmd);
@@ -123,24 +125,41 @@ const char* pos_mov_state_string(int dir)
 }
 
 /**
+ * @brief Returns string description for MotorPosDirection enum values.
+ *
+ * @param dir
+ * @return const char*
+ */
+const char* rec_pos_mov_state_string(int dir)
+{
+    switch (dir) {
+        case RecMotorPosDirection::REC_POS_OFF: return "OFF";
+        case RecMotorPosDirection::REC_POS_INC: return "INC";
+        case RecMotorPosDirection::REC_POS_DEC: return "DEC";
+        case RecMotorPosDirection::REC_POS_INV: return "INV";
+        default: return "Undefined!";
+    }
+}
+
+/**
  * @brief Returns int for strings according to MotorPosDirection enum values. Used to convert between sending direction and receiving direction.
  *
  * @param str
  * @return const int
  */
-int rec_pos_mov_state(const char* str)
+int pos_mov_state(const char* str)
 {
     if (strcmp(str, "OFF") == 0){
-        return RecMotorPosDirection::REC_POS_OFF;
+        return MotorPosDirection::POS_OFF;
     }
     else if(strcmp(str, "INC") == 0){
-        return RecMotorPosDirection::REC_POS_INC;
+        return MotorPosDirection::POS_INC;
     }
     else if (strcmp(str, "DEC") == 0){
-        return RecMotorPosDirection::REC_POS_DEC;
+        return MotorPosDirection::POS_DEC;
     }
     else if(strcmp(str, "INV") == 0){
-        return RecMotorPosDirection::REC_POS_INV;
+        return MotorPosDirection::POS_INV;
     }
     else {
         return -2;
@@ -165,24 +184,41 @@ const char* tilt_mov_state_string(int dir)
 }
 
 /**
+ * @brief Returns string description for MotorPosDirection enum values.
+ *
+ * @param dir
+ * @return const char*
+ */
+const char* rec_tilt_mov_state_string(int dir)
+{
+    switch (dir) {
+        case RecMotorTiltDirection::REC_TILT_OFF: return "OFF";
+        case RecMotorTiltDirection::REC_TILT_INC: return "INC";
+        case RecMotorTiltDirection::REC_TILT_DEC: return "DEC";
+        case RecMotorTiltDirection::REC_TILT_INV: return "INV";
+        default: return "Undefined!";
+    }
+}
+
+/**
  * @brief Returns int for strings according to MotorTiltDirection enum values. Used to convert between sending direction and receiving direction.
  *
  * @param str
  * @return const int
  */
-int rec_tilt_mov_state(const char* str)
+int tilt_mov_state(const char* str)
 {
     if (strcmp(str, "OFF") == 0){
-        return RecMotorTiltDirection::REC_TILT_OFF;
+        return MotorTiltDirection::TILT_OFF;
     }
     else if(strcmp(str, "INC") == 0){
-        return RecMotorTiltDirection::REC_TILT_INC;
+        return MotorTiltDirection::TILT_INC;
     }
     else if (strcmp(str, "DEC") == 0){
-        return RecMotorTiltDirection::REC_TILT_DEC;
+        return MotorTiltDirection::TILT_DEC;
     }
     else if(strcmp(str, "INV") == 0){
-        return RecMotorTiltDirection::REC_TILT_INV;
+        return MotorTiltDirection::TILT_INV;
     }
     else {
         return -2;
@@ -474,7 +510,7 @@ error_t handle_secu2_stat(seatctrl_context_t *ctx, const struct can_frame *frame
             ctx->event_cb(SeatCtrlEvent::MotorPos, stat.motor1_pos, ctx->event_cb_user_data);
         }
 
-        int mov_state = rec_pos_mov_state(pos_mov_state_string(stat.motor1_mov_state));
+        int mov_state = pos_mov_state(rec_pos_mov_state_string(stat.motor1_mov_state));
         ctx->motor_pos_mov_state = mov_state;
         ctx->motor_pos_learning_state = stat.motor1_learning_state;
         ctx->motor_pos = stat.motor1_pos; // decode?
@@ -504,7 +540,7 @@ error_t handle_secu2_stat(seatctrl_context_t *ctx, const struct can_frame *frame
             ctx->event_cb(SeatCtrlEvent::MotorTilt, stat.motor3_pos, ctx->event_cb_user_data);
         }
 
-        int mov_state = rec_tilt_mov_state(tilt_mov_state_string(stat.motor3_mov_state));
+        int mov_state = tilt_mov_state(rec_tilt_mov_state_string(stat.motor3_mov_state));
         ctx->motor_tilt_mov_state = mov_state;
         ctx->motor_tilt_learning_state = stat.motor3_learning_state;
         ctx->motor_tilt = stat.motor3_pos; // decode?
