@@ -612,8 +612,8 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor1::INC\n");
             }
-            ctx->_sim_motor_pos_status = MotorPosDirection_DEC;
-            ctx->_sim_motor_pos_inc = -motor_inc;
+            ctx->_sim_motor_pos_status = MotorPosDirection_INC;
+            ctx->_sim_motor_pos_inc = motor_inc;
             ctx->_sim_motor_pos_ts = get_ts();
             // todo : calculate increment per sim_delay cycle
         } else if (motor1_dir == MotorPosDirection_DEC && motor1_rpm > 0) {
@@ -623,8 +623,8 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor1::DEC\n");
             }
-            ctx->_sim_motor_pos_status = MotorPosDirection_INC;
-            ctx->_sim_motor_pos_inc = motor_inc;
+            ctx->_sim_motor_pos_status = MotorPosDirection_DEC;
+            ctx->_sim_motor_pos_inc = -motor_inc;
             ctx->_sim_motor_pos_ts = get_ts();
         } else {
             fprintf(sim_log, SELF_CAN_WCB "Warning! Unhandled motor status: 0x%02X\n", motor1_dir);
@@ -645,8 +645,8 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor2::INC\n");
             }
-            ctx->_sim_motor_tilt_status = MotorTiltDirection_DEC;
-            ctx->_sim_motor_tilt_inc = -motor2_inc;
+            ctx->_sim_motor_tilt_status = RecMotorTiltDirection_INC;
+            ctx->_sim_motor_tilt_inc = motor2_inc;
             ctx->_sim_motor_tilt_ts = get_ts();
             // todo : calculate increment per sim_delay cycle
         } else if (motor3_dir == MotorTiltDirection_DEC && motor3_rpm > 0) {
@@ -656,8 +656,8 @@ ssize_t sae_write_cb(sae_context_t *ctx, const void *buf, size_t len) {
             } else {
                 fprintf(sim_log, SELF_CAN_WCB "*** Motor2::DEC\n");
             }
-            ctx->_sim_motor_tilt_status = MotorTiltDirection_INC;
-            ctx->_sim_motor_tilt_inc = motor2_inc;
+            ctx->_sim_motor_tilt_status = RecMotorTiltDirection_DEC;
+            ctx->_sim_motor_tilt_inc = -motor2_inc;
             ctx->_sim_motor_tilt_ts = get_ts();
         } else {
             fprintf(sim_log, SELF_CAN_WCB "Warning! Unhandled motor status: 0x%02X\n", motor3_dir);
