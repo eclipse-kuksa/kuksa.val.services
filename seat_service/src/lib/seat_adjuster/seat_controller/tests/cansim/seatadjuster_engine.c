@@ -26,7 +26,7 @@
 //////////////////////// SocketCanMock CAN_Read and CAN_Write callbacks ////////////////
 
 bool _sae_verbose = false; // verbose dumps from sim loop
-bool _sae_debug = true;
+bool _sae_debug = false;
 bool _sae_all_motors = false;
 
 #define SELF_INIT    "<MOCK> [SAE Init] "

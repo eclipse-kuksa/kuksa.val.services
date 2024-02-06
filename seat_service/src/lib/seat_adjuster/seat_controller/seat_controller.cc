@@ -732,9 +732,11 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
         if (is_ctl_running(ctx)) {
             int64_t elapsed_motor1 = 0;
             int64_t elapsed_motor2 = 0;
+            int64_t elapsed_motor3 = 0;
 
-            if(ctx->pos_running && ctx->motor_pos != ctx->desired_position){
-                elapsed_motor1 = get_ts() - ctx->command_pos_ts;
+            if(ctx->pos_running){
+                // if all commands come in at the same time add elapsed times so it does not timeout while waiting for other motors (worst case timeout 3x config.command_timeout)
+                elapsed_motor1 = get_ts() - ctx->command_pos_ts + elapsed_motor2 + elapsed_motor3;
                 // Preliminary phase: operation was just scheduled (up to 500ms ago),
                 // but can signal may not yet come, i.e. waiting for motor tor start moving
                 if (elapsed_motor1 < 500 && ctx->motor_pos_mov_state == MotorPosDirection::POS_OFF && ctx->motor_pos != ctx->desired_position) {
@@ -759,7 +761,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                         // Workaround for possible "bug" in seat adjuster ECU that is stopping (OFF) at
                         // some thresholds at both ends of the range (e.g. 14% and 80%)
                         if (ctx->motor_pos_mov_state == MotorPosDirection::POS_OFF) {
-                            printf(PREFIX_CTL " >>> Sending MotorPosOff command...\n");
+                            // printf(PREFIX_CTL " >>> Sending MotorPosOff command...\n");
                             // error_t rc0 = seatctrl_send_ecu2_cmd1(ctx, MotorPosDirection::POS_OFF, 0, 1); // off, 0rpm
                             // if (rc0 != SEAT_CTRL_OK) {
                             //     perror(PREFIX_CTL "seatctrl_send_ecu2_cmd1(OFF) error");
@@ -784,7 +786,6 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                     last_ctl_pos_dir = ctx->motor_pos_mov_state;
                     last_ctl_pos = ctx->motor_pos;
                 }
-                // FIXME: if desired_pos_direction INC && ctx->desired_position >= ctx->motor_pos
                 if ( ctx->motor_pos != MOTOR_POS_INVALID &&
                     ((ctx->desired_pos_direction == MotorPosDirection::POS_INC && ctx->motor_pos >= ctx->desired_position) ||
                     (ctx->desired_pos_direction == MotorPosDirection::POS_DEC && ctx->motor_pos <= ctx->desired_position) ))
@@ -797,7 +798,7 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             elapsed_motor1);
                     seatctrl_stop_pos_movement(ctx);
                     // invalidate last states
-                    last_ctl_pos_dir = 0;
+                    last_ctl_pos_dir = -1;
                     last_ctl_pos = MOTOR_POS_INVALID;
                 } else
                 if (elapsed_motor1 > ctx->config.command_timeout) {
@@ -808,13 +809,13 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             elapsed_motor1);
                     seatctrl_stop_pos_movement(ctx);
                     // invalidate last states
-                    last_ctl_pos_dir = 0;
+                    last_ctl_pos_dir = -1;
                     last_ctl_pos = MOTOR_POS_INVALID;
                 }
             }
 
-            if(ctx->tilt_running && ctx->motor_tilt != ctx->desired_tilt){
-                elapsed_motor2 = get_ts() - ctx->command_tilt_ts + elapsed_motor1;
+            if(ctx->tilt_running){
+                elapsed_motor2 = get_ts() - ctx->command_tilt_ts + elapsed_motor1 + elapsed_motor3;
                 // Preliminary phase: operation was just scheduled (up to 500ms ago),
                 // but can signal may not yet come, i.e. waiting for motor tor start moving
                 if (elapsed_motor2 < 500 && ctx->motor_tilt_mov_state == MotorTiltDirection::TILT_OFF && ctx->motor_tilt != ctx->desired_tilt) {
@@ -893,15 +894,15 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                 }
             }
 
-            if(ctx->height_running && ctx->motor_height != ctx->desired_height){
-                int64_t elapsed = get_ts() - ctx->command_height_ts + elapsed_motor2;
+            if(ctx->height_running){
+                elapsed_motor3 = get_ts() - ctx->command_height_ts + elapsed_motor2 + elapsed_motor1;
                 // Preliminary phase: operation was just scheduled (up to 500ms ago),
                 // but can signal may not yet come, i.e. waiting for motor tor start moving
-                if (elapsed < 500 && ctx->motor_height_mov_state == MotorHeightDirection::HEIGHT_OFF && ctx->motor_height != ctx->desired_height) {
+                if (elapsed_motor3 < 500 && ctx->motor_height_mov_state == MotorHeightDirection::HEIGHT_OFF && ctx->motor_height != ctx->desired_height) {
                     printf(PREFIX_CTL "* Seat Adjustment[Height] to (%d, %s) active, waiting motor movement for %" PRId64 "ms.\n",
                             ctx->desired_height,
                             height_mov_state_string(ctx->desired_height_direction),
-                            elapsed);
+                            elapsed_motor3);
                     ::usleep(1000);
                     return SEAT_CTRL_OK;
                 }
@@ -954,18 +955,18 @@ error_t seatctrl_control_ecu12_loop(seatctrl_context_t *ctx)
                             ctx->desired_height,
                             height_mov_state_string(ctx->desired_height_direction),
                             ctx->motor_height,
-                            elapsed);
+                            elapsed_motor3);
                     seatctrl_stop_height_movement(ctx);
                     // invalidate last states
                     last_ctl_height_dir = 0;
                     last_ctl_height = MOTOR_POS_INVALID;
                 } else
-                if (elapsed > ctx->config.command_timeout) {
+                if (elapsed_motor3 > ctx->config.command_timeout) {
                     // stop movement due to timeout
                     printf(PREFIX_CTL "WARN: *** Seat adjustment[Height] to (%d, %s) timed out (%" PRId64 "ms). Stopping motors.\n",
                             ctx->desired_height,
                             height_mov_state_string(ctx->desired_height_direction),
-                            elapsed);
+                            elapsed_motor3);
                     seatctrl_stop_height_movement(ctx);
                     // invalidate last states
                     last_ctl_height_dir = 0;
@@ -1613,6 +1614,8 @@ error_t seatctrl_default_config(seatctrl_config_t *config)
 {
     if (!config) return SEAT_CTRL_ERR_INVALID;
 
+    error_t ret = SEAT_CTRL_OK;
+
     // default values
     memset(config, 0, sizeof(seatctrl_config_t));
     config->can_device = "can0";
@@ -1649,22 +1652,22 @@ error_t seatctrl_default_config(seatctrl_config_t *config)
     if (config->motor_pos_rpm < 1 || config->motor_pos_rpm > 254) {
         printf("### SC_POS_RPM: %d, range is [1..254]\n", config->motor_pos_rpm);
         config->motor_pos_rpm = DEFAULT_POS_RPM;
-        return SEAT_CTRL_ERR_INVALID;
+        ret = SEAT_CTRL_ERR_INVALID;
     }
 
     if (config->motor_tilt_rpm < 1 || config->motor_tilt_rpm > 254) {
         printf("### SC_TLT_RPM: %d, range is [1..254]\n", config->motor_tilt_rpm);
         config->motor_tilt_rpm = DEFAULT_TILT_RPM;
-        return SEAT_CTRL_ERR_INVALID;
+        ret = SEAT_CTRL_ERR_INVALID;
     }
 
     if (config->motor_height_rpm < 1 || config->motor_height_rpm > 254) {
         printf("### SC_HEIGHT_RPM: %d, range is [1..254]\n", config->motor_height_rpm);
         config->motor_height_rpm = DEFAULT_HEIGHT_RPM;
-        return SEAT_CTRL_ERR_INVALID;
+        ret = SEAT_CTRL_ERR_INVALID;
     }
     
-    return SEAT_CTRL_OK;
+    return ret;
 }
 
 
