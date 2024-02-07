@@ -107,7 +107,17 @@ extern "C" {
 /**
  * @brief Default timeout for aborting seatctrl_set_position() if desired position is not reached.
  */
-#define DEFAULT_OPERATION_TIMEOUT	15000
+#define DEFAULT_POS_OPERATION_TIMEOUT	25000
+
+/**
+ * @brief Default timeout for aborting seatctrl_set_tilt() if desired position is not reached.
+ */
+#define DEFAULT_TILT_OPERATION_TIMEOUT	25000
+
+/**
+ * @brief Default timeout for aborting seatctrl_set_height() if desired position is not reached.
+ */
+#define DEFAULT_HEIGHT_OPERATION_TIMEOUT	15000
 
 /**
  * @brief Special value set in seatctrl_init_ctx() to identify valid context memory
@@ -216,10 +226,12 @@ enum HeightLearningState {
  *
  * @param can_device "can0", "vcan0", etc. please use literal values or allocated memory!
  * @param debug_raw dump raw can bytes
- * @param debug_ctl dumps when control loop is handling set_position command
+ * @param debug_ctl dumps when control loop is handling set_position/set_tilt/set_height command
  * @param debug_stats periodic dumps of current SECUx_STAT parsed values
  * @param debug_verbose enable for troubleshooting only
- * @param command_timeout manual command tieout (ms). Moving is stopped after timeout if position not reached
+ * @param command_height_timeout manual command timeout (ms). Moving is stopped after timeout if height not reached
+ * @param command_tilt_timeout manual command timeout (ms). Moving is stopped after timeout if tilt not reached
+ * @param command_pos_timeout manual command timeout (ms). Moving is stopped after timeout if position not reached
  * @param motor_height_rpm manual command raw rpm/100. [0..254]
  * @param motor_tilt_rpm manual command raw rpm/100. [0..254]
  * @param motor_pos_rpm manual command raw rpm/100. [0..254]
@@ -230,7 +242,9 @@ typedef struct {
 	bool debug_ctl;         // dumps when control loop is handling set_position command
 	bool debug_stats;       // periodic dumps of current SECUx_STAT parsed values
 	bool debug_verbose;     // enable for troubleshooting only
-	int  command_timeout;   // manual command tieout (ms). Moving is stopped after timeout if position not reached
+	int  command_height_timeout;   // manual command tieout (ms). Moving is stopped after timeout if position not reached
+	int  command_tilt_timeout;   // manual command tieout (ms). Moving is stopped after timeout if position not reached
+	int  command_pos_timeout;   // manual command tieout (ms). Moving is stopped after timeout if position not reached
 	int  motor_height_rpm;         // manual command raw rpm/100. [0..254]
 	int  motor_tilt_rpm;
 	int  motor_pos_rpm;	

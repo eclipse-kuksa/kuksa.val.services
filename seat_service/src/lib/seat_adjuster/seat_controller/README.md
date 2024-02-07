@@ -15,10 +15,10 @@ To maximize flexibility SeatController uses environment variables to easily over
 
 - `SC_CAN`: If set, overrides requested can interface to use. (Not used if `seat_service` is started with `<can_if_name>` argument)
 - `SC_RESET`: if set to "1", forces calling `ecu-reset` script on any `CAN` interface (Default 1).
-- `SC_TIMEOUT`: Seat adjuster move operation timeout (ms). After it is reached motors are stopped.
+- `SC_x_TIMEOUT`: Seat adjuster move operation timeout (ms). After it is reached motors are stopped. exchange x with POS, TILT, HEIGHT
 - `SC_STAT`: "1" = dump SECU1_STAT can frames (useful to check for unmanaged seat position changes).
 - `SC_CTL`: "1" = dump Coontrol Loop messages. Only dumps when active set position operation is running.
-- `SC_RPM`: Seat moror `RPMs / 100`. e.g. `80=8000rpm`. Suggested range `[30..100]`
+- `SC_x_RPM`: Seat moror `RPMs / 100`. e.g. `80=8000rpm`. Suggested range `[30..100]` exchange x with POS, TILT, HEIGHT
 - `SC_RAW`: "1" = enables raw can dumps, too verbose (only for troubleshooting).
 - `SC_VERBOSE`: "1" = enables verbose dumps (only for troubleshooting).
 

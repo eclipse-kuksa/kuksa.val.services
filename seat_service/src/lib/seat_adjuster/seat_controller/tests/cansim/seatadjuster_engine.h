@@ -27,32 +27,11 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "CAN.h"
-
 // If defined, all motors are dumped (potentially also simulated in future)
 #define SAE_ALL_MOTORS
 
 
 #define SAE_POS_INVALID -1//0xFF // MOTOR_POS_INVALID
-
-// maps: MotorDirection enum
-enum { MotorPosDirection_OFF=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, 
-       MotorPosDirection_DEC=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE,
-       MotorPosDirection_INC=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, 
-       MotorPosDirection_INV=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE };
-enum { MotorTiltDirection_OFF=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_OFF_CHOICE,
-       MotorTiltDirection_DEC=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_DEC_CHOICE, 
-       MotorTiltDirection_INC=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_INC_CHOICE,
-       MotorTiltDirection_INV=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_INV_CHOICE };
-// motor in real seat is installed in the opposite direction for tilt
-enum { RecMotorTiltDirection_OFF=CAN_SECU2_STAT_MOTOR3_MOV_STATE_OFF_CHOICE,
-       RecMotorTiltDirection_DEC=CAN_SECU2_STAT_MOTOR3_MOV_STATE_DEC_CHOICE, 
-       RecMotorTiltDirection_INC=CAN_SECU2_STAT_MOTOR3_MOV_STATE_INC_CHOICE,
-       RecMotorTiltDirection_INV=CAN_SECU2_STAT_MOTOR3_MOV_STATE_DEF_CHOICE };
-enum { MotorHeightDirection_OFF=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE,
-       MotorHeightDirection_DEC=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE,
-       MotorHeightDirection_INC=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, 
-       MotorHeightDirection_INV=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE };
 
 /**
  * @brief maps LearningState enum

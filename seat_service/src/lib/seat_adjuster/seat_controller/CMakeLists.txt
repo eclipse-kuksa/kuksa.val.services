@@ -77,6 +77,7 @@ file(GLOB_RECURSE SOURCES RELATIVE "${CMAKE_CURRENT_BINARY_DIR}/generated" "*.c"
 message("--- Generated sources: ${GEN_SRC}")
 
 ### target: seat_controller_lib
+add_library(generated "${CANTOOLS_GENERATED_C}")
 add_library(seat_controller_lib
   "${CANTOOLS_GENERATED_C}"
   seat_controller.cc

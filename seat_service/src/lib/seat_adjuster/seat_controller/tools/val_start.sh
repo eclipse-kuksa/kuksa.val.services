@@ -57,7 +57,13 @@ fi
 [ -z "$SC_RAW" ] && export SC_RAW=0
 
 # Seat adjuster move operation timeout (ms). After it is reached motors are stopped
-[ -z "$SC_TIMEOUT" ] && export SC_TIMEOUT=15000
+[ -z "$SC_HEIGHT_TIMEOUT" ] && export SC_HEIGHT_TIMEOUT=15000
+
+# Seat adjuster move operation timeout (ms). After it is reached motors are stopped
+[ -z "$SC_TILT_TIMEOUT" ] && export SC_TILT_TIMEOUT=25000
+
+# Seat adjuster move operation timeout (ms). After it is reached motors are stopped
+[ -z "$SC_POS_TIMEOUT" ] && export SC_POS_TIMEOUT=25000
 
 # 1=dump SECU1_STAT can frames (useful to check for unmanaged seat position changes)
 [ -z "$SC_STAT" ] && export SC_STAT=0

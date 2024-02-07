@@ -65,7 +65,7 @@ class SeatCtrlIntegrationTest : public ::testing::Test {
     void ResetEnv() {
         // make sure environmet variables are unset
         ::unsetenv("SC_CAN");
-        ::unsetenv("SC_TIMEOUT");
+        ::unsetenv("SC_POS_TIMEOUT");
         ::unsetenv("SC_HEIGHT_RPM");
         ::unsetenv("SC_TILT_RPM");
         ::unsetenv("SC_POS_RPM");
@@ -96,7 +96,9 @@ TEST_F(SeatCtrlIntegrationTest, TestDemoPositions) {
     int target_pos;
 
     ::setenv("SC_CAN", "cansim-TestDemoPositions", true);
-    ::setenv("SC_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_POS_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_TILT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_HEIGHT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
     ::setenv("SC_HEIGHT_RPM", "80", true); // keep it within +/- 1 increments
     ::setenv("SC_TILT_RPM", "45", true); // keep it within +/- 1 increments
     ::setenv("SC_POS_RPM", "45", true); // keep it within +/- 1 increments
@@ -234,7 +236,9 @@ TEST_F(SeatCtrlIntegrationTest, TestFastMove) {
     int target_pos;
 
     // sdv::test::mock::SocketCanMock::instance().StartMocking(-1, can_read_cb, can_write_cb);
-    ::setenv("SC_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_POS_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_TILT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_HEIGHT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
     ::setenv("SC_POS_RPM", "254", true);
     ::setenv("SC_CTL", "0", true);
     ::setenv("SC_STAT", "0", true);
@@ -296,7 +300,9 @@ TEST_F(SeatCtrlIntegrationTest, TestMoveTimeout) {
     int target_pos;
 
     ::setenv("SC_CAN", "cansim-TestMoveTimeout", true);
-    ::setenv("SC_TIMEOUT", "500", true); // 500ms
+    ::setenv("SC_POS_TIMEOUT", "500", true); // 500ms
+    ::setenv("SC_TILT_TIMEOUT", "500", true); // 500ms
+    ::setenv("SC_HEIGHT_TIMEOUT", "500", true); // 500ms
     ::setenv("SC_RPM", "30", true);
     ::setenv("SC_CTL", "0", true);
     ::setenv("SC_STAT", "0", true);
@@ -503,7 +509,9 @@ TEST_F(SeatCtrlIntegrationTest, ExtraCoverage) {
 
     // enable all posible debugs for code coverage...
     ::setenv("SC_CAN", "vcan123456789abcef", true); // invalid length, max 16
-    ::setenv("SC_TIMEOUT", "50", true);
+    ::setenv("SC_POS_TIMEOUT", "50", true);
+    ::setenv("SC_TILT_TIMEOUT", "50", true);
+    ::setenv("SC_HEIGHT_TIMEOUT", "50", true);
     ::setenv("SC_RPM", "1", true);
     ::setenv("SC_CTL", "1", true);
     ::setenv("SC_STAT", "1", true);

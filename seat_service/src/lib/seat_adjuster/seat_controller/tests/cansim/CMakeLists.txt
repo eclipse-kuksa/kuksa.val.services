@@ -47,6 +47,7 @@ set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_SANITIZE_FLAGS}")
 set_property(TARGET cansim PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(cansim
+  generated
   pthread
   dl
 )

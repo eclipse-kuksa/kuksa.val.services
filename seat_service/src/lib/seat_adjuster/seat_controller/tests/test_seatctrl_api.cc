@@ -84,7 +84,9 @@ class TestSeatCtrlApi : public ::testing::Test {
     void ResetEnv() {
         // make sure environmet variables are unset
         ::unsetenv("SC_CAN");
-        ::unsetenv("SC_TIMEOUT");
+        ::unsetenv("SC_POS_TIMEOUT");
+        ::unsetenv("SC_TILT_TIMEOUT");
+        ::unsetenv("SC_HEIGHT_TIMEOUT");
         ::unsetenv("SC_HEIGHT_RPM");
         ::unsetenv("SC_TILT_RPM");
         ::unsetenv("SC_POS_RPM");
@@ -178,7 +180,9 @@ TEST_F(TestSeatCtrlApi, TestConfigDefault) {
     EXPECT_EQ(DEFAULT_HEIGHT_RPM, config.motor_height_rpm);
     EXPECT_EQ(DEFAULT_TILT_RPM, config.motor_tilt_rpm);
     EXPECT_EQ(DEFAULT_POS_RPM, config.motor_pos_rpm);
-    EXPECT_EQ(DEFAULT_OPERATION_TIMEOUT, config.command_timeout);
+    EXPECT_EQ(DEFAULT_POS_OPERATION_TIMEOUT, config.command_pos_timeout);
+    EXPECT_EQ(DEFAULT_TILT_OPERATION_TIMEOUT, config.command_tilt_timeout);
+    EXPECT_EQ(DEFAULT_HEIGHT_OPERATION_TIMEOUT, config.command_height_timeout);
 }
 
 /**
@@ -188,7 +192,9 @@ TEST_F(TestSeatCtrlApi, TestConfigEnv) {
     // NOTE: ctx and config memory is invalidated in SetUp()
 
     ::setenv("SC_CAN", "vcan0", true);
-    ::setenv("SC_TIMEOUT", "12345", true);
+    ::setenv("SC_POS_TIMEOUT", "12345", true);
+    ::setenv("SC_TILT_TIMEOUT", "12345", true);
+    ::setenv("SC_HEIGHT_TIMEOUT", "12345", true);
     ::setenv("SC_HEIGHT_RPM", "99", true); 
     ::setenv("SC_TILT_RPM", "99", true); 
     ::setenv("SC_POS_RPM", "99", true); 
@@ -203,7 +209,9 @@ TEST_F(TestSeatCtrlApi, TestConfigEnv) {
     EXPECT_EQ(99, config.motor_height_rpm);
     EXPECT_EQ(99, config.motor_tilt_rpm);
     EXPECT_EQ(99, config.motor_pos_rpm);
-    EXPECT_EQ(12345, config.command_timeout);
+    EXPECT_EQ(12345, config.command_pos_timeout);
+    EXPECT_EQ(12345, config.command_tilt_timeout);
+    EXPECT_EQ(12345, config.command_height_timeout);
 
     EXPECT_EQ(false, config.debug_raw);  // invalid integer=0
     EXPECT_EQ(true, config.debug_verbose);
@@ -240,7 +248,9 @@ TEST_F(TestSeatCtrlApi, TestContext) {
     EXPECT_EQ(config.motor_height_rpm, ctx.config.motor_height_rpm);
     EXPECT_EQ(config.motor_tilt_rpm, ctx.config.motor_tilt_rpm);
     EXPECT_EQ(config.motor_pos_rpm, ctx.config.motor_pos_rpm);
-    EXPECT_EQ(config.command_timeout, ctx.config.command_timeout);
+    EXPECT_EQ(config.command_pos_timeout, ctx.config.command_pos_timeout);
+    EXPECT_EQ(config.command_tilt_timeout, ctx.config.command_tilt_timeout);
+    EXPECT_EQ(config.command_height_timeout, ctx.config.command_height_timeout);
     EXPECT_EQ(config.debug_ctl, ctx.config.debug_ctl);
     EXPECT_EQ(config.debug_raw, ctx.config.debug_raw);
     EXPECT_EQ(config.debug_stats, ctx.config.debug_stats);
@@ -599,25 +609,21 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     ctx.motor_height = initial_height; // can't start with MOTOR_POS_INVALID, as it needs another thread to change it
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
-    auto now_ts = get_ts();
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_pos, ctx.motor_pos) << "Must start from initial position: " << initial_pos;
 
-    EXPECT_GT(ctx.command_pos_ts, now_ts);
     EXPECT_EQ(target_pos, ctx.desired_position);
     EXPECT_EQ(MotorPosDirection::POS_INC, ctx.desired_pos_direction);
 
     EXPECT_EQ(0, seatctrl_set_tilt(&ctx, target_tilt)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_tilt, ctx.motor_tilt) << "Must start from initial tilt: " << initial_pos;
 
-    EXPECT_GT(ctx.command_tilt_ts, now_ts);
     EXPECT_EQ(target_tilt, ctx.desired_tilt);
     EXPECT_EQ(MotorTiltDirection::TILT_INC, ctx.desired_tilt_direction);
 
     EXPECT_EQ(0, seatctrl_set_height(&ctx, target_height)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_height, ctx.motor_height) << "Must start from initial height: " << initial_pos;
 
-    EXPECT_GT(ctx.command_height_ts, now_ts);
     EXPECT_EQ(target_height, ctx.desired_height);
     EXPECT_EQ(MotorHeightDirection::HEIGHT_INC, ctx.desired_height_direction);
 
@@ -627,6 +633,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
 
     // do actual move(s)...
     ctx.pos_running = true;
+    ctx.command_pos_ts = get_ts();
     for (auto pos = initial_pos-3; pos <= target_pos; pos++) {
         bool captured = false;
         if (pos == initial_pos-3) {
@@ -660,7 +667,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
                     << "Expected resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }
-        usleep(1 * 1000L);  // 1ms
+        usleep(10 * 1000L);  // 10ms
     }
 
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
@@ -674,6 +681,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
     ctx.tilt_running = true;
+    ctx.command_tilt_ts = get_ts();
     for (auto tilt = initial_tilt-3; tilt <= target_pos; tilt++) {
         bool captured = false;
         if (tilt == initial_tilt-3) {
@@ -707,7 +715,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
                     << "Expected resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }
-        usleep(1 * 1000L);  // 1ms
+        usleep(10 * 1000L);  // 10ms
     }
 
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
@@ -721,6 +729,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
     ctx.height_running = true;
+    ctx.command_height_ts = get_ts();
     for (auto height = initial_height-3; height <= target_height; height++) {
         bool captured = false;
         if (height == initial_height-3) {
@@ -754,7 +763,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopINC) {
                     << "Expected resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }
-        usleep(1 * 1000L);  // 1ms
+        usleep(10 * 1000L);  // 10ms
     }
 
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
@@ -808,25 +817,21 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     ctx.motor_height = initial_pos; // can't start with MOTOR_POS_INVALID, as it needs another thread to change it
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
-    auto now_ts = get_ts();
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_pos, ctx.motor_pos) << "Must start from initial position: " << initial_pos;
 
-    EXPECT_GT(ctx.command_pos_ts, now_ts);
     EXPECT_EQ(target_pos, ctx.desired_position);
     EXPECT_EQ(MotorPosDirection::POS_DEC, ctx.desired_pos_direction);
 
     EXPECT_EQ(0, seatctrl_set_tilt(&ctx, target_tilt)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_tilt, ctx.motor_tilt) << "Must start from initial tilt: " << initial_pos;
 
-    EXPECT_GT(ctx.command_tilt_ts, now_ts);
     EXPECT_EQ(target_tilt, ctx.desired_tilt);
     EXPECT_EQ(MotorTiltDirection::TILT_DEC, ctx.desired_tilt_direction);
 
     EXPECT_EQ(0, seatctrl_set_height(&ctx, target_height)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_height, ctx.motor_height) << "Must start from initial height: " << initial_pos;
 
-    EXPECT_GT(ctx.command_height_ts, now_ts);
     EXPECT_EQ(target_height, ctx.desired_height);
     EXPECT_EQ(MotorHeightDirection::HEIGHT_DEC, ctx.desired_height_direction);
 
@@ -836,6 +841,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
 
     // do actual move(s)...
     ctx.pos_running = true;
+    ctx.command_pos_ts = get_ts();
     for (auto pos = initial_pos+3; pos >= target_pos; pos--) {
         bool captured = false;
         if (pos == initial_pos+3) {
@@ -869,7 +875,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
                     << "Expected resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }
-        usleep(1 * 1000L);  // 1ms
+        usleep(10 * 1000L);  // 10ms
     }
 
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
@@ -883,6 +889,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
     ctx.tilt_running = true;
+    ctx.command_tilt_ts = get_ts();
     for (auto tilt = initial_tilt+3; tilt >= target_tilt; tilt--) {
         bool captured = false;
         if (tilt == initial_tilt+3) {
@@ -916,7 +923,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
                     << "Expected resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }
-        usleep(1 * 1000L);  // 1ms
+        usleep(10 * 1000L);  // 10ms
     }
 
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
@@ -930,6 +937,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
     ctx.height_running = true;
+    ctx.command_height_ts = get_ts();
     for (auto height = initial_height+3; height >= target_height; height--) {
         bool captured = false;
         if (height == initial_height+3) {
@@ -947,7 +955,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
         else {
             ctx.motor_height = height;
             // simulate stop @ threshold
-            if (height == 85) {
+            if (height == 14) {
                 testing::internal::CaptureStdout();
                 captured = true;
                 ctx.motor_height_mov_state = MotorHeightDirection::HEIGHT_OFF; 
@@ -963,7 +971,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopDEC) {
                     << "Expected resend command on auto stop:\n---\n" << output << "\n---";
             captured = false;
         }
-        usleep(1 * 1000L);  // 1ms
+        usleep(10 * 1000L);  // 10ms
     }
 
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
@@ -993,7 +1001,7 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
 
     SocketMock mock("/tmp/.test_seatctrl_api-ControlLoopTimeout.sock");
     EXPECT_EQ(0, seatctrl_default_config(&config));
-    config.command_timeout = timeout; // override to 50ms
+    config.command_pos_timeout = timeout; // override to 50ms
 
     EXPECT_EQ(-EINVAL, seatctrl_set_position(nullptr, 42)); // Test with invalid context
     EXPECT_EQ(-EINVAL, seatctrl_set_position(&ctx, 42)); // Test with unintialized context
@@ -1019,16 +1027,15 @@ TEST_F(TestSeatCtrlApi, ControlLoopTimeout) {
     ctx.motor_pos = initial_pos; // can't start with MOTOR_POS_INVALID, as it needs another thread to change it
     EXPECT_EQ(0, seatctrl_control_ecu12_loop(&ctx));
 
-    auto now_ts = get_ts();
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos)) << "May fail if socket mock is not connected..";
     EXPECT_EQ(initial_pos, ctx.motor_pos) << "Must start from initial position: " << initial_pos;
 
-    EXPECT_GT(ctx.command_pos_ts, now_ts);
     EXPECT_EQ(target_pos, ctx.desired_position);
     EXPECT_EQ(MotorPosDirection::POS_INC, ctx.desired_pos_direction);
 
     // do actual move(s)...
     ctx.pos_running = true;
+    ctx.command_pos_ts = get_ts();
     for (auto pos = initial_pos; pos <= target_pos; pos++) {
         if (pos == 85) {
             ctx.motor_pos_mov_state = MotorPosDirection::POS_OFF; 

@@ -23,6 +23,8 @@
 #include <stdint.h>
 #include <time.h>
 
+#include "CAN.h"
+
 //////////////////////// SocketCanMock CAN_Read and CAN_Write callbacks ////////////////
 
 bool _sae_verbose = false; // verbose dumps from sim loop
@@ -40,6 +42,25 @@ bool _sae_all_motors = false;
 // external declarations
 extern FILE* sim_log;
 extern void fprintf_hex(FILE* fp, const void* buf, ssize_t len);
+
+// maps: MotorDirection enum
+enum { MotorPosDirection_OFF=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE, 
+       MotorPosDirection_DEC=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE,
+       MotorPosDirection_INC=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, 
+       MotorPosDirection_INV=CAN_SECU2_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE };
+enum { MotorTiltDirection_OFF=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_OFF_CHOICE,
+       MotorTiltDirection_DEC=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_DEC_CHOICE, 
+       MotorTiltDirection_INC=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_INC_CHOICE,
+       MotorTiltDirection_INV=CAN_SECU2_CMD_1_MOTOR3_MANUAL_CMD_INV_CHOICE };
+// motor in real seat is installed in the opposite direction for tilt
+enum { RecMotorTiltDirection_OFF=CAN_SECU2_STAT_MOTOR3_MOV_STATE_OFF_CHOICE,
+       RecMotorTiltDirection_DEC=CAN_SECU2_STAT_MOTOR3_MOV_STATE_DEC_CHOICE, 
+       RecMotorTiltDirection_INC=CAN_SECU2_STAT_MOTOR3_MOV_STATE_INC_CHOICE,
+       RecMotorTiltDirection_INV=CAN_SECU2_STAT_MOTOR3_MOV_STATE_DEF_CHOICE };
+enum { MotorHeightDirection_OFF=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_OFF_CHOICE,
+       MotorHeightDirection_DEC=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_DEC_CHOICE,
+       MotorHeightDirection_INC=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INC_CHOICE, 
+       MotorHeightDirection_INV=CAN_SECU1_CMD_1_MOTOR1_MANUAL_CMD_INV_CHOICE };
 
 const char* sae_lrn_state(int lrn) {
     switch (lrn) {
