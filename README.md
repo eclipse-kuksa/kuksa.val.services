@@ -1,5 +1,20 @@
 # KUKSA.VAL.services
 
+## Use of this repository is deprecated
+
+Parts of this repository has been migrated to the [eclipse-kuksa](https://github.com/eclipse-kuksa) Github organization as described below. This repository is planned to be archived in the long term.
+Note that not everything in this repository has been migrated,
+some parts are considered obsolete and are not planned for migration.
+If you are missing something please add an issue here or in the new repositories.
+
+Service |  New Location
+----------|-------------------------
+HVAC Service | https://github.com/eclipse-kuksa/kuksa-incubation/hvac_service
+Seat Service | https://github.com/eclipse-kuksa/kuksa-incubation/seat_service
+Mock Service | https://github.com/eclipse-kuksa/kuksa-mock-provider
+
+## Content
+
 - [KUKSA.VAL.services](#kuksavalservices)
   - [Overview](#overview)
   - [Contribution](#contribution)
@@ -10,7 +25,7 @@
 
 ## Overview
 
-This repository provides you a set of example **vehicle services** showing how to define and implement these important pieces of the **Eclipse KUKSA Vehicle Abstraction Layer (VAL)**. 
+This repository provides you a set of example **vehicle services** showing how to define and implement these important pieces of the **Eclipse KUKSA Vehicle Abstraction Layer (VAL)**.
 [KUKSA.val](https://github.com/eclipse/kuksa.val) is offering a *Vehicle API*, which is an abstraction of vehicle data and functions to be used by *Vehicle Apps*.
 Vehicle data is provided in form of a data model, which is accessible via the [KUKSA.val Databroker](https://github.com/eclipse/kuksa.val/tree/master/kuksa_databroker).
 Vehicle functions are made available by a set of so-called *vehicle services* (short: *vservice*).
@@ -22,7 +37,7 @@ It currently consists of
 * a simple example [HVAC service](./hvac_service) written in Python and
 * a more complex example [seat control service](./seat_service) written in C/C++.
 * a [mock service](./mock_service/) written in Python to define execute mocking behavior defined in a Python-based DSL
-  
+
 More elaborate or completely differing implementations are target of "real world grown" projects.
 
 
