@@ -52,16 +52,32 @@ public:
 
     int GetSeatPosition() override;
     SetResult SetSeatPosition(int positionInPercent) override;
+    int GetSeatTilt() override;
+    SetResult SetSeatTilt(int positionInPercent) override;
+    int GetSeatHeight() override;
+    SetResult SetSeatHeight(int positionInPercent) override;
 
     void SubscribePosition(std::function<void(int)> cb) override {
         if (debug) std::cerr << LOG_FN << "setting callback: " << cb.target_type().name() << std::endl;
         cb_ = cb;
     }
 
+    void SubscribeTilt(std::function<void(int)> cb) override {
+        if (debug) std::cerr << LOG_FN << "setting callback: " << cb.target_type().name() << std::endl;
+        cb_tilt_ = cb;
+    }
+
+    void SubscribeHeight(std::function<void(int)> cb) override {
+        if (debug) std::cerr << LOG_FN << "setting callback: " << cb.target_type().name() << std::endl;
+        cb_height_ = cb;
+    }
+
 private:
     seatctrl_context_t ctx_;
     std::string can_if_name_;
     std::function<void(int)> cb_;
+    std::function<void(int)> cb_tilt_;
+    std::function<void(int)> cb_height_;
     static void seatctrl_event_cb(SeatCtrlEvent event, int value, void* user_data);
 };
 
@@ -79,6 +95,8 @@ std::shared_ptr<SeatAdjuster> SeatAdjuster::createInstance(const std::string& ca
 SeatAdjusterImpl::SeatAdjusterImpl(const std::string& can_if_name)
     : can_if_name_{can_if_name}
     , cb_{nullptr}
+    , cb_tilt_{nullptr}
+    , cb_height_{nullptr}
 {
     error_t rc;
     // init
@@ -145,6 +163,40 @@ int SeatAdjusterImpl::GetSeatPosition() {
 }
 
 /**
+ * @brief Gets last received seat position (motor1).
+ * 
+ * @return int seat position in percents [0..100] or SEAT_POSITION_INVALID(-1) if position not known/available
+ */
+int SeatAdjusterImpl::GetSeatTilt() {
+    // Gets last repoted seat Tilt, value 255=invalid
+    auto pos = seatctrl_get_tilt(&ctx_);
+    if (pos == MOTOR_POS_INVALID || pos < 0) { // (pos < 0) -> SEAT_CTRL_ERR_XXX
+        pos = SEAT_POSITION_INVALID;  // considered as invalid value
+    }
+    if (debug) {
+        std::cerr << LOG_FN << "-> " << pos << std::endl;
+    }
+    return pos;
+}
+
+/**
+ * @brief Gets last received seat position (motor1).
+ * 
+ * @return int seat position in percents [0..100] or SEAT_POSITION_INVALID(-1) if position not known/available
+ */
+int SeatAdjusterImpl::GetSeatHeight() {
+    // Gets last repoted seat height, value 255=invalid
+    auto pos = seatctrl_get_height(&ctx_);
+    if (pos == MOTOR_POS_INVALID || pos < 0) { // (pos < 0) -> SEAT_CTRL_ERR_XXX
+        pos = SEAT_POSITION_INVALID;  // considered as invalid value
+    }
+    if (debug) {
+        std::cerr << LOG_FN << "-> " << pos << std::endl;
+    }
+    return pos;
+}
+
+/**
  * @brief Set absolute Seat position (%) asynchronously.
  * 
  * @param positionInPercent position [0..100]
@@ -153,6 +205,72 @@ int SeatAdjusterImpl::GetSeatPosition() {
 SetResult SeatAdjusterImpl::SetSeatPosition(int positionInPercent) {
     std::cerr << LOG_FN << "setting seat position to " << positionInPercent << "%" << std::endl;
     error_t rc = seatctrl_set_position(&ctx_, positionInPercent);
+    if (rc == SEAT_CTRL_OK) {
+        return SetResult::OK;
+    }
+    std::cerr << LOG_FN << "setting seat position failed: " << rc << std::endl;
+    switch (rc) {
+    case SEAT_CTRL_ERR:
+        return SetResult::UNSPECIFIC_ERROR;
+    case SEAT_CTRL_ERR_NO_CAN:
+        return SetResult::NO_CAN;
+    case SEAT_CTRL_ERR_IFR:
+        return SetResult::CAN_IF_INDEX_ERROR;
+    case SEAT_CTRL_ERR_CAN_BIND:
+        return SetResult::CAN_BIND_ERROR;
+    case SEAT_CTRL_ERR_CAN_IO:
+        return SetResult::CAN_IO_ERROR;
+    case SEAT_CTRL_ERR_INVALID:
+        return SetResult::INVALID_ARG;
+    case SEAT_CTRL_ERR_NO_FRAMES:
+        return SetResult::NO_FRAMES;
+    default:
+        return SetResult::UNSPECIFIC_ERROR;
+    }
+}
+
+/**
+ * @brief Set absolute Seat position (%) asynchronously.
+ * 
+ * @param positionInPercent position [0..100]
+ * @return SetResult SetResult::OK if seat movement has started or mapped error from seatctrl_set_position()
+ */
+SetResult SeatAdjusterImpl::SetSeatTilt(int positionInPercent) {
+    std::cerr << LOG_FN << "setting seat position to " << positionInPercent << "%" << std::endl;
+    error_t rc = seatctrl_set_tilt(&ctx_, positionInPercent);
+    if (rc == SEAT_CTRL_OK) {
+        return SetResult::OK;
+    }
+    std::cerr << LOG_FN << "setting seat position failed: " << rc << std::endl;
+    switch (rc) {
+    case SEAT_CTRL_ERR:
+        return SetResult::UNSPECIFIC_ERROR;
+    case SEAT_CTRL_ERR_NO_CAN:
+        return SetResult::NO_CAN;
+    case SEAT_CTRL_ERR_IFR:
+        return SetResult::CAN_IF_INDEX_ERROR;
+    case SEAT_CTRL_ERR_CAN_BIND:
+        return SetResult::CAN_BIND_ERROR;
+    case SEAT_CTRL_ERR_CAN_IO:
+        return SetResult::CAN_IO_ERROR;
+    case SEAT_CTRL_ERR_INVALID:
+        return SetResult::INVALID_ARG;
+    case SEAT_CTRL_ERR_NO_FRAMES:
+        return SetResult::NO_FRAMES;
+    default:
+        return SetResult::UNSPECIFIC_ERROR;
+    }
+}
+
+/**
+ * @brief Set absolute Seat position (%) asynchronously.
+ * 
+ * @param positionInPercent position [0..100]
+ * @return SetResult SetResult::OK if seat movement has started or mapped error from seatctrl_set_position()
+ */
+SetResult SeatAdjusterImpl::SetSeatHeight(int positionInPercent) {
+    std::cerr << LOG_FN << "setting seat position to " << positionInPercent << "%" << std::endl;
+    error_t rc = seatctrl_set_height(&ctx_, positionInPercent);
     if (rc == SEAT_CTRL_OK) {
         return SetResult::OK;
     }
@@ -192,7 +310,7 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
         return;
     }
 
-    if (event == SeatCtrlEvent::Motor1Pos) {
+    if (event == SeatCtrlEvent::MotorPos) {
         if (user_data != nullptr) {
             SeatAdjusterImpl* seat_adjuster = static_cast<SeatAdjusterImpl*>(user_data);
             if (seat_adjuster->cb_ != nullptr) {
@@ -207,6 +325,56 @@ void SeatAdjusterImpl::seatctrl_event_cb(SeatCtrlEvent event, int value, void* u
             } else {
                 if (!cb_null_dumped) {
                     std::cerr << prefix << "cb_ is NULL!" << std::endl;
+                }
+                cb_null_dumped = true;
+            }
+        } else {
+            if (debug) {
+                std::cerr << prefix << "user_data is NULL!" << std::endl;
+            }
+        }
+    }
+
+    if (event == SeatCtrlEvent::MotorTilt) {
+        if (user_data != nullptr) {
+            SeatAdjusterImpl* seat_adjuster = static_cast<SeatAdjusterImpl*>(user_data);
+            if (seat_adjuster->cb_tilt_ != nullptr) {
+                if (debug > 1) { // consider this verbose
+                    std::cerr << prefix << "calling *" << seat_adjuster->cb_tilt_.target_type().name() << "(" << value << ")"
+                            << std::endl;
+                }
+                // adjust scaling for value to match GetSeatTilt()
+                int pos = (value == MOTOR_POS_INVALID) ? -1 : value;
+                seat_adjuster->cb_tilt_(pos);
+                cb_null_dumped = false;
+            } else {
+                if (!cb_null_dumped) {
+                    std::cerr << prefix << "cb_tilt_ is NULL!" << std::endl;
+                }
+                cb_null_dumped = true;
+            }
+        } else {
+            if (debug) {
+                std::cerr << prefix << "user_data is NULL!" << std::endl;
+            }
+        }
+    }
+
+    if (event == SeatCtrlEvent::MotorHeight) {
+        if (user_data != nullptr) {
+            SeatAdjusterImpl* seat_adjuster = static_cast<SeatAdjusterImpl*>(user_data);
+            if (seat_adjuster->cb_height_ != nullptr) {
+                if (debug > 1) { // consider this verbose
+                    std::cerr << prefix << "calling *" << seat_adjuster->cb_height_.target_type().name() << "(" << value << ")"
+                            << std::endl;
+                }
+                // adjust scaling for value to match GetSeatHeight()
+                int pos = (value == MOTOR_POS_INVALID) ? -1 : value;
+                seat_adjuster->cb_height_(pos);
+                cb_null_dumped = false;
+            } else {
+                if (!cb_null_dumped) {
+                    std::cerr << prefix << "cb_height_ is NULL!" << std::endl;
                 }
                 cb_null_dumped = true;
             }

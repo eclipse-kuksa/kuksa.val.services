@@ -65,8 +65,10 @@ class SeatCtrlIntegrationTest : public ::testing::Test {
     void ResetEnv() {
         // make sure environmet variables are unset
         ::unsetenv("SC_CAN");
-        ::unsetenv("SC_TIMEOUT");
-        ::unsetenv("SC_RPM");
+        ::unsetenv("SC_POS_TIMEOUT");
+        ::unsetenv("SC_HEIGHT_RPM");
+        ::unsetenv("SC_TILT_RPM");
+        ::unsetenv("SC_POS_RPM");
         ::unsetenv("SC_RAW");
         ::unsetenv("SC_VERBOSE");
         ::unsetenv("SC_STAT");
@@ -88,14 +90,18 @@ TEST_F(SeatCtrlIntegrationTest, TestDemoPositions) {
     std::cout << "[TestDemoPositions] Started ..." << std::endl;
 
     // time in ms to wait for seatctrl_set_position()
-    const int wait_timeout = 10000;
+    const int wait_timeout = 150000;
 
     int wait_time;
     int target_pos;
 
     ::setenv("SC_CAN", "cansim-TestDemoPositions", true);
-    ::setenv("SC_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
-    ::setenv("SC_RPM", "80", true); // keep it within +/- 1 increments
+    ::setenv("SC_POS_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_TILT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_HEIGHT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_HEIGHT_RPM", "80", true); // keep it within +/- 1 increments
+    ::setenv("SC_TILT_RPM", "45", true); // keep it within +/- 1 increments
+    ::setenv("SC_POS_RPM", "45", true); // keep it within +/- 1 increments
     ::setenv("SC_CTL", "1", true);
     ::setenv("SC_STAT", "0", true);
 
@@ -107,7 +113,7 @@ TEST_F(SeatCtrlIntegrationTest, TestDemoPositions) {
 
     target_pos = 50;
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos));
-    printf("### Waiting %d sec for reaching desired position ...\n", wait_timeout);
+    printf("### Waiting %d ms for reaching desired_position ...\n", wait_timeout);
     for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
         ::usleep(1000L);  // wait 1ms
         if (seatctrl_get_position(&ctx) >= target_pos) break;
@@ -117,8 +123,36 @@ TEST_F(SeatCtrlIntegrationTest, TestDemoPositions) {
     EXPECT_EQ(target_pos, seatctrl_get_position(&ctx)) << "Expected position " << target_pos << " not reached!";
     EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction);
-    EXPECT_EQ(MotorDirection::OFF, ctx.motor1_mov_state);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.desired_pos_direction);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.motor_pos_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_tilt(&ctx, target_pos));
+    printf("### Waiting %d ms for reaching desired_tilt ...\n", wait_timeout);
+    for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
+        ::usleep(1000L);  // wait 1ms
+        if (seatctrl_get_tilt(&ctx) >= target_pos) break;
+    }
+    ::usleep(100 * 1000L); // give ctl time to read next can frame to update motor1_mov_state
+
+    EXPECT_EQ(target_pos, seatctrl_get_tilt(&ctx)) << "Expected tilt " << target_pos << " not reached!";
+    EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_tilt);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.desired_tilt_direction);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.motor_tilt_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_height(&ctx, target_pos));
+    printf("### Waiting %d ms for reaching desired_height ...\n", wait_timeout);
+    for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
+        ::usleep(1000L);  // wait 1ms
+        if (seatctrl_get_height(&ctx) >= target_pos) break;
+    }
+    ::usleep(100 * 1000L); // give ctl time to read next can frame to update motor1_mov_state
+
+    EXPECT_EQ(target_pos, seatctrl_get_height(&ctx)) << "Expected height " << target_pos << " not reached!";
+    EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_height);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.desired_height_direction);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.motor_height_mov_state);
 
     target_pos = 30;
     // test threshold stop (14):
@@ -132,15 +166,57 @@ TEST_F(SeatCtrlIntegrationTest, TestDemoPositions) {
     EXPECT_EQ(target_pos, seatctrl_get_position(&ctx)) << "Expected position " << target_pos << " not reached!";
     EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction);
-    EXPECT_EQ(MotorDirection::OFF, ctx.motor1_mov_state);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.desired_pos_direction);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.motor_pos_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_tilt(&ctx, target_pos));
+    printf("### Waiting %d ms for reaching desired_tilt ...\n", wait_timeout);
+    for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
+        ::usleep(1000L);  // wait 1ms
+        if (seatctrl_get_tilt(&ctx) == target_pos) break;
+    }
+    ::usleep(100 * 1000L); // give ctl time to read next can frame to update motor1_mov_state
+
+    EXPECT_EQ(target_pos, seatctrl_get_tilt(&ctx)) << "Expected tilt " << target_pos << " not reached!";
+    EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_tilt);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.desired_tilt_direction);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.motor_tilt_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_height(&ctx, target_pos));
+    printf("### Waiting %d ms for reaching desired_height ...\n", wait_timeout);
+    for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
+        ::usleep(1000L);  // wait 1ms
+        if (seatctrl_get_height(&ctx) == target_pos) break;
+    }
+    ::usleep(100 * 1000L); // give ctl time to read next can frame to update motor1_mov_state
+
+    EXPECT_EQ(target_pos, seatctrl_get_height(&ctx)) << "Expected height " << target_pos << " not reached!";
+    EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_height);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.desired_height_direction);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.motor_height_mov_state);
 
     // test setting same position
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos));
     EXPECT_EQ(target_pos, seatctrl_get_position(&ctx)) << "Expected position " << target_pos << " not reached!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction);
-    EXPECT_EQ(MotorDirection::OFF, ctx.motor1_mov_state);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.desired_pos_direction);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.motor_pos_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_tilt(&ctx, target_pos));
+    EXPECT_EQ(target_pos, seatctrl_get_tilt(&ctx)) << "Expected tilt " << target_pos << " not reached!";
+    EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_tilt);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.desired_tilt_direction);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.motor_tilt_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_height(&ctx, target_pos));
+    EXPECT_EQ(target_pos, seatctrl_get_height(&ctx)) << "Expected height " << target_pos << " not reached!";
+    EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_height);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.desired_height_direction);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.motor_height_mov_state);
 
     ::usleep(100 * 1000L);
 
@@ -160,8 +236,10 @@ TEST_F(SeatCtrlIntegrationTest, TestFastMove) {
     int target_pos;
 
     // sdv::test::mock::SocketCanMock::instance().StartMocking(-1, can_read_cb, can_write_cb);
-    ::setenv("SC_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
-    ::setenv("SC_RPM", "254", true);
+    ::setenv("SC_POS_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_TILT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_HEIGHT_TIMEOUT", std::to_string(wait_timeout).c_str(), true);
+    ::setenv("SC_POS_RPM", "254", true);
     ::setenv("SC_CTL", "0", true);
     ::setenv("SC_STAT", "0", true);
     ::setenv("SC_CAN", "cansim-TestFastMove", true);
@@ -180,7 +258,7 @@ TEST_F(SeatCtrlIntegrationTest, TestFastMove) {
 
     target_pos = 99;
     EXPECT_EQ(0, seatctrl_set_position(&ctx, target_pos));
-    printf("### Waiting %d sec for reaching desired position ...\n", wait_timeout);
+    printf("### Waiting %d ms for reaching desired_position ...\n", wait_timeout);
     for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
         ::usleep(1000L);  // wait 1ms
         if (seatctrl_get_position(&ctx) >= target_pos) break;
@@ -190,8 +268,8 @@ TEST_F(SeatCtrlIntegrationTest, TestFastMove) {
     EXPECT_LE(target_pos, seatctrl_get_position(&ctx)) << "Expected position " << target_pos << " not reached!";
     EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction);
-    EXPECT_EQ(MotorDirection::OFF, ctx.motor1_mov_state);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.desired_pos_direction);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.motor_pos_mov_state);
 
     target_pos = 1;
     // test threshold stop (14) and overshooting position
@@ -205,8 +283,8 @@ TEST_F(SeatCtrlIntegrationTest, TestFastMove) {
     EXPECT_GE(target_pos, seatctrl_get_position(&ctx)) << "Expected position " << target_pos << " not reached!";
     EXPECT_LE(wait_time, wait_timeout) << "Set timed out after " << wait_time << " ms!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction);
-    EXPECT_EQ(MotorDirection::OFF, ctx.motor1_mov_state);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.desired_pos_direction);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.motor_pos_mov_state);
 
     EXPECT_EQ(0, seatctrl_close(&ctx));
     mutex.unlock();
@@ -222,7 +300,9 @@ TEST_F(SeatCtrlIntegrationTest, TestMoveTimeout) {
     int target_pos;
 
     ::setenv("SC_CAN", "cansim-TestMoveTimeout", true);
-    ::setenv("SC_TIMEOUT", "500", true); // 500ms
+    ::setenv("SC_POS_TIMEOUT", "500", true); // 500ms
+    ::setenv("SC_TILT_TIMEOUT", "500", true); // 500ms
+    ::setenv("SC_HEIGHT_TIMEOUT", "500", true); // 500ms
     ::setenv("SC_RPM", "30", true);
     ::setenv("SC_CTL", "0", true);
     ::setenv("SC_STAT", "0", true);
@@ -244,8 +324,30 @@ TEST_F(SeatCtrlIntegrationTest, TestMoveTimeout) {
     ::usleep(100 * 1000L); // give ctl time to read next can frame to update motor1_mov_state
     EXPECT_NE(target_pos, seatctrl_get_position(&ctx)) << "Expected position " << target_pos << " should not be reached!";
     EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_position);
-    EXPECT_EQ(MotorDirection::OFF, ctx.desired_direction);
-    EXPECT_EQ(MotorDirection::OFF, ctx.motor1_mov_state);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.desired_pos_direction);
+    EXPECT_EQ(MotorPosDirection::POS_OFF, ctx.motor_pos_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_tilt(&ctx, target_pos));
+    for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
+        if (seatctrl_get_tilt(&ctx) >= target_pos) break;
+        ::usleep(1000);  // wait 1ms
+    }
+    ::usleep(100 * 1000L); // give ctl time to read next can frame to update motor1_mov_state
+    EXPECT_NE(target_pos, seatctrl_get_tilt(&ctx)) << "Expected tilt " << target_pos << " should not be reached!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_tilt);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.desired_tilt_direction);
+    EXPECT_EQ(MotorTiltDirection::TILT_OFF, ctx.motor_tilt_mov_state);
+
+    EXPECT_EQ(0, seatctrl_set_height(&ctx, target_pos));
+    for (wait_time = 0; wait_time <= wait_timeout; wait_time++) {
+        if (seatctrl_get_height(&ctx) >= target_pos) break;
+        ::usleep(1000);  // wait 1ms
+    }
+    ::usleep(100 * 1000L); // give ctl time to read next can frame to update motor1_mov_state
+    EXPECT_NE(target_pos, seatctrl_get_height(&ctx)) << "Expected height " << target_pos << " should not be reached!";
+    EXPECT_EQ(MOTOR_POS_INVALID, ctx.desired_height);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.desired_height_direction);
+    EXPECT_EQ(MotorHeightDirection::HEIGHT_OFF, ctx.motor_height_mov_state);
 
     EXPECT_EQ(0, seatctrl_close(&ctx));
     mutex.unlock();
@@ -407,7 +509,9 @@ TEST_F(SeatCtrlIntegrationTest, ExtraCoverage) {
 
     // enable all posible debugs for code coverage...
     ::setenv("SC_CAN", "vcan123456789abcef", true); // invalid length, max 16
-    ::setenv("SC_TIMEOUT", "50", true);
+    ::setenv("SC_POS_TIMEOUT", "50", true);
+    ::setenv("SC_TILT_TIMEOUT", "50", true);
+    ::setenv("SC_HEIGHT_TIMEOUT", "50", true);
     ::setenv("SC_RPM", "1", true);
     ::setenv("SC_CTL", "1", true);
     ::setenv("SC_STAT", "1", true);

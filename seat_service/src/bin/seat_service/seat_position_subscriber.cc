@@ -22,6 +22,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
+#include <mutex>
 
 #include "kuksa_client.h"
 #include "seat_adjuster.h"
@@ -31,12 +32,15 @@ extern int debug;
 namespace sdv {
 namespace seat_service {
 
+std::mutex seat_adjuster_mutex;
+
 SeatPositionSubscriber::SeatPositionSubscriber(std::shared_ptr<SeatAdjuster> seat_adjuster,
                                                std::shared_ptr<broker_feeder::KuksaClient> kuksa_client,
-                                               const std::string& seat_pos_name)
+                                               const std::string& seat_pos_name, const sdv::seat_service::posSub& pos)
     : seat_adjuster_(seat_adjuster)
     , kuksa_client_(kuksa_client)
     , seat_pos_name_(seat_pos_name)
+    , pos_(pos)
     , running_(false)
 {
     /* Define datapoints (metadata) of seat service */
@@ -98,7 +102,43 @@ void SeatPositionSubscriber::Run() {
 
                             int position_in_percent = (position + 5) / 10;
 
-                            seat_adjuster_->SetSeatPosition(position_in_percent);
+                            std::lock_guard<std::mutex> guard(seat_adjuster_mutex);
+                            switch(pos_){
+                                case posSub::POSITION:
+                                    seat_adjuster_->SetSeatPosition(position_in_percent);
+                                    break;
+                                case posSub::TILT:
+                                    seat_adjuster_->SetSeatTilt(position_in_percent);
+                                    break;
+                                case posSub::HEIGHT:
+                                    seat_adjuster_->SetSeatHeight(position_in_percent);
+                                    break;
+                            }
+                            break;
+                        }
+                        case sdv::databroker::v1::Datapoint::ValueCase::kFloatValue: {
+                            auto position = static_cast<unsigned int>(actuator_target.float_());
+                            std::cout << "SeatPositionSubscriber: Got actuator target: " << position << std::endl;
+                            if (position < 0 || 1000 < position) {
+                                std::cout << "Invalid position" << std::endl;
+                                continue;
+                            }
+
+                            int position_in_percent = (position + 5) / 10;
+
+                            std::lock_guard<std::mutex> guard(seat_adjuster_mutex);
+                            switch(pos_){
+                                case posSub::POSITION:
+                                    seat_adjuster_->SetSeatPosition(position_in_percent);
+                                    break;
+                                case posSub::TILT:
+                                    seat_adjuster_->SetSeatTilt(position_in_percent);
+                                    break;
+                                case posSub::HEIGHT:
+                                    seat_adjuster_->SetSeatHeight(position_in_percent);
+                                    break;
+                            }
+                            break;
                         }
                     }
                 }

@@ -90,7 +90,7 @@ cmake --build . -j $(nproc)
 cmake --install .
 set +e
 
-# Ensure release is sripped
+# Ensure release is stripped
 if [ "$TARGET_ARCH" = "aarch64" ]; then
 	STRIP="$(which aarch64-linux-gnu-strip)"
 else

@@ -20,6 +20,7 @@ if (SDV_CMAKE_DEBUG)
   message("---- CANSIM PROJECT: ${PROJECT_NAME}")
   message("---- CANSIM CMAKE_SOURCE_DIR = ${CMAKE_SOURCE_DIR}")
   message("----  CMAKE_CURRENT_SOURCE_DIR = ${CMAKE_CURRENT_SOURCE_DIR}")
+  message("----  CMAKE_CURRENT_BINARY_DIR = ${CMAKE_CURRENT_BINARY_DIR}")
   message("----  PROJECT_SOURCE_DIR = ${PROJECT_SOURCE_DIR}")
 endif()
 
@@ -31,8 +32,9 @@ add_library(cansim SHARED
 
 target_include_directories(cansim
   PUBLIC
-    "${CMAKE_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}"
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/../../generated
 )
 
 # fail compilation on any warning
@@ -45,6 +47,7 @@ set(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} ${GCC_SANITIZE_FLAGS}")
 set_property(TARGET cansim PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 target_link_libraries(cansim
+  generated
   pthread
   dl
 )
@@ -60,7 +63,7 @@ target_compile_options(cansim_test PRIVATE -Werror -Wall -Wextra -pedantic)
 
 target_include_directories(cansim_test
   PUBLIC
-    "${CMAKE_CURRENT_SOURCE_DIR}"
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_link_libraries(cansim_test

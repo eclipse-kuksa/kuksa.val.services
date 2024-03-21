@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
 */
         uint8_t can_buffer_rx[16];
         const uint8_t can_buffer_tx[16] = { // 705#02.1E.00.00.00.00.00.00
-            0x05, 0x07, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x96, 0x1e, 0x50, 0x1e, 0x50, 0x00, 0x00, 0x00
+            0x07, 0x05, 0x00, 0x00, 0x08, 0x00, 0x00, 0x00, 0x96, 0x1e, 0x50, 0x1e, 0x50, 0x00, 0x00, 0x00
         };
         struct can_frame frame;
 
@@ -111,14 +111,14 @@ int main(int argc, char* argv[])
         }
 
         for (int r=0; r<255; r+=10) {
-            ctx->sae._sim_motor1_rpm = r;
+            ctx->sae._sim_motor_pos_rpm = r;
             int inc = sae_pos_increment(&ctx->sae);
             printf("  rpm(%3d): total: %dms, inc:0x%0x (%f)\n", r, sae_estimate_move_time(r), inc, inc / (double)(1<<POS_SHIFT));
         }
 
         memset(&frame, 0, sizeof(frame));
         frame.can_dlc = 8;
-        frame.can_id = 0x705;
+        frame.can_id = 0x707;
         rc = write(s, &can_buffer_tx, sizeof(can_buffer_tx));
         if (rc == -1) {
             perror("write:");

@@ -86,7 +86,7 @@ const sdv::broker_feeder::DatapointConfiguration metadata_3 {
 */
 
 SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std::shared_ptr<broker_feeder::KuksaClient> collector_client,
-                               std::string& seat_pos_name, DatapointConfiguration&& dpConfig)
+                               std::string& seat_pos_name, std::string& seat_tilt_name, std::string& seat_height_name, DatapointConfiguration&& dpConfig)
     : seat_adjuster_(seat_adjuster)
 {
     /* Init feeder
@@ -95,6 +95,7 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std:
 
     /* Internally subscribe to signals to be fed to broker
      */
+    // handle forward motor position
     seat_adjuster_->SubscribePosition([this, seat_pos_name](int position_in_percent) {
         const std::string self = "[SeatSvc][SeatDataFeeder] ";
         if (debug > 1) { // require more verbose for extra dump
@@ -126,6 +127,73 @@ SeatDataFeeder::SeatDataFeeder(std::shared_ptr<SeatAdjuster> seat_adjuster, std:
             }
         }
         broker_feeder_->FeedValue(seat_pos_name, datapoint);
+    });
+
+    // handle tilt motor position
+    seat_adjuster_->SubscribeTilt([this, seat_tilt_name](int position_in_percent) {
+        const std::string self = "[SeatSvc][SeatDataFeeder] ";
+        if (debug > 1) { // require more verbose for extra dump
+            std::cout << self << "got pos: " << position_in_percent << "%" << std::endl;
+        }
+        Datapoint datapoint;
+        if (0 <= position_in_percent && position_in_percent <= 100) {
+            datapoint.set_float_value(static_cast<float>(position_in_percent * 10)); // scale up to [0..1000]
+        } else
+        if (position_in_percent == -1) { // -1 replaces MOTOR_POS_INVALID in SeatAdjusterImpl::seatctrl_event_cb()
+            datapoint.set_failure_value(Datapoint_Failure::Datapoint_Failure_NOT_AVAILABLE);
+        } else {
+            // values > 100 are invalid
+            datapoint.set_failure_value(Datapoint_Failure::Datapoint_Failure_INVALID_VALUE);
+        }
+        if (debug) {
+            if (datapoint.has_failure_value()) {
+                std::cout << self << "pos: " << position_in_percent << "% -> "
+                    << "FeedValue(" << seat_tilt_name << ", failure:"
+                    << Datapoint_Failure_Name(datapoint.failure_value()) << ")" << std::endl;
+            } else
+            if (datapoint.has_float_value()) {
+                std::cout << self << "pos: " << position_in_percent << "% -> "
+                    << "FeedValue(" << seat_tilt_name << ", float:" << datapoint.float_value() << ")" << std::endl;
+            } else {
+                std::cout << self << "pos: " << position_in_percent << "% -> "
+                    << "FeedValue(" << seat_tilt_name << ", unknown)" << std::endl;
+            }
+        }
+        broker_feeder_->FeedValue(seat_tilt_name, datapoint);
+    });
+
+    // handle height motor position
+    seat_adjuster_->SubscribeHeight([this, seat_height_name](int position_in_percent) {
+        const std::string self = "[SeatSvc][SeatDataFeeder] ";
+        if (debug > 1) { // require more verbose for extra dump
+            std::cout << self << "got pos: " << position_in_percent << "%" << std::endl;
+        }
+        Datapoint datapoint;
+        // NOTE: we are using uint32 value as grpc does not have smaller integers
+        if (0 <= position_in_percent && position_in_percent <= 100) {
+            datapoint.set_uint32_value(position_in_percent * 10); // scale up to [0..1000]
+        } else
+        if (position_in_percent == -1) { // -1 replaces MOTOR_POS_INVALID in SeatAdjusterImpl::seatctrl_event_cb()
+            datapoint.set_failure_value(Datapoint_Failure::Datapoint_Failure_NOT_AVAILABLE);
+        } else {
+            // values > 100 are invalid
+            datapoint.set_failure_value(Datapoint_Failure::Datapoint_Failure_INVALID_VALUE);
+        }
+        if (debug) {
+            if (datapoint.has_failure_value()) {
+                std::cout << self << "pos: " << position_in_percent << "% -> "
+                    << "FeedValue(" << seat_height_name << ", failure:"
+                    << Datapoint_Failure_Name(datapoint.failure_value()) << ")" << std::endl;
+            } else
+            if (datapoint.has_uint32_value()) {
+                std::cout << self << "pos: " << position_in_percent << "% -> "
+                    << "FeedValue(" << seat_height_name << ", uint32:" << datapoint.uint32_value() << ")" << std::endl;
+            } else {
+                std::cout << self << "pos: " << position_in_percent << "% -> "
+                    << "FeedValue(" << seat_height_name << ", unknown)" << std::endl;
+            }
+        }
+        broker_feeder_->FeedValue(seat_height_name, datapoint);
     });
 }
 void SeatDataFeeder::Run() { broker_feeder_->Run(); }

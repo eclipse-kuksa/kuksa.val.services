@@ -26,8 +26,12 @@ seatctrl_config_t config = {
     true,
     true,
     true,
-    DEFAULT_OPERATION_TIMEOUT,
-    DEFAULT_RPM
+    DEFAULT_POS_OPERATION_TIMEOUT,
+    DEFAULT_TILT_OPERATION_TIMEOUT,
+    DEFAULT_HEIGHT_OPERATION_TIMEOUT,
+    DEFAULT_HEIGHT_RPM,
+    DEFAULT_TILT_RPM,
+    DEFAULT_POS_RPM
 };
 
 /*
@@ -49,7 +53,7 @@ seatctrl_context_t ctx;
  * @param position
  */
 void pos_cb(SeatCtrlEvent event, int value, void* ctx) {
-    if (event == SeatCtrlEvent::Motor1Pos) {
+    if (event == SeatCtrlEvent::MotorPos) {
         printf("****** motor1 pos changed: %3d%%, ctx:%p\n", value, ctx);
     } else
     if (event == SeatCtrlEvent::CanError) {

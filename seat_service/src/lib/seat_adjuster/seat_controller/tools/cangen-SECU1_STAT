@@ -25,6 +25,6 @@ CAN=$1
 TIMEOUT=$2
 [ -z "$TIMEOUT" ] && TIMEOUT=1000
 
-cangen -v "$CAN" -L 8 -I 712 -D r -g "$TIMEOUT"
+cangen -v "$CAN" -L 8 -I 714 -D r -g "$TIMEOUT"
 
 

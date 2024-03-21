@@ -16,7 +16,7 @@
 # how many can read timeouts are accepted before bailing out (no can hw)
 MAX_RETRIES=3
 # motor pwm % for commands. WARNING: Setting 100% did not finish the learning.
-MOTOR_RPM=80
+MOTOR_height_RPM=80
 
 # timeout for aborting calibration (seconds)
 TIMEOUT=60
@@ -52,35 +52,57 @@ done
 echo "### Normalizing SeatAdjust ECU on $CAN"
 
 
-motor_off() {
-    _frame=$(printf "cansend %s 705#00.00.00.00.00.00.00.00" "$CAN")
+motor_height_off() {
+    _frame=$(printf "cansend %s 705#00.00.00.00.00" "$CAN")
     echo "TX: [motor-OFF] $_frame"
     eval "$_frame"
     sleep 0.5
 }
 
-motor_inc() {
+motor_tilt_pos_off() {
+    _frame=$(printf "cansend %s 707#00.00.00.00.00" "$CAN")
+    echo "TX: [motor-OFF] $_frame"
+    eval "$_frame"
+    sleep 0.5
+}
+
+motor_height_inc() {
     _rpm="$1"
-    _frame=$(printf "cansend %s 705#02.%02X.00.00.00.00.00.00" "$CAN" "$_rpm")
+    _frame=$(printf "cansend %s 705#02.%02X.00.00.00" "$CAN" "$_rpm")
     echo "TX: [motor-INC] $_frame"
     eval "$_frame"
     sleep 0.2
 }
 
-motor_dec() {
+motor_height_dec() {
     _rpm="$1"
-    _frame=$(printf "cansend %s 705#01.%02X.00.00.00.00.00.00" "$CAN" "$_rpm")
+    _frame=$(printf "cansend %s 705#01.%02X.00.00.00" "$CAN" "$_rpm")
     echo "TX: [motor-DEC] $_frame"
+    eval "$_frame"
+    sleep 0.2
+}
+
+motor_pos_invalid() {
+    _frame=$(printf "cansend %s 707#03.00.00.00.00" "$CAN")
+    echo "TX: [motor-INVALID] $_frame"
+    eval "$_frame"
+    sleep 0.2
+}
+
+motor_tilt_invalid() {
+    _frame=$(printf "cansend %s 707#30.00.00.00.00" "$CAN")
+    echo "TX: [motor-INVALID] $_frame"
     eval "$_frame"
     sleep 0.2
 }
 
 read_can_frame() {
     _can="$1"
-    candump -T 1000 -n 1 -L "$_can",712:7FF | cut -d ' ' -f 3
+    _id="$2"
+    candump -T 1000 -n 1 -L "$_can","$2":7FF | cut -d ' ' -f 3
 }
 
-parse_motor_pos() {
+parse_motor_height_pos() {
     _frame="$1"
     # only handle 0x712 canid
     if [ "$(echo "$_frame" | cut -c-4)" != "712#" ]; then  # "{frame:0:4}"
@@ -93,7 +115,7 @@ parse_motor_pos() {
     return 0
 }
 
-parse_motor_mov() {
+parse_motor_height_mov() {
     _frame="$1"
     # only handle 0x712 canid
     if [ "$(echo "$_frame" | cut -c-4)" != "712#" ]; then  # "{frame:0:4}"
@@ -112,10 +134,10 @@ parse_motor_mov() {
     return 0
 }
 
-parse_motor_lrn() {
+parse_motor_height_lrn() {
     _frame="$1"
     # only handle 0x712 canid
-    if [ "$(echo "$_frame" | cut -c -4)" != "712#" ]; then  # "{frame:0:4}"
+    if [ "$(echo "$_frame" | cut -c-4)" != "712#" ]; then  # "{frame:0:4}"
         return 1;
     fi
     _data="${_frame#*#}"
@@ -131,16 +153,122 @@ parse_motor_lrn() {
     return 0
 }
 
-old_frame="---" # invalidate
+parse_motor_pos_pos() {
+    _frame="$1"
+    # only handle 0x714 canid
+    if [ "$(echo "$_frame" | cut -c-4)" != "714#" ]; then  # "{frame:0:4}"
+        return 1;
+    fi
+    # lrn1/mov1|lrn2mov2|lrn3/mov3|lrn4/mov4|pos1|pos2|pos3|pos4| .....
+    _data="${_frame#*#}"
+    # pos_hex is 3rd byte
+    _pos_hex=$(echo "$_data" | cut -c5-6) # "{data:4:2}"
+    echo "$(( 0x${_pos_hex} ))"
+    return 0
+}
+
+parse_motor_pos_mov() {
+    _frame="$1"
+    # only handle 0x714 canid
+    if [ "$(echo "$_frame" | cut -c-4)" != "714#" ]; then  # "{frame:0:4}"
+        return 1;
+    fi
+    _data="${_frame#*#}"
+    # mov_hex is 2nd & 0x0F
+    _mov_hex=$(echo "$_data" | cut -c2) # "{data:1:1}"
+    case $(( _mov_hex & 0x03 )) in
+        0) echo "OFF";;
+        1) echo "DEC";;
+        2) echo "INC";;
+        *) echo "INV"
+           return 1;;
+    esac
+    return 0
+}
+
+parse_motor_pos_lrn() {
+    _frame="$1"
+    # only handle 0x714 canid
+    if [ "$(echo "$_frame" | cut -c -4)" != "714#" ]; then  # "{frame:0:4}"
+        return 1;
+    fi
+    _data="${_frame#*#}"
+    # mov_hex is 2nd & 0x0F
+    _mov_hex=$(echo "$_data" | cut -c2) # {data:1:1}
+    case $(( (_mov_hex >> 2) & 0x03 )) in
+        0) echo "NOT";;
+        1) echo "LRN";;
+        2) echo "INV";;
+        *) echo "???"
+           return 1;;
+    esac
+    return 0
+}
+
+parse_motor_tilt_pos() {
+    _frame="$1"
+    # only handle 0x714 canid
+    if [ "$(echo "$_frame" | cut -c-4)" != "714#" ]; then  # "{frame:0:4}"
+        return 1;
+    fi
+    _data="${_frame#*#}"
+    # pos_hex is 3rd byte
+    _pos_hex=$(echo "$_data" | cut -c9-10) # "{data:4:2}"
+    echo "$(( 0x${_pos_hex} ))"
+    return 0
+}
+
+parse_motor_tilt_mov() {
+    _frame="$1"
+    # only handle 0x714 canid
+    if [ "$(echo "$_frame" | cut -c-4)" != "714#" ]; then  # "{frame:0:4}"
+        return 1;
+    fi
+    _data="${_frame#*#}"
+    # mov_hex is 2nd & 0x0F
+    _mov_hex=$(echo "$_data" | cut -c4) # "{data:1:1}"
+    case $(( _mov_hex & 0x03 )) in
+        0) echo "OFF";;
+        1) echo "DEC";;
+        2) echo "INC";;
+        *) echo "INV"
+           return 1;;
+    esac
+    return 0
+}
+
+parse_motor_tilt_lrn() {
+    _frame="$1"
+    # only handle 0x714 canid
+    if [ "$(echo "$_frame" | cut -c -4)" != "714#" ]; then  # "{frame:0:4}"
+        return 1;
+    fi
+    _data="${_frame#*#}"
+    # mov_hex is 2nd & 0x0F
+    _mov_hex=$(echo "$_data" | cut -c4) # {data:1:1}
+    case $(( (_mov_hex >> 2) & 0x03 )) in
+        0) echo "NOT";;
+        1) echo "LRN";;
+        2) echo "INV";;
+        *) echo "???"
+           return 1;;
+    esac
+    return 0
+}
+
+old_frame1="---" # invalidate
+old_frame2="---" # invalidate
 
 ## normalization states
-# 0=motor_inc; 1=wait_off_motor_dec; 2=wait_off_motor_inc; 3=wait_off_finish
+# 0=all_motor_learned; 1=motor_height_inc; 2=motor_height_dec; 3=motor_pos_inc; 4=motor_pos_dec; 5=motor_tilt_inc; 6=motor_tilt_dec
 state=0
 
 ts_start=$(date '+%s')
 failures=0
+progress=0
 while true; do
-    frame=$(read_can_frame "$CAN")
+    frame1=$(read_can_frame "$CAN" 712)
+    frame2=$(read_can_frame "$CAN" 714)
     if [ $? -ne 0 ]; then
         echo "Aborted. Can't read from $CAN ..."
         exit 1
@@ -151,7 +279,7 @@ while true; do
         echo "### Aborted after $ts_elapsed sec." 1>&2
         exit 1
     fi
-    if [ -z "$frame" ]; then
+    if [ -z "$frame1" ] | [ -z "$frame2" ] ; then
         echo "RX: No can data, retry: $failures" 1>&2
         failures=$((failures+1))
          if [ $failures -ge $MAX_RETRIES ]; then
@@ -162,52 +290,65 @@ while true; do
     else
         failures=0 # reset counter on incoming can frame...
     fi
-    if [ "$frame" = "$old_frame" ]; then
+    if [ "$frame1" = "$old_frame1" ] && [ "$frame2" = "$old_frame2" ]; then
         #sleep 0
         continue
     fi
 
-    pos=$(parse_motor_pos "$frame")
-    mov=$(parse_motor_mov "$frame")
-    lrn=$(parse_motor_lrn "$frame")
+    pos1=$(parse_motor_height_pos "$frame1")
+    mov1=$(parse_motor_height_mov "$frame1")
+    lrn1=$(parse_motor_height_lrn "$frame1")
+    pos2=$(parse_motor_pos_pos "$frame2")
+    mov2=$(parse_motor_pos_mov "$frame2")
+    lrn2=$(parse_motor_pos_lrn "$frame2")
+    pos3=$(parse_motor_tilt_pos "$frame2")
+    mov3=$(parse_motor_tilt_mov "$frame2")
+    lrn3=$(parse_motor_tilt_lrn "$frame2")
 
-    [ -n "$frame" ] && [ "$STAT" = "1" ] && printf 'RX: SECU1_STAT {pos:%3d%% mov:%3s, lrn:%3s} \tframe: %s\n' "$pos" "$mov" "$lrn" "$frame"
-    old_frame="$frame"
-
+    [ -n "$frame1" ] && [ "$STAT" = "1" ] && printf 'RX: SECU1_STAT {pos1:%3d%% mov1:%3s, lrn1:%3s} \tframe: %s\n' "$pos1" "$mov1" "$lrn1" "$frame"
+    old_frame1=$frame1
+    [ -n "$frame2" ] && [ "$STAT" = "1" ] && printf 'RX: SECU2_STAT {pos2:%3d%% mov2:%3s, lrn2:%3s; pos3:%3d%% mov3:%3s, lrn3:%3s} \tframe: %s\n' "$pos2" "$mov2" "$lrn2" "$pos3" "$mov3" "$lrn3" "$frame"
+    old_frame2=$frame2
+    
     # handle fsm
     case $state in
-        0) ## 0. motor inc
-            # check if motor is in learned state and abort
-            if [ "$pos" != "255" ] && [ "$lrn" != "NOT" ]; then
+        0) ## 0. learn motor 1
+           # check if motor is in learned state and check the next one
+            if [ "$pos1" != "255" ] && [ "$lrn1" != "NOT" ]; then
                 if [ $FORCE -eq 1 ]; then
                     echo "[Status Check] Running calibration on learned state (forced)"
                 else
-                    echo "[Status Check] Aborting. Motor is learned"
-                    exit 0
+                    echo "[Status Check] Motor 1 is learned. Checking next one ..."
+                    if ([ "$pos2" != "255" ] && [ "$lrn2" != "NOT" ]) || ([ "$pos3" != "255" ] && [ "$lrn3" != "NOT" ]); then
+                        state=4
+                    else
+                        exit 0
+                    fi
                 fi
+            else
+                echo "0: [motor++]"
+                motor_height_off
+                motor_height_inc $MOTOR_height_RPM
+                state=1
             fi
-            echo "0: [motor++]"
-            motor_off
-            motor_inc $MOTOR_RPM
-            state=1
             #old_frame=""
             ;;
-        1) ## 1. wait for mov OFF state, then motor_dec
-            if [ "$mov" = "OFF" ]; then
+        1) ## 1. wait for mov OFF state, then motor_height_dec
+            if [ "$mov1" = "OFF" ]; then
                 echo "1: [motor--]"
-                motor_off
-                motor_dec $MOTOR_RPM
+                motor_height_off
+                motor_height_dec $MOTOR_height_RPM
                 state=2
                 #old_frame=""
             else
                 [ "$VERBOSE" = "1" ] && echo "1: [++] waiting OFF..."
             fi
             ;;
-        2) ## 2. wait for mov OFF state, then motor_inc
-            if [ "$mov" = "OFF" ]; then
+        2) ## 2. wait for mov OFF state, then motor_height_inc
+            if [ "$mov1" = "OFF" ]; then
                 echo "2: [motor++]"
-                motor_off
-                motor_inc $MOTOR_RPM
+                motor_height_off
+                motor_height_inc $MOTOR_height_RPM
                 state=3
                 #old_frame=""
             else
@@ -215,19 +356,62 @@ while true; do
             fi
             ;;
         3) ## 3. wait for mov OFF state, then finish
-            if [ "$mov" = "OFF" ]; then
+            if [ "$mov1" = "OFF" ]; then
                 echo "3: [*] Normalize finished"
-                state=4 # terminal state
-                echo "### Motor state: [$lrn]"
+                state=4 
+                echo "### Motor 1 state: [$lrn1]"
                 #old_frame=""
-                break
             else
                 [ "$VERBOSE" = "1" ] && echo "3: [++] waiting OFF..."
             fi
+            ;;
+
+        4) ## 4. learn motor 3
+            # check if motor is in learned state and abort
+            echo "4: [motor lrn]"
+            if [ "$pos3" != "255" ] && [ "$lrn3" != "NOT" ] ; then
+                if [ $FORCE -eq 1 ]; then
+                    echo "[Status Check] Running calibration on learned state (forced)"
+                else
+                    echo "[Status Check] Motor 3 is learned. Checking next one ..."
+                    motor_tilt_pos_off
+                    progress=0
+                    state=5
+                fi
+            fi
+
+            if [ "$lrn3" = "NOT" ] && [ "$progress" != "1" ]; then
+                motor_pos_invalid
+                progress=1
+                echo "### Motor 3 state: [$lrn3]"
+            fi
+
+            #old_frame=""
+            ;;
+        5) ## 5. learn motor2
+            # check if motor is in learned state and abort
+            echo "5: [motor lrn]"
+            if [ "$pos2" != "255" ] && [ "$lrn2" != "NOT" ] ; then
+                if [ $FORCE -eq 1 ]; then
+                    echo "[Status Check] Running calibration on learned state (forced)"
+                else
+                    echo "[Status Check] Motor 2 is learned. Checking next one ..."
+                    motor_tilt_pos_off
+                    exit 0
+                fi
+            fi
+
+            if [ "$lrn2" = "NOT" ] && [ "$progress" != "1" ]; then
+                motor_tilt_invalid
+                progress=1
+                echo "### Motor 2 state: [$lrn2]"
+            fi
+
+            #old_frame=""
             ;;
     esac
 done
 
 # stop the motor
-motor_off
-
+motor_height_off
+motor_tilt_pos_off

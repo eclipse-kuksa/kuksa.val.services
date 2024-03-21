@@ -66,22 +66,22 @@ send_frame()
     sleep 0.01
 }
 
-send_secu1_stat()
+send_secu2_stat()
 {
     _mov="$1"
     _lrn="$2"
     _pos="$3"
 
-    # printf "### Sending SECU1_STAT [ MOTOR1_MOV_STATE:%d, MOTOR1_LEARNING_STATE:%d, MOTOR1_POS:%d ]\n" "$mov" "$lrn" "$pos" 1>&2
+    # printf "### Sending SECU2_STAT [ MOTOR1_MOV_STATE:%d, MOTOR1_LEARNING_STATE:%d, MOTOR1_POS:%d ]\n" "$mov" "$lrn" "$pos" 1>&2
 
     _nibble=$(( (_lrn & 0x3) * 4 | (_mov & 0x3) ))
-    _sframe=$(printf "cansend %s 712#0%d.00.%02X.00.00.00.00.00" "$CAN" $_nibble "$_pos")
+    _sframe=$(printf "cansend %s 714#0%d.00.%02X.00.00.00.00.00" "$CAN" $_nibble "$_pos")
     send_frame "$_sframe"
 }
 
 if [ -n "$RESET" ]; then
     # Simulate ECU reset, state unlearned
-    send_secu1_stat $MOV_OFF $STATE_NOT 0
+    send_secu2_stat $MOV_OFF $STATE_NOT 0
     LEARN_STATE=$STATE_NOT
 else
     LEARN_STATE=$STATE_LRN
@@ -91,10 +91,10 @@ echo "# Running $ITERATIONS interations on: $CAN ..."
 iter=0
 while [ "$ITERATIONS" -eq 0 ] || [ $iter -lt "$ITERATIONS" ]; do
     echo
-    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'DEC', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: 100..0 ]"
+    echo "### Sending SECU2_STAT [ MOTOR1_MOV_STATE: 'DEC', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: 100..0 ]"
     for pos in $(seq 100 -1 0); do
         #frame=$(printf "cansend %s 712#45.44.%02X.00.00.00.00.00" "$CAN" "$pos")
-        send_secu1_stat $MOV_DEC $LEARN_STATE "$pos"
+        send_secu2_stat $MOV_DEC $LEARN_STATE "$pos"
     done
     [ "$VERBOSE" != "0" ] && echo
 
@@ -105,22 +105,22 @@ while [ "$ITERATIONS" -eq 0 ] || [ $iter -lt "$ITERATIONS" ]; do
     fi
 
     # Motor OFF
-    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'OFF', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: $pos"
-    send_secu1_stat $MOV_OFF $LEARN_STATE "$pos"
+    echo "### Sending SECU2_STAT [ MOTOR1_MOV_STATE: 'OFF', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: $pos"
+    send_secu2_stat $MOV_OFF $LEARN_STATE "$pos"
 
     sleep "$TIMEOUT"
 
-    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: 0..100 ]"
+    echo "### Sending SECU2_STAT [ MOTOR1_MOV_STATE: 'INC', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: 0..100 ]"
     for pos in $(seq 0 +1 100); do
-        #frame=$(printf "cansend %s 712#46.44.%02X.00.00.00.00.00" "$CAN" "$pos")
-        send_secu1_stat $MOV_INC $LEARN_STATE "$pos"
+        #frame=$(printf "cansend %s 714#46.44.%02X.00.00.00.00.00" "$CAN" "$pos")
+        send_secu2_stat $MOV_INC $LEARN_STATE "$pos"
     done
     [ "$VERBOSE" != "0" ] && echo
 
     iter=$(( iter+1 ))
 
     # Motor OFF
-    echo "### Sending SECU1_STAT [ MOTOR1_MOV_STATE: 'OFF', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: $pos"
-    send_secu1_stat $MOV_OFF $LEARN_STATE "$pos"
+    echo "### Sending SECU2_STAT [ MOTOR1_MOV_STATE: 'OFF', MOTOR1_LEARNING_STATE: $LEARN_STATE, MOTOR1_POS: $pos"
+    send_secu2_stat $MOV_OFF $LEARN_STATE "$pos"
 
 done

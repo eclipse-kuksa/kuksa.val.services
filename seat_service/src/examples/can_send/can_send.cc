@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
     sdv::hal::CanRawSocket can_if("vcan0");
 
     sdv::hal::CanFrame frame = {
-        .can_id = 0x712,
+        .can_id = 0x714,
         .data = {0x1, 0x50, 20, 0, 0, 0, 0, 0},
     };
 

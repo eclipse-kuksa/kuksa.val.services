@@ -57,7 +57,13 @@ fi
 [ -z "$SC_RAW" ] && export SC_RAW=0
 
 # Seat adjuster move operation timeout (ms). After it is reached motors are stopped
-[ -z "$SC_TIMEOUT" ] && export SC_TIMEOUT=15000
+[ -z "$SC_HEIGHT_TIMEOUT" ] && export SC_HEIGHT_TIMEOUT=15000
+
+# Seat adjuster move operation timeout (ms). After it is reached motors are stopped
+[ -z "$SC_TILT_TIMEOUT" ] && export SC_TILT_TIMEOUT=25000
+
+# Seat adjuster move operation timeout (ms). After it is reached motors are stopped
+[ -z "$SC_POS_TIMEOUT" ] && export SC_POS_TIMEOUT=25000
 
 # 1=dump SECU1_STAT can frames (useful to check for unmanaged seat position changes)
 [ -z "$SC_STAT" ] && export SC_STAT=0
@@ -66,7 +72,13 @@ fi
 [ -z "$SC_CTL" ] && export SC_CTL=1
 
 # Seat position moror RPM/100. e.g. 80=8000rpm. Suggested range [30..120]
-[ -z "$SC_RPM" ] && export SC_RPM=80
+[ -z "$SC_HEIGHT_RPM" ] && export SC_HEIGHT_RPM=80
+
+# Seat position moror RPM/100. e.g. 80=8000rpm. Suggested range [30..120]
+[ -z "$SC_POS_RPM" ] && export SC_POS_RPM=48
+
+# Seat position moror RPM/100. e.g. 80=8000rpm. Suggested range [30..120]
+[ -z "$SC_TILT_RPM" ] && export SC_TILT_RPM=48
 
 # SeatAdjuster c++ debug
 [ -z "$SA_DEBUG" ] && export SA_DEBUG=0
